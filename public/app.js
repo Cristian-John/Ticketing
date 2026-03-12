@@ -14,7 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     'use strict';
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g;
     // ==================== CONSTANTS ====================
     const DEPARTMENTS = [
         'Executive', 'Marketing', 'I-Wallet', 'Admin', 'I-Tech',
@@ -54,7 +54,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         update: (id, data) => api(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id) => api(`/tickets/${id}`, { method: 'DELETE' }),
         addNote: (id, data) => api(`/tickets/${id}/notes`, { method: 'POST', body: JSON.stringify(data) }),
+        uploadAttachment: (id, file) => __awaiter(this, void 0, void 0, function* () {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = yield fetch(`${API}/tickets/${id}/attachments`, { method: 'POST', body: formData });
+            if (!res.ok)
+                throw new Error('Upload failed');
+            return res.json();
+        }),
         stats: () => api('/stats'),
+    };
+    const articlesAPI = {
+        list: (search) => {
+            const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+            return api(`/articles${qs}`);
+        },
+        create: (data) => api('/articles', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id, data) => api(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id) => api(`/articles/${id}`, { method: 'DELETE' }),
     };
     // ==================== SESSION ====================
     function getSession() {
@@ -124,6 +141,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     }
     function severityClass(s) {
         return 'badge badge-' + (s || 'moderate').toLowerCase();
+    }
+    function getSLAHtml(ticket) {
+        if (ticket.status === 'Resolved' || ticket.status === 'Closed')
+            return '';
+        if (!ticket.dueAt)
+            return '';
+        const diff = Date.parse(ticket.dueAt) - Date.now();
+        if (diff < 0)
+            return `<span class="badge-sla breached">SLA Breached</span>`;
+        if (diff < 3600000 * 2)
+            return `<span class="badge-sla risk">SLA At Risk</span>`;
+        return '';
     }
     function getSeverityColor(s) {
         if (s === 'Severe')
@@ -245,6 +274,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     // ==================== STATE ====================
     let currentUser = null;
     let allTickets = [];
+    let allArticles = [];
     let prevTicketCount = 0;
     let adminView = 'dashboard';
     let clientView = 'my-tickets';
@@ -406,6 +436,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 renderClientView();
             }
         }
+        else if (clientView === 'knowledge-base') {
+            titleEl.textContent = 'Knowledge Base';
+            renderClientKnowledgeBase(content);
+        }
     }
     function renderClientList(container, tickets) {
         container.innerHTML = '';
@@ -423,7 +457,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             <span class="${severityClass(t.severity)}">${esc(t.severity)}</span>
                             <span class="badge-dept">${esc(t.department)}</span>
                         </div>
-                        <div style="font-weight:600;font-size:15px;color:#eee;margin-bottom:4px">${esc(t.title)}</div>
+                        <div style="font-weight:600;font-size:15px;color:#eee;margin-bottom:4px">${esc(t.title)}${getSLAHtml(t)}</div>
                         <div style="font-size:12px;color:#666">${esc(t.category)} · ${formatAssignees(t)} · ${formatDate(t.updatedAt)}</div>
                         ${lastNote ? `<div class="latest-note">💬 ${esc(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
                     </div>
@@ -467,6 +501,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         <span class="${statusClass(ticket.status)}">${esc(ticket.status)}</span>
                         <span class="badge-cat">${esc(ticket.category)}</span>
                         <span class="badge-dept">${esc(ticket.department)}</span>
+                        ${getSLAHtml(ticket)}
                     </div>
                 </div>
                 <button class="btn-back" id="client-back-btn">← Back</button>
@@ -475,7 +510,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 <div class="detail-main">
                     <div class="panel">
                         <div class="panel-header">Issue Description</div>
-                        <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px">${esc(ticket.description)}</p>
+                        <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
+                        ${(ticket.attachments && ticket.attachments.length > 0) ? `
+                            <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
+                                <strong style="color:#ddd;font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                    ${ticket.attachments.map((a) => `
+                                        <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
+                                            📎 ${esc(a.originalname)} <span style="opacity:0.6;font-size:10px">(${(a.size / 1024).toFixed(1)}kb)</span>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                     ${notes.length > 0 ? `
                     <div class="panel">
@@ -506,7 +553,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 <div class="detail-side">
                     <div class="panel">
                         <div class="panel-header">Ticket Info</div>
-                        ${[['ID', ticket.id], ['Department', ticket.department], ['Category', ticket.category], ['Severity', ticket.severity], ['Assignee(s)', formatAssignees(ticket)], ['Submitted', formatDate(ticket.createdAt)], ['Updated', formatDate(ticket.updatedAt)]].map(([k, v]) => `
+                        ${[['ID', ticket.id], ['Department', ticket.department], ['Category', ticket.category], ['Severity', ticket.severity], ['Assignee(s)', formatAssignees(ticket)], ['Submitted', formatDate(ticket.createdAt)], ['Updated', formatDate(ticket.updatedAt)], ['SLA Due', formatDateTime(ticket.dueAt)]].map(([k, v]) => `
                             <div class="detail-info-row">
                                 <span class="detail-info-key">${k}</span>
                                 <span class="detail-info-val">${esc(v)}</span>
@@ -629,6 +676,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 adminView = 'all-tickets';
                 renderAdminView();
             }
+        }
+        else if (adminView === 'knowledge-base') {
+            titleEl.textContent = 'Knowledge Base';
+            renderAdminKnowledgeBase(content);
         }
     }
     function getFilteredTickets() {
@@ -775,7 +826,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 <span class="mini-card-id">${esc(ticket.id)}</span>
                 <span class="${statusClass(ticket.status)}">${esc(ticket.status)}</span>
             </div>
-            <div class="mini-card-title">${esc(ticket.title)}</div>
+            <div class="mini-card-title">${esc(ticket.title)}${getSLAHtml(ticket)}</div>
             ${!compact ? `<div class="mini-card-desc">${esc((ticket.description || '').slice(0, 65))}${(ticket.description || '').length > 65 ? '…' : ''}</div>` : ''}
             <div class="mini-card-badges">
                 <span class="${severityClass(ticket.severity)}">${esc(ticket.severity)}</span>
@@ -817,7 +868,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const row = el('div', { className: 'table-row' });
             row.innerHTML = `
                 <span style="flex:0 0 88px;font-family:monospace;font-size:10px;color:var(--text-muted)">${esc(t.id)}</span>
-                <span style="flex:1;font-weight:600;color:#eee;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</span>
+                <span style="flex:1;font-weight:600;color:#eee;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}${getSLAHtml(t)}</span>
                 <span style="flex:0 0 110px"><span class="badge-dept">${esc(t.department)}</span></span>
                 <span style="flex:0 0 86px"><span class="${severityClass(t.severity)}">${esc(t.severity)}</span></span>
                 <span style="flex:0 0 108px"><span class="${statusClass(t.status)}">${esc(t.status)}</span></span>
@@ -902,6 +953,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         <span class="${statusClass(ticket.status)}">${esc(ticket.status)}</span>
                         <span class="badge-cat">${esc(ticket.category)}</span>
                         <span class="badge-dept">${esc(ticket.department)}</span>
+                        ${getSLAHtml(ticket)}
                     </div>
                 </div>
                 <div style="display:flex;gap:10px">
@@ -915,6 +967,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     <div class="panel">
                         <div class="panel-header">Issue Details</div>
                         <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
+                        ${(ticket.attachments && ticket.attachments.length > 0) ? `
+                            <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
+                                <strong style="color:#ddd;font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                    ${ticket.attachments.map((a) => `
+                                        <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
+                                            📎 ${esc(a.originalname)} <span style="opacity:0.6;font-size:10px">(${(a.size / 1024).toFixed(1)}kb)</span>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
 
                     <div class="panel" style="background:#131318">
@@ -931,7 +995,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         `}
                         <div class="note-compose" style="margin-top:20px">
                             <textarea id="reply-text" placeholder="Type a message or internal note..." style="width:100%;background:#1a1a20;border:1px solid #333;color:#eee;padding:12px;border-radius:6px;min-height:80px;font-family:inherit;margin-bottom:10px"></textarea>
-                            <div style="text-align:right">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <input type="file" id="reply-file" style="font-size:12px;color:#aaa">
                                 <button class="btn btn-primary" id="btn-reply">Send Reply</button>
                             </div>
                         </div>
@@ -1002,20 +1067,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             renderAdminView();
         });
         (_b = $('#btn-reply')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            var _a, _b;
             const txt = (_a = $('#reply-text')) === null || _a === void 0 ? void 0 : _a.value.trim();
-            if (!txt)
+            const fileInput = $('#reply-file');
+            const file = (_b = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files) === null || _b === void 0 ? void 0 : _b[0];
+            if (!txt && !file)
                 return;
             try {
                 const btn = $('#btn-reply');
                 if (btn)
                     btn.disabled = true;
-                yield ticketsAPI.addNote(ticket.id, { text: txt, author: (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'Admin' });
-                showToast('Reply added');
+                if (txt) {
+                    yield ticketsAPI.addNote(ticket.id, { text: txt, author: (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'Admin' });
+                }
+                if (file) {
+                    yield ticketsAPI.uploadAttachment(ticket.id, file);
+                }
+                showToast('Reply / Update added');
                 yield loadAndRenderAdmin();
             }
             catch (err) {
-                showToast('Failed to add note', 'error');
+                showToast('Failed to add reply', 'error');
                 const btn = $('#btn-reply');
                 if (btn)
                     btn.disabled = false;
@@ -1149,9 +1221,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     btn.disabled = true;
                     btn.textContent = 'Submitting...';
                 }
-                yield ticketsAPI.create({
+                const ticket = yield ticketsAPI.create({
                     title, description: desc, department: dept, severity: sev, category: cat, requester: req
                 });
+                const fileInput = $('#ticket-file');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    yield ticketsAPI.uploadAttachment(ticket.id, fileInput.files[0]);
+                }
                 showToast('Ticket created successfully!');
                 closeTicketModal();
                 if ((currentUser === null || currentUser === void 0 ? void 0 : currentUser.role) === 'admin')
@@ -1239,6 +1315,188 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
         }));
     }
+    // ==================== KNOWLEDGE BASE ====================
+    let articleModalMode = 'create';
+    const articleModal = $('#article-modal');
+    function openArticleModal(article) {
+        if (!articleModal)
+            return;
+        articleModalMode = article ? 'edit' : 'create';
+        $('#article-modal-title').textContent = article ? 'Edit Article' : 'Create Article';
+        const idField = $('#article-id');
+        const titleField = $('#article-title');
+        const catField = $('#article-category');
+        const contentField = $('#article-content');
+        if (article) {
+            idField.value = article.id;
+            titleField.value = article.title;
+            catField.value = article.category;
+            contentField.value = article.content;
+        }
+        else {
+            idField.value = '';
+            titleField.value = '';
+            catField.value = '';
+            contentField.value = '';
+        }
+        articleModal.classList.add('show');
+    }
+    function closeArticleModal() {
+        if (articleModal)
+            articleModal.classList.remove('show');
+    }
+    (_e = $('#close-article-modal-btn')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', closeArticleModal);
+    (_f = $('#cancel-article-modal-btn')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', closeArticleModal);
+    (_g = $('#article-form')) === null || _g === void 0 ? void 0 : _g.addEventListener('submit', (e) => __awaiter(this, void 0, void 0, function* () {
+        e.preventDefault();
+        const id = $('#article-id').value;
+        const title = $('#article-title').value.trim();
+        const category = $('#article-category').value.trim();
+        const content = $('#article-content').value.trim();
+        if (!title || !content)
+            return;
+        try {
+            if (articleModalMode === 'edit') {
+                yield articlesAPI.update(id, { title, category, content });
+                showToast('Article updated successfully');
+            }
+            else {
+                yield articlesAPI.create({ title, category, content, author: (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'Admin' });
+                showToast('Article created successfully');
+            }
+            closeArticleModal();
+            if (adminView === 'knowledge-base')
+                renderAdminView();
+            else if (clientView === 'knowledge-base')
+                renderClientView();
+        }
+        catch (err) {
+            showToast('Failed to save article', 'error');
+        }
+    }));
+    function fetchKnowledgeBase(search) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                allArticles = yield articlesAPI.list(search);
+            }
+            catch (err) {
+                showToast('Failed to load articles', 'error');
+            }
+        });
+    }
+    function renderAdminKnowledgeBase(container) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            yield fetchKnowledgeBase();
+            container.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <p style="color:var(--text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
+                <button class="btn btn-primary" id="btn-new-article">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Article
+                </button>
+            </div>
+            <div class="table-wrap">
+                <div class="table-head">
+                    <span style="flex:1">Title</span>
+                    <span style="flex:0 0 150px">Category</span>
+                    <span style="flex:0 0 120px">Author</span>
+                    <span style="flex:0 0 100px">Updated</span>
+                    <span style="flex:0 0 100px;text-align:right">Actions</span>
+                </div>
+                <div id="kb-table-body"></div>
+            </div>
+        `;
+            const body = $('#kb-table-body');
+            if (allArticles.length === 0 && body) {
+                body.innerHTML = '<div class="empty-state" style="padding:30px">No articles found.</div>';
+            }
+            else if (body) {
+                allArticles.forEach(a => {
+                    const row = el('div', { className: 'table-row' });
+                    row.innerHTML = `
+                    <span style="flex:1;font-weight:600;color:#eee;font-size:13px">${esc(a.title)}</span>
+                    <span style="flex:0 0 150px"><span class="badge-cat">${esc(a.category)}</span></span>
+                    <span style="flex:0 0 120px;color:#aaa;font-size:12px">${esc(a.author)}</span>
+                    <span style="flex:0 0 100px;color:var(--text-muted);font-size:11px">${formatDate(a.updatedAt)}</span>
+                    <span style="flex:0 0 100px;text-align:right">
+                        <button class="btn-ghost edit-art-btn" style="padding:4px 8px;font-size:11px" data-id="${esc(a.id)}">Edit</button>
+                        <button class="btn-ghost del-art-btn" style="padding:4px 8px;font-size:11px;color:var(--severity-severe)" data-id="${esc(a.id)}">Del</button>
+                    </span>
+                `;
+                    body.appendChild(row);
+                });
+            }
+            (_a = $('#btn-new-article')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => openArticleModal());
+            $$('.edit-art-btn').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    const a = allArticles.find(x => x.id === b.dataset.id);
+                    if (a)
+                        openArticleModal(a);
+                });
+            });
+            $$('.del-art-btn').forEach(b => {
+                b.addEventListener('click', (e) => __awaiter(this, void 0, void 0, function* () {
+                    const id = b.dataset.id;
+                    if (!id || !confirm('Delete this article?'))
+                        return;
+                    try {
+                        yield articlesAPI.delete(id);
+                        showToast('Article deleted');
+                        renderAdminView();
+                    }
+                    catch (err) {
+                        showToast('Failed to delete', 'error');
+                    }
+                }));
+            });
+        });
+    }
+    let clientKbSearch = '';
+    function renderClientKnowledgeBase(container) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield fetchKnowledgeBase(clientKbSearch);
+            container.innerHTML = `
+            <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;">
+                <input type="text" id="kb-search-client" class="search-box" style="flex:1;max-width:400px;" placeholder="Search articles, FAQs..." value="${esc(clientKbSearch)}">
+                <button class="btn btn-primary" id="kb-search-btn">Search</button>
+            </div>
+            <div id="kb-client-list" style="display:grid;gap:15px;grid-template-columns:1fr;align-items:start;">
+            </div>
+        `;
+            const list = $('#kb-client-list');
+            if (list) {
+                if (allArticles.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No matching articles found.</div>';
+                }
+                else {
+                    allArticles.forEach(a => {
+                        const card = el('div', { className: 'panel', style: { padding: '20px' } });
+                        card.innerHTML = `
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">
+                            <span class="badge-cat">${esc(a.category)}</span>
+                            <span style="margin-left:10px">Updated ${formatDate(a.updatedAt)}</span>
+                        </div>
+                        <h3 style="color:#eee;margin:0 0 12px 0;">${esc(a.title)}</h3>
+                        <div style="color:#bbb;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(a.content)}</div>
+                    `;
+                        list.appendChild(card);
+                    });
+                }
+            }
+            const searchInput = $('#kb-search-client');
+            const searchBtn = $('#kb-search-btn');
+            const performSearch = () => {
+                clientKbSearch = searchInput.value.trim();
+                renderClientView();
+            };
+            searchBtn === null || searchBtn === void 0 ? void 0 : searchBtn.addEventListener('click', performSearch);
+            searchInput === null || searchInput === void 0 ? void 0 : searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter')
+                    performSearch();
+            });
+        });
+    }
     // ==================== APP INIT ====================
     function init() {
         const session = getSession();
@@ -1268,6 +1526,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             closeTicketModal();
         if (e.target === ratingModal)
             closeRatingModal();
+        if (e.target === articleModal)
+            closeArticleModal();
     });
     init();
 })();

@@ -20,10 +20,22 @@
         assignee: string;
         requester: string;
         rating: number | null;
-        ratingComment: string;
+        ratingComment: string | null;
         createdAt: string;
         updatedAt: string;
+        dueAt?: string;
         notes?: Note[];
+        attachments?: Attachment[];
+    }
+
+    interface Article {
+        id: string;
+        title: string;
+        content: string;
+        category: string;
+        author: string;
+        createdAt: string;
+        updatedAt: string;
     }
 
     interface Note {
@@ -32,6 +44,15 @@
         text: string;
         author: string;
         time: string;
+    }
+
+    interface Attachment {
+        id: string;
+        ticketId: string;
+        filename: string;
+        originalname: string;
+        size: number;
+        uploadedAt: string;
     }
 
     interface UserSession {
@@ -97,7 +118,24 @@
         update: (id: string, data: Partial<Ticket>): Promise<Ticket> => api<Ticket>(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: string): Promise<{ success: boolean; id: string }> => api<{ success: boolean; id: string }>(`/tickets/${id}`, { method: 'DELETE' }),
         addNote: (id: string, data: { text: string; author: string }): Promise<Note> => api<Note>(`/tickets/${id}/notes`, { method: 'POST', body: JSON.stringify(data) }),
+        uploadAttachment: async (id: string, file: File): Promise<Attachment> => {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch(`${API}/tickets/${id}/attachments`, { method: 'POST', body: formData });
+            if (!res.ok) throw new Error('Upload failed');
+            return res.json();
+        },
         stats: (): Promise<Stats> => api<Stats>('/stats'),
+    };
+
+    const articlesAPI = {
+        list: (search?: string): Promise<Article[]> => {
+            const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+            return api<Article[]>(`/articles${qs}`);
+        },
+        create: (data: Partial<Article>): Promise<Article> => api<Article>('/articles', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id: string, data: Partial<Article>): Promise<Article> => api<Article>(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: (id: string): Promise<{ success: boolean; id: string }> => api<{ success: boolean; id: string }>(`/articles/${id}`, { method: 'DELETE' }),
     };
 
     // ==================== SESSION ====================
@@ -169,6 +207,15 @@
 
     function severityClass(s: string | null | undefined): string {
         return 'badge badge-' + (s || 'moderate').toLowerCase();
+    }
+
+    function getSLAHtml(ticket: Ticket): string {
+        if (ticket.status === 'Resolved' || ticket.status === 'Closed') return '';
+        if (!ticket.dueAt) return '';
+        const diff = Date.parse(ticket.dueAt) - Date.now();
+        if (diff < 0) return `<span class="badge-sla breached">SLA Breached</span>`;
+        if (diff < 3600000 * 2) return `<span class="badge-sla risk">SLA At Risk</span>`;
+        return '';
     }
 
     function getSeverityColor(s: string): string {
@@ -293,6 +340,7 @@
 
     let currentUser: UserSession | null = null;
     let allTickets: Ticket[] = [];
+    let allArticles: Article[] = [];
     let prevTicketCount = 0;
     let adminView = 'dashboard';
     let clientView = 'my-tickets';
@@ -451,6 +499,9 @@
                 }
             }
             else { clientView = 'my-tickets'; renderClientView(); }
+        } else if (clientView === 'knowledge-base') {
+            titleEl.textContent = 'Knowledge Base';
+            renderClientKnowledgeBase(content);
         }
     }
 
@@ -471,7 +522,7 @@
                             <span class="${severityClass(t.severity)}">${esc(t.severity)}</span>
                             <span class="badge-dept">${esc(t.department)}</span>
                         </div>
-                        <div style="font-weight:600;font-size:15px;color:#eee;margin-bottom:4px">${esc(t.title)}</div>
+                        <div style="font-weight:600;font-size:15px;color:#eee;margin-bottom:4px">${esc(t.title)}${getSLAHtml(t)}</div>
                         <div style="font-size:12px;color:#666">${esc(t.category)} · ${formatAssignees(t)} · ${formatDate(t.updatedAt)}</div>
                         ${lastNote ? `<div class="latest-note">💬 ${esc(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
                     </div>
@@ -515,6 +566,7 @@
                         <span class="${statusClass(ticket.status)}">${esc(ticket.status)}</span>
                         <span class="badge-cat">${esc(ticket.category)}</span>
                         <span class="badge-dept">${esc(ticket.department)}</span>
+                        ${getSLAHtml(ticket)}
                     </div>
                 </div>
                 <button class="btn-back" id="client-back-btn">← Back</button>
@@ -523,7 +575,19 @@
                 <div class="detail-main">
                     <div class="panel">
                         <div class="panel-header">Issue Description</div>
-                        <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px">${esc(ticket.description)}</p>
+                        <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
+                        ${(ticket.attachments && ticket.attachments.length > 0) ? `
+                            <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
+                                <strong style="color:#ddd;font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                    ${ticket.attachments.map((a: Attachment) => `
+                                        <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
+                                            📎 ${esc(a.originalname)} <span style="opacity:0.6;font-size:10px">(${(a.size/1024).toFixed(1)}kb)</span>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                     ${notes.length > 0 ? `
                     <div class="panel">
@@ -554,7 +618,7 @@
                 <div class="detail-side">
                     <div class="panel">
                         <div class="panel-header">Ticket Info</div>
-                        ${[['ID', ticket.id], ['Department', ticket.department], ['Category', ticket.category], ['Severity', ticket.severity], ['Assignee(s)', formatAssignees(ticket)], ['Submitted', formatDate(ticket.createdAt)], ['Updated', formatDate(ticket.updatedAt)]].map(([k, v]) => `
+                        ${[['ID', ticket.id], ['Department', ticket.department], ['Category', ticket.category], ['Severity', ticket.severity], ['Assignee(s)', formatAssignees(ticket)], ['Submitted', formatDate(ticket.createdAt)], ['Updated', formatDate(ticket.updatedAt)], ['SLA Due', formatDateTime(ticket.dueAt)]].map(([k, v]) => `
                             <div class="detail-info-row">
                                 <span class="detail-info-key">${k}</span>
                                 <span class="detail-info-val">${esc(v)}</span>
@@ -672,6 +736,9 @@
             const ticket = allTickets.find(t => t.id === selectedTicketId);
             if (ticket) renderAdminDetail(content, ticket);
             else { adminView = 'all-tickets'; renderAdminView(); }
+        } else if (adminView === 'knowledge-base') {
+            titleEl.textContent = 'Knowledge Base';
+            renderAdminKnowledgeBase(content);
         }
     }
 
@@ -823,7 +890,7 @@
                 <span class="mini-card-id">${esc(ticket.id)}</span>
                 <span class="${statusClass(ticket.status)}">${esc(ticket.status)}</span>
             </div>
-            <div class="mini-card-title">${esc(ticket.title)}</div>
+            <div class="mini-card-title">${esc(ticket.title)}${getSLAHtml(ticket)}</div>
             ${!compact ? `<div class="mini-card-desc">${esc((ticket.description || '').slice(0, 65))}${(ticket.description || '').length > 65 ? '…' : ''}</div>` : ''}
             <div class="mini-card-badges">
                 <span class="${severityClass(ticket.severity)}">${esc(ticket.severity)}</span>
@@ -866,7 +933,7 @@
             const row = el('div', { className: 'table-row' });
             row.innerHTML = `
                 <span style="flex:0 0 88px;font-family:monospace;font-size:10px;color:var(--text-muted)">${esc(t.id)}</span>
-                <span style="flex:1;font-weight:600;color:#eee;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</span>
+                <span style="flex:1;font-weight:600;color:#eee;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}${getSLAHtml(t)}</span>
                 <span style="flex:0 0 110px"><span class="badge-dept">${esc(t.department)}</span></span>
                 <span style="flex:0 0 86px"><span class="${severityClass(t.severity)}">${esc(t.severity)}</span></span>
                 <span style="flex:0 0 108px"><span class="${statusClass(t.status)}">${esc(t.status)}</span></span>
@@ -956,6 +1023,7 @@
                         <span class="${statusClass(ticket.status)}">${esc(ticket.status)}</span>
                         <span class="badge-cat">${esc(ticket.category)}</span>
                         <span class="badge-dept">${esc(ticket.department)}</span>
+                        ${getSLAHtml(ticket)}
                     </div>
                 </div>
                 <div style="display:flex;gap:10px">
@@ -969,6 +1037,18 @@
                     <div class="panel">
                         <div class="panel-header">Issue Details</div>
                         <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
+                        ${(ticket.attachments && ticket.attachments.length > 0) ? `
+                            <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
+                                <strong style="color:#ddd;font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                    ${ticket.attachments.map((a: Attachment) => `
+                                        <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
+                                            📎 ${esc(a.originalname)} <span style="opacity:0.6;font-size:10px">(${(a.size/1024).toFixed(1)}kb)</span>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
 
                     <div class="panel" style="background:#131318">
@@ -985,7 +1065,8 @@
                         `}
                         <div class="note-compose" style="margin-top:20px">
                             <textarea id="reply-text" placeholder="Type a message or internal note..." style="width:100%;background:#1a1a20;border:1px solid #333;color:#eee;padding:12px;border-radius:6px;min-height:80px;font-family:inherit;margin-bottom:10px"></textarea>
-                            <div style="text-align:right">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <input type="file" id="reply-file" style="font-size:12px;color:#aaa">
                                 <button class="btn btn-primary" id="btn-reply">Send Reply</button>
                             </div>
                         </div>
@@ -1059,15 +1140,26 @@
 
         $('#btn-reply')?.addEventListener('click', async () => {
             const txt = ($('#reply-text') as HTMLTextAreaElement)?.value.trim();
-            if (!txt) return;
+            const fileInput = $('#reply-file') as HTMLInputElement;
+            const file = fileInput?.files?.[0];
+
+            if (!txt && !file) return;
             try {
                 const btn = $('#btn-reply') as HTMLButtonElement;
                 if (btn) btn.disabled = true;
-                await ticketsAPI.addNote(ticket.id, { text: txt, author: currentUser?.username || 'Admin' });
-                showToast('Reply added');
+
+                if (txt) {
+                    await ticketsAPI.addNote(ticket.id, { text: txt, author: currentUser?.username || 'Admin' });
+                }
+
+                if (file) {
+                    await ticketsAPI.uploadAttachment(ticket.id, file);
+                }
+
+                showToast('Reply / Update added');
                 await loadAndRenderAdmin();
             } catch (err) {
-                showToast('Failed to add note', 'error');
+                showToast('Failed to add reply', 'error');
                 const btn = $('#btn-reply') as HTMLButtonElement;
                 if (btn) btn.disabled = false;
             }
@@ -1196,9 +1288,14 @@
                 const btn = $('#create-submit') as HTMLButtonElement;
                 if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
                 
-                await ticketsAPI.create({
+                const ticket = await ticketsAPI.create({
                     title, description: desc, department: dept, severity: sev, category: cat, requester: req
                 });
+                
+                const fileInput = $('#ticket-file') as HTMLInputElement;
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    await ticketsAPI.uploadAttachment(ticket.id, fileInput.files[0]);
+                }
                 
                 showToast('Ticket created successfully!');
                 closeTicketModal();
@@ -1281,6 +1378,191 @@
         });
     }
 
+    // ==================== KNOWLEDGE BASE ====================
+
+    let articleModalMode: 'create' | 'edit' = 'create';
+    const articleModal = $('#article-modal');
+    
+    function openArticleModal(article?: Article) {
+        if (!articleModal) return;
+        articleModalMode = article ? 'edit' : 'create';
+        ($('#article-modal-title') as HTMLElement).textContent = article ? 'Edit Article' : 'Create Article';
+        
+        const idField = $('#article-id') as HTMLInputElement;
+        const titleField = $('#article-title') as HTMLInputElement;
+        const catField = $('#article-category') as HTMLInputElement;
+        const contentField = $('#article-content') as HTMLTextAreaElement;
+        
+        if (article) {
+            idField.value = article.id;
+            titleField.value = article.title;
+            catField.value = article.category;
+            contentField.value = article.content;
+        } else {
+            idField.value = '';
+            titleField.value = '';
+            catField.value = '';
+            contentField.value = '';
+        }
+        
+        articleModal.classList.add('show');
+    }
+    
+    function closeArticleModal() {
+        if (articleModal) articleModal.classList.remove('show');
+    }
+    
+    $('#close-article-modal-btn')?.addEventListener('click', closeArticleModal);
+    $('#cancel-article-modal-btn')?.addEventListener('click', closeArticleModal);
+    
+    $('#article-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = ($('#article-id') as HTMLInputElement).value;
+        const title = ($('#article-title') as HTMLInputElement).value.trim();
+        const category = ($('#article-category') as HTMLInputElement).value.trim();
+        const content = ($('#article-content') as HTMLTextAreaElement).value.trim();
+        
+        if (!title || !content) return;
+        
+        try {
+            if (articleModalMode === 'edit') {
+                await articlesAPI.update(id, { title, category, content });
+                showToast('Article updated successfully');
+            } else {
+                await articlesAPI.create({ title, category, content, author: currentUser?.username || 'Admin' });
+                showToast('Article created successfully');
+            }
+            closeArticleModal();
+            if (adminView === 'knowledge-base') renderAdminView();
+            else if (clientView === 'knowledge-base') renderClientView();
+        } catch (err) {
+            showToast('Failed to save article', 'error');
+        }
+    });
+
+    async function fetchKnowledgeBase(search?: string) {
+        try {
+            allArticles = await articlesAPI.list(search);
+        } catch (err) {
+            showToast('Failed to load articles', 'error');
+        }
+    }
+
+    async function renderAdminKnowledgeBase(container: HTMLElement) {
+        await fetchKnowledgeBase();
+        
+        container.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <p style="color:var(--text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
+                <button class="btn btn-primary" id="btn-new-article">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Article
+                </button>
+            </div>
+            <div class="table-wrap">
+                <div class="table-head">
+                    <span style="flex:1">Title</span>
+                    <span style="flex:0 0 150px">Category</span>
+                    <span style="flex:0 0 120px">Author</span>
+                    <span style="flex:0 0 100px">Updated</span>
+                    <span style="flex:0 0 100px;text-align:right">Actions</span>
+                </div>
+                <div id="kb-table-body"></div>
+            </div>
+        `;
+        
+        const body = $('#kb-table-body');
+        if (allArticles.length === 0 && body) {
+            body.innerHTML = '<div class="empty-state" style="padding:30px">No articles found.</div>';
+        } else if (body) {
+            allArticles.forEach(a => {
+                const row = el('div', { className: 'table-row' });
+                row.innerHTML = `
+                    <span style="flex:1;font-weight:600;color:#eee;font-size:13px">${esc(a.title)}</span>
+                    <span style="flex:0 0 150px"><span class="badge-cat">${esc(a.category)}</span></span>
+                    <span style="flex:0 0 120px;color:#aaa;font-size:12px">${esc(a.author)}</span>
+                    <span style="flex:0 0 100px;color:var(--text-muted);font-size:11px">${formatDate(a.updatedAt)}</span>
+                    <span style="flex:0 0 100px;text-align:right">
+                        <button class="btn-ghost edit-art-btn" style="padding:4px 8px;font-size:11px" data-id="${esc(a.id)}">Edit</button>
+                        <button class="btn-ghost del-art-btn" style="padding:4px 8px;font-size:11px;color:var(--severity-severe)" data-id="${esc(a.id)}">Del</button>
+                    </span>
+                `;
+                body.appendChild(row);
+            });
+        }
+        
+        $('#btn-new-article')?.addEventListener('click', () => openArticleModal());
+        
+        $$('.edit-art-btn').forEach(b => {
+            b.addEventListener('click', (e) => {
+                const a = allArticles.find(x => x.id === (b as HTMLElement).dataset.id);
+                if (a) openArticleModal(a);
+            });
+        });
+        
+        $$('.del-art-btn').forEach(b => {
+            b.addEventListener('click', async (e) => {
+                const id = (b as HTMLElement).dataset.id;
+                if (!id || !confirm('Delete this article?')) return;
+                try {
+                    await articlesAPI.delete(id);
+                    showToast('Article deleted');
+                    renderAdminView();
+                } catch (err) {
+                    showToast('Failed to delete', 'error');
+                }
+            });
+        });
+    }
+
+    let clientKbSearch = '';
+
+    async function renderClientKnowledgeBase(container: HTMLElement) {
+        await fetchKnowledgeBase(clientKbSearch);
+        
+        container.innerHTML = `
+            <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;">
+                <input type="text" id="kb-search-client" class="search-box" style="flex:1;max-width:400px;" placeholder="Search articles, FAQs..." value="${esc(clientKbSearch)}">
+                <button class="btn btn-primary" id="kb-search-btn">Search</button>
+            </div>
+            <div id="kb-client-list" style="display:grid;gap:15px;grid-template-columns:1fr;align-items:start;">
+            </div>
+        `;
+        
+        const list = $('#kb-client-list');
+        if (list) {
+            if (allArticles.length === 0) {
+                list.innerHTML = '<div class="empty-state">No matching articles found.</div>';
+            } else {
+                allArticles.forEach(a => {
+                    const card = el('div', { className: 'panel', style: { padding: '20px' } });
+                    card.innerHTML = `
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">
+                            <span class="badge-cat">${esc(a.category)}</span>
+                            <span style="margin-left:10px">Updated ${formatDate(a.updatedAt)}</span>
+                        </div>
+                        <h3 style="color:#eee;margin:0 0 12px 0;">${esc(a.title)}</h3>
+                        <div style="color:#bbb;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(a.content)}</div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+        }
+        
+        const searchInput = $('#kb-search-client') as HTMLInputElement;
+        const searchBtn = $('#kb-search-btn') as HTMLButtonElement;
+        
+        const performSearch = () => {
+            clientKbSearch = searchInput.value.trim();
+            renderClientView();
+        };
+        
+        searchBtn?.addEventListener('click', performSearch);
+        searchInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    }
+
     // ==================== APP INIT ====================
 
     function init() {
@@ -1305,6 +1587,7 @@
     window.addEventListener('click', (e) => {
         if (e.target === createModal) closeTicketModal();
         if (e.target === ratingModal) closeRatingModal();
+        if (e.target === articleModal) closeArticleModal();
     });
 
     init();
