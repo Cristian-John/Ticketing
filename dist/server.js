@@ -1,26 +1,26 @@
+"use strict";
 /* ===================================
    IT Support Ticketing System
-   Node.js / Express Backend
+   Node.js / Express Backend (TypeScript)
    =================================== */
-
-const express = require('express');
-const Database = require('better-sqlite3');
-const cors = require('cors');
-const path = require('path');
-
-const app = express();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
+const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
+const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
-
 // ─── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use(express_1.default.static(path_1.default.join(__dirname, '../public')));
 // ─── Database Setup ───────────────────────────────────────────────────────────
-const db = new Database(path.join(__dirname, 'tickets.db'));
+const db = new better_sqlite3_1.default(path_1.default.join(__dirname, '../tickets.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
-
 // Create tables
 db.exec(`
     CREATE TABLE IF NOT EXISTS tickets (
@@ -49,7 +49,6 @@ db.exec(`
         FOREIGN KEY (ticketId) REFERENCES tickets(id) ON DELETE CASCADE
     );
 `);
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function generateId() {
     const now = new Date();
@@ -59,11 +58,9 @@ function generateId() {
     const d = String(now.getDate()).padStart(2, '0');
     return `TKT-${y}${m}${d}-${num}`;
 }
-
 function nowISO() {
     return new Date().toISOString();
 }
-
 // Prepared statements for performance
 const stmts = {
     getAllTickets: db.prepare(`SELECT * FROM tickets ORDER BY updatedAt DESC`),
@@ -78,14 +75,10 @@ const stmts = {
         INSERT INTO notes (ticketId, text, author, time) VALUES (@ticketId, @text, @author, @time)
     `),
 };
-
 // ─── API Routes ───────────────────────────────────────────────────────────────
-
-// GET /api/tickets — list all tickets (with optional filters)
 app.get('/api/tickets', (req, res) => {
     try {
         let tickets = stmts.getAllTickets.all();
-
         // Apply query-string filters
         const { status, priority, severity, department, search } = req.query;
         if (status && status !== 'all') {
@@ -102,56 +95,53 @@ app.get('/api/tickets', (req, res) => {
         }
         if (search) {
             const q = search.toLowerCase();
-            tickets = tickets.filter(t =>
-                t.id.toLowerCase().includes(q) ||
+            tickets = tickets.filter(t => t.id.toLowerCase().includes(q) ||
                 t.title.toLowerCase().includes(q) ||
                 t.requester.toLowerCase().includes(q) ||
                 t.department.toLowerCase().includes(q) ||
-                (t.description || '').toLowerCase().includes(q)
-            );
+                (t.description || '').toLowerCase().includes(q));
         }
-
         // Attach notes to each ticket
-        tickets = tickets.map(t => ({
+        const ticketsWithNotes = tickets.map(t => ({
             ...t,
             notes: stmts.getNotes.all(t.id),
         }));
-
-        res.json(tickets);
-    } catch (err) {
+        res.json(ticketsWithNotes);
+    }
+    catch (err) {
         console.error('GET /api/tickets error:', err);
         res.status(500).json({ error: 'Failed to fetch tickets' });
     }
 });
-
-// GET /api/tickets/:id — single ticket with notes
 app.get('/api/tickets/:id', (req, res) => {
     try {
         const ticket = stmts.getTicketById.get(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-        ticket.notes = stmts.getNotes.all(ticket.id);
-        res.json(ticket);
-    } catch (err) {
+        if (!ticket) {
+            res.status(404).json({ error: 'Ticket not found' });
+            return;
+        }
+        const responseData = {
+            ...ticket,
+            notes: stmts.getNotes.all(ticket.id)
+        };
+        res.json(responseData);
+    }
+    catch (err) {
         console.error('GET /api/tickets/:id error:', err);
         res.status(500).json({ error: 'Failed to fetch ticket' });
     }
 });
-
-// POST /api/tickets — create a new ticket
 app.post('/api/tickets', (req, res) => {
     try {
-        const {
-            title, description = '', category = 'Other',
-            department, priority = 'Medium', severity = 'Moderate',
-            requester, assignee = 'Unassigned'
-        } = req.body;
-
+        const { title, description = '', category = 'Other', department, priority = 'Medium', severity = 'Moderate', requester, assignee = 'Unassigned' } = req.body;
         if (!title || !department || !requester) {
-            return res.status(400).json({ error: 'Title, department, and requester are required' });
+            res.status(400).json({ error: 'Title, department, and requester are required' });
+            return;
         }
-
+        const newId = generateId();
+        const now = nowISO();
         const ticket = {
-            id: generateId(),
+            id: newId,
             title,
             description,
             category,
@@ -163,101 +153,97 @@ app.post('/api/tickets', (req, res) => {
             requester,
             rating: null,
             ratingComment: '',
-            createdAt: nowISO(),
-            updatedAt: nowISO(),
+            createdAt: now,
+            updatedAt: now,
         };
-
         stmts.insertTicket.run(ticket);
-        ticket.notes = [];
-        res.status(201).json(ticket);
-    } catch (err) {
+        res.status(201).json({ ...ticket, notes: [] });
+    }
+    catch (err) {
         console.error('POST /api/tickets error:', err);
         res.status(500).json({ error: 'Failed to create ticket' });
     }
 });
-
-// PUT /api/tickets/:id — update a ticket
 app.put('/api/tickets/:id', (req, res) => {
     try {
         const existing = stmts.getTicketById.get(req.params.id);
-        if (!existing) return res.status(404).json({ error: 'Ticket not found' });
-
+        if (!existing) {
+            res.status(404).json({ error: 'Ticket not found' });
+            return;
+        }
         const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment'];
         const setClauses = [];
         const values = {};
-
         for (const key of allowed) {
             if (req.body[key] !== undefined) {
                 setClauses.push(`${key} = @${key}`);
                 values[key] = req.body[key];
             }
         }
-
         if (setClauses.length === 0) {
-            return res.status(400).json({ error: 'No valid fields to update' });
+            res.status(400).json({ error: 'No valid fields to update' });
+            return;
         }
-
         setClauses.push('updatedAt = @updatedAt');
         values.updatedAt = nowISO();
         values.id = req.params.id;
-
         const sql = `UPDATE tickets SET ${setClauses.join(', ')} WHERE id = @id`;
         db.prepare(sql).run(values);
-
         const updated = stmts.getTicketById.get(req.params.id);
-        updated.notes = stmts.getNotes.all(updated.id);
-        res.json(updated);
-    } catch (err) {
+        const responseData = {
+            ...updated,
+            notes: stmts.getNotes.all(updated.id)
+        };
+        res.json(responseData);
+    }
+    catch (err) {
         console.error('PUT /api/tickets/:id error:', err);
         res.status(500).json({ error: 'Failed to update ticket' });
     }
 });
-
-// DELETE /api/tickets/:id — delete a ticket
 app.delete('/api/tickets/:id', (req, res) => {
     try {
         const existing = stmts.getTicketById.get(req.params.id);
-        if (!existing) return res.status(404).json({ error: 'Ticket not found' });
-
+        if (!existing) {
+            res.status(404).json({ error: 'Ticket not found' });
+            return;
+        }
         stmts.deleteTicket.run(req.params.id);
         res.json({ success: true, id: req.params.id });
-    } catch (err) {
+    }
+    catch (err) {
         console.error('DELETE /api/tickets/:id error:', err);
         res.status(500).json({ error: 'Failed to delete ticket' });
     }
 });
-
-// POST /api/tickets/:id/notes — add a note
 app.post('/api/tickets/:id/notes', (req, res) => {
     try {
         const existing = stmts.getTicketById.get(req.params.id);
-        if (!existing) return res.status(404).json({ error: 'Ticket not found' });
-
+        if (!existing) {
+            res.status(404).json({ error: 'Ticket not found' });
+            return;
+        }
         const { text, author } = req.body;
         if (!text || !author) {
-            return res.status(400).json({ error: 'Text and author are required' });
+            res.status(400).json({ error: 'Text and author are required' });
+            return;
         }
-
         const note = {
             ticketId: req.params.id,
             text,
             author,
             time: new Date().toLocaleString(),
         };
-
         const result = stmts.insertNote.run(note);
-
         // Update ticket's updatedAt
         db.prepare('UPDATE tickets SET updatedAt = ? WHERE id = ?').run(nowISO(), req.params.id);
-
         res.status(201).json({ id: result.lastInsertRowid, ...note });
-    } catch (err) {
+    }
+    catch (err) {
         console.error('POST /api/tickets/:id/notes error:', err);
         res.status(500).json({ error: 'Failed to add note' });
     }
 });
-
-// GET /api/stats — dashboard statistics
 app.get('/api/stats', (req, res) => {
     try {
         const all = stmts.getAllTickets.all();
@@ -267,26 +253,23 @@ app.get('/api/stats', (req, res) => {
         const resolved = all.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
         const severe = all.filter(t => t.severity === 'Severe' && t.status !== 'Resolved' && t.status !== 'Closed').length;
         const critical = all.filter(t => t.priority === 'Critical' && t.status !== 'Resolved' && t.status !== 'Closed').length;
-
         const rated = all.filter(t => t.rating !== null);
         const avgRating = rated.length ? (rated.reduce((s, t) => s + t.rating, 0) / rated.length).toFixed(1) : null;
-
         res.json({ total, open, inProgress, resolved, severe, critical, avgRating, rated: rated.length });
-    } catch (err) {
+    }
+    catch (err) {
         console.error('GET /api/stats error:', err);
         res.status(500).json({ error: 'Failed to fetch stats' });
     }
 });
-
 // ─── Catch-all: serve index.html for SPA ──────────────────────────────────────
 app.get('{*path}', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path_1.default.join(__dirname, '../public', 'index.html'));
 });
-
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-    console.log(`\n  🎫  IT Support Ticketing System`);
-    console.log(`  ─────────────────────────────────`);
+    console.log(`\n  🎫  IT Support Ticketing System (TypeScript)`);
+    console.log(`  ──────────────────────────────────────────`);
     console.log(`  Server running at http://localhost:${PORT}`);
     console.log(`  Database: tickets.db\n`);
 });
