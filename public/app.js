@@ -14,7 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     'use strict';
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     // ==================== CONSTANTS ====================
     const DEPARTMENTS = [
         'Executive', 'Marketing', 'I-Wallet', 'Admin', 'I-Tech',
@@ -1153,33 +1153,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }));
     }
     // ==================== NEW TICKET MODAL ====================
-    const createModal = $('#create-modal');
+    const createModal = $('#ticket-modal');
     function openTicketModal() {
         var _a;
         if (!createModal)
             return;
         createModal.classList.add('show');
-        const dSel = $('#create-dept');
+        const dSel = $('#ticket-department');
         if (dSel)
             html(dSel, `<option value="" disabled selected>Select Department</option>${DEPARTMENTS.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}<option value="other">Other...</option>`);
-        (_a = $('#create-name')) === null || _a === void 0 ? void 0 : _a.focus();
+        (_a = $('#ticket-title')) === null || _a === void 0 ? void 0 : _a.focus();
     }
     function closeTicketModal() {
         var _a;
         if (!createModal)
             return;
         createModal.classList.remove('show');
-        (_a = $('#create-form')) === null || _a === void 0 ? void 0 : _a.reset();
-        const cg = $('#create-custom-dept-group');
+        (_a = $('#ticket-form')) === null || _a === void 0 ? void 0 : _a.reset();
+        const cg = $('#custom-dept-group');
         if (cg)
             cg.style.display = 'none';
     }
-    (_c = $('#btn-new-ticket')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openTicketModal);
-    (_d = $('#admin-new-ticket')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', openTicketModal);
-    $$('#create-modal .modal-close, #create-cancel').forEach(b => b.addEventListener('click', closeTicketModal));
-    const createDept = $('#create-dept');
-    const createCustomGroup = $('#create-custom-dept-group');
-    const createCustomDept = $('#create-custom-dept');
+    (_c = $('#client-new-ticket-btn')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openTicketModal);
+    (_d = $('#admin-new-ticket-btn')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', openTicketModal);
+    $$('#close-modal-btn, #cancel-modal-btn').forEach(b => b.addEventListener('click', closeTicketModal));
+    const createDept = $('#ticket-department');
+    const createCustomGroup = $('#custom-dept-group');
+    const createCustomDept = $('#ticket-custom-department');
     if (createDept && createCustomGroup && createCustomDept) {
         createDept.addEventListener('change', function () {
             if (this.value === 'other') {
@@ -1193,19 +1193,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
         });
     }
-    const createForm = $('#create-form');
+    const createForm = $('#ticket-form');
     if (createForm) {
         createForm.addEventListener('submit', (e) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c, _d, _e, _f;
             e.preventDefault();
-            const title = (_a = $('#create-title')) === null || _a === void 0 ? void 0 : _a.value.trim();
-            const desc = (_b = $('#create-desc')) === null || _b === void 0 ? void 0 : _b.value.trim();
-            let dept = (_c = $('#create-dept')) === null || _c === void 0 ? void 0 : _c.value;
-            const sev = (_d = $('#create-sev')) === null || _d === void 0 ? void 0 : _d.value;
-            const cat = (_e = $('#create-cat')) === null || _e === void 0 ? void 0 : _e.value;
+            const title = (_a = $('#ticket-title')) === null || _a === void 0 ? void 0 : _a.value.trim();
+            const desc = (_b = $('#ticket-description')) === null || _b === void 0 ? void 0 : _b.value.trim();
+            let dept = (_c = $('#ticket-department')) === null || _c === void 0 ? void 0 : _c.value;
+            const sev = (_d = $('#ticket-severity')) === null || _d === void 0 ? void 0 : _d.value;
+            const cat = (_e = $('#ticket-category')) === null || _e === void 0 ? void 0 : _e.value;
             const req = (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'Unknown User';
             if (dept === 'other') {
-                dept = (_f = $('#create-custom-dept')) === null || _f === void 0 ? void 0 : _f.value.trim();
+                dept = (_f = $('#ticket-custom-department')) === null || _f === void 0 ? void 0 : _f.value.trim();
                 if (!dept) {
                     showToast('Please specify the custom department', 'error');
                     return;
@@ -1216,7 +1216,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 return;
             }
             try {
-                const btn = $('#create-submit');
+                const btn = $('#submit-ticket-btn');
                 if (btn) {
                     btn.disabled = true;
                     btn.textContent = 'Submitting...';
@@ -1239,7 +1239,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 showToast('Failed to create ticket', 'error');
             }
             finally {
-                const btn = $('#create-submit');
+                const btn = $('#submit-ticket-btn');
                 if (btn) {
                     btn.disabled = false;
                     btn.textContent = 'Submit Request';
@@ -1497,8 +1497,63 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             });
         });
     }
+    // ==================== THEME TOGGLE ====================
+    const THEME_KEY = 'itsupport_theme';
+    function getStoredTheme() {
+        return localStorage.getItem(THEME_KEY) || 'dark';
+    }
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+        // Update all toggle buttons
+        $$('.theme-toggle').forEach(btn => {
+            const icon = btn.querySelector('.theme-icon');
+            const label = btn.querySelector('span:last-child');
+            if (icon)
+                icon.textContent = theme === 'light' ? '☀️' : '🌙';
+            if (label)
+                label.textContent = theme === 'light' ? 'Light Mode' : 'Dark Mode';
+        });
+    }
+    function toggleTheme() {
+        const current = getStoredTheme();
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+    // Wire up theme toggles
+    (_h = $('#client-theme-toggle')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', toggleTheme);
+    (_j = $('#admin-theme-toggle')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', toggleTheme);
+    (_k = $('#login-theme-toggle')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', toggleTheme);
+    // ==================== MOBILE SIDEBAR TOGGLE ====================
+    function setupSidebarToggle(toggleId, sidebarId, overlayId) {
+        const toggle = $(`#${toggleId}`);
+        const sidebar = $(`#${sidebarId}`);
+        const overlay = $(`#${overlayId}`);
+        if (!toggle || !sidebar)
+            return;
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay === null || overlay === void 0 ? void 0 : overlay.classList.toggle('show');
+        });
+        overlay === null || overlay === void 0 ? void 0 : overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        });
+        // Close sidebar when a nav button is clicked (mobile)
+        sidebar.querySelectorAll('.sb-nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                    overlay === null || overlay === void 0 ? void 0 : overlay.classList.remove('show');
+                }
+            });
+        });
+    }
+    setupSidebarToggle('client-sidebar-toggle', 'client-sidebar', 'client-sidebar-overlay');
+    setupSidebarToggle('admin-sidebar-toggle', 'admin-sidebar', 'admin-sidebar-overlay');
     // ==================== APP INIT ====================
     function init() {
+        // Apply saved theme
+        applyTheme(getStoredTheme());
         const session = getSession();
         if (session) {
             currentUser = session;

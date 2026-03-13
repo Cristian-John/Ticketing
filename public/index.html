@@ -86,6 +86,10 @@
                         <strong>Clients:</strong> Just enter your name. <strong>Admins:</strong> Name + password required.
                     </p>
                 </form>
+                <button class="theme-toggle" id="login-theme-toggle" style="margin:16px auto 0;width:fit-content">
+                    <span class="theme-icon">🌙</span>
+                    <span>Dark Mode</span>
+                </button>
             </div>
         </div>
     </div>
@@ -133,6 +137,10 @@
                 </div>
 
                 <div class="sb-bottom">
+                    <button class="theme-toggle" id="client-theme-toggle">
+                        <span class="theme-icon">🌙</span>
+                        <span>Dark Mode</span>
+                    </button>
                     <button class="btn btn-primary sb-new-btn" id="client-new-ticket-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Submit Ticket
@@ -144,10 +152,14 @@
                 </div>
             </aside>
 
+            <div class="sidebar-overlay" id="client-sidebar-overlay"></div>
             <!-- Client Main Area -->
             <div class="main-area">
                 <header class="topbar">
-                    <h1 class="page-title" id="client-page-title">My Tickets</h1>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <button class="sidebar-toggle" id="client-sidebar-toggle">☰</button>
+                        <h1 class="page-title" id="client-page-title">My Tickets</h1>
+                    </div>
                 </header>
                 <div class="content-area" id="client-content">
                     <!-- Dynamically rendered -->
@@ -210,6 +222,10 @@
                 </div>
 
                 <div class="sb-bottom">
+                    <button class="theme-toggle" id="admin-theme-toggle">
+                        <span class="theme-icon">🌙</span>
+                        <span>Dark Mode</span>
+                    </button>
                     <button class="btn btn-primary sb-new-btn" id="admin-new-ticket-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         New Ticket
@@ -221,10 +237,14 @@
                 </div>
             </aside>
 
+            <div class="sidebar-overlay" id="admin-sidebar-overlay"></div>
             <!-- Admin Main Area -->
             <div class="main-area">
                 <header class="topbar" id="admin-topbar">
-                    <h1 class="page-title" id="admin-page-title">Dashboard</h1>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <button class="sidebar-toggle" id="admin-sidebar-toggle">☰</button>
+                        <h1 class="page-title" id="admin-page-title">Dashboard</h1>
+                    </div>
                     <div class="filter-row" id="admin-filters" style="display:none">
                         <input type="text" id="admin-search" class="search-box" placeholder="Search…">
                         <select id="admin-filter-status" class="filter-sel">

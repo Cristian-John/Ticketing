@@ -11,12 +11,22 @@ const express_1 = __importDefault(require("express"));
 const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
+const multer_1 = __importDefault(require("multer"));
+const storage = multer_1.default.diskStorage({
+    destination: path_1.default.join(__dirname, '../uploads'),
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+const upload = (0, multer_1.default)({ storage });
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // ─── Middleware ────────────────────────────────────────────────────────────────
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.static(path_1.default.join(__dirname, '../public')));
+app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 // ─── Database Setup ───────────────────────────────────────────────────────────
 const db = new better_sqlite3_1.default(path_1.default.join(__dirname, '../tickets.db'));
 db.pragma('journal_mode = WAL');
@@ -48,7 +58,34 @@ db.exec(`
         time     TEXT NOT NULL,
         FOREIGN KEY (ticketId) REFERENCES tickets(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS articles (
+        id       TEXT PRIMARY KEY,
+        title    TEXT NOT NULL,
+        content  TEXT NOT NULL,
+        category TEXT DEFAULT 'General',
+        author   TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS attachments (
+        id           TEXT PRIMARY KEY,
+        ticketId     TEXT NOT NULL,
+        filename     TEXT NOT NULL,
+        originalname TEXT NOT NULL,
+        size         INTEGER NOT NULL,
+        uploadedAt   TEXT NOT NULL,
+        FOREIGN KEY (ticketId) REFERENCES tickets(id) ON DELETE CASCADE
+    );
 `);
+try {
+    // Add dueAt column for SLA Tracking if it doesn't already exist
+    db.exec('ALTER TABLE tickets ADD COLUMN dueAt TEXT DEFAULT ""');
+}
+catch (e) {
+    // Column likely already exists
+}
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function generateId() {
     const now = new Date();
@@ -58,21 +95,31 @@ function generateId() {
     const d = String(now.getDate()).padStart(2, '0');
     return `TKT-${y}${m}${d}-${num}`;
 }
-function nowISO() {
-    return new Date().toISOString();
-}
+const nowISO = () => new Date().toISOString();
 // Prepared statements for performance
 const stmts = {
-    getAllTickets: db.prepare(`SELECT * FROM tickets ORDER BY updatedAt DESC`),
+    getAllTickets: db.prepare(`SELECT * FROM tickets ORDER BY createdAt DESC`),
     getTicketById: db.prepare(`SELECT * FROM tickets WHERE id = ?`),
     insertTicket: db.prepare(`
-        INSERT INTO tickets (id, title, description, category, department, priority, severity, status, assignee, requester, rating, ratingComment, createdAt, updatedAt)
-        VALUES (@id, @title, @description, @category, @department, @priority, @severity, @status, @assignee, @requester, @rating, @ratingComment, @createdAt, @updatedAt)
+        INSERT INTO tickets (id, title, description, category, department, priority, severity, status, assignee, requester, rating, ratingComment, createdAt, updatedAt, dueAt)
+        VALUES (@id, @title, @description, @category, @department, @priority, @severity, @status, @assignee, @requester, @rating, @ratingComment, @createdAt, @updatedAt, @dueAt)
     `),
     deleteTicket: db.prepare(`DELETE FROM tickets WHERE id = ?`),
     getNotes: db.prepare(`SELECT * FROM notes WHERE ticketId = ? ORDER BY id ASC`),
     insertNote: db.prepare(`
         INSERT INTO notes (ticketId, text, author, time) VALUES (@ticketId, @text, @author, @time)
+    `),
+    getAllArticles: db.prepare(`SELECT * FROM articles ORDER BY updatedAt DESC`),
+    getArticleById: db.prepare(`SELECT * FROM articles WHERE id = ?`),
+    insertArticle: db.prepare(`
+        INSERT INTO articles (id, title, content, category, author, createdAt, updatedAt)
+        VALUES (@id, @title, @content, @category, @author, @createdAt, @updatedAt)
+    `),
+    deleteArticle: db.prepare(`DELETE FROM articles WHERE id = ?`),
+    getAttachments: db.prepare(`SELECT * FROM attachments WHERE ticketId = ?`),
+    insertAttachment: db.prepare(`
+        INSERT INTO attachments (id, ticketId, filename, originalname, size, uploadedAt)
+        VALUES (@id, @ticketId, @filename, @originalname, @size, @uploadedAt)
     `),
 };
 // ─── API Routes ───────────────────────────────────────────────────────────────
@@ -101,10 +148,11 @@ app.get('/api/tickets', (req, res) => {
                 t.department.toLowerCase().includes(q) ||
                 (t.description || '').toLowerCase().includes(q));
         }
-        // Attach notes to each ticket
+        // Attach notes and attachments to each ticket
         const ticketsWithNotes = tickets.map(t => ({
             ...t,
             notes: stmts.getNotes.all(t.id),
+            attachments: stmts.getAttachments.all(t.id),
         }));
         res.json(ticketsWithNotes);
     }
@@ -122,7 +170,8 @@ app.get('/api/tickets/:id', (req, res) => {
         }
         const responseData = {
             ...ticket,
-            notes: stmts.getNotes.all(ticket.id)
+            notes: stmts.getNotes.all(ticket.id),
+            attachments: stmts.getAttachments.all(ticket.id),
         };
         res.json(responseData);
     }
@@ -134,30 +183,32 @@ app.get('/api/tickets/:id', (req, res) => {
 app.post('/api/tickets', (req, res) => {
     try {
         const { title, description = '', category = 'Other', department, priority = 'Medium', severity = 'Moderate', requester, assignee = 'Unassigned' } = req.body;
-        if (!title || !department || !requester) {
-            res.status(400).json({ error: 'Title, department, and requester are required' });
+        if (!title || !description || !requester) {
+            res.status(400).json({ error: 'Missing required fields' });
             return;
         }
-        const newId = generateId();
+        const id = `TKT-${Date.now()}`;
         const now = nowISO();
+        let dueHours = 24;
+        if (severity === 'Severe')
+            dueHours = 2;
+        else if (severity === 'High')
+            dueHours = 4;
+        else if (severity === 'Low')
+            dueHours = 48;
+        const dueAt = new Date(Date.now() + dueHours * 3600000).toISOString();
         const ticket = {
-            id: newId,
-            title,
-            description,
-            category,
-            department,
-            priority,
-            severity,
-            status: 'Open',
-            assignee,
-            requester,
+            id, requester, department, category, title, description,
+            status: 'Open', priority, severity,
             rating: null,
-            ratingComment: '',
+            ratingComment: null,
             createdAt: now,
             updatedAt: now,
+            dueAt,
+            assignee: assignee || 'Unassigned',
         };
         stmts.insertTicket.run(ticket);
-        res.status(201).json({ ...ticket, notes: [] });
+        res.status(201).json({ ...ticket, notes: [], attachments: [] });
     }
     catch (err) {
         console.error('POST /api/tickets error:', err);
@@ -192,7 +243,8 @@ app.put('/api/tickets/:id', (req, res) => {
         const updated = stmts.getTicketById.get(req.params.id);
         const responseData = {
             ...updated,
-            notes: stmts.getNotes.all(updated.id)
+            notes: stmts.getNotes.all(updated.id),
+            attachments: stmts.getAttachments.all(updated.id)
         };
         res.json(responseData);
     }
@@ -242,6 +294,129 @@ app.post('/api/tickets/:id/notes', (req, res) => {
     catch (err) {
         console.error('POST /api/tickets/:id/notes error:', err);
         res.status(500).json({ error: 'Failed to add note' });
+    }
+});
+app.post('/api/tickets/:id/attachments', upload.single('file'), (req, res) => {
+    try {
+        const existing = stmts.getTicketById.get(req.params.id);
+        if (!existing) {
+            res.status(404).json({ error: 'Ticket not found' });
+            return;
+        }
+        if (!req.file) {
+            res.status(400).json({ error: 'No file uploaded' });
+            return;
+        }
+        const id = `ATT-${Date.now()}`;
+        const attachment = {
+            id,
+            ticketId: String(req.params.id),
+            filename: req.file.filename,
+            originalname: req.file.originalname,
+            size: req.file.size,
+            uploadedAt: nowISO(),
+        };
+        stmts.insertAttachment.run(attachment);
+        res.status(201).json(attachment);
+    }
+    catch (err) {
+        console.error('POST /api/tickets/:id/attachments error:', err);
+        res.status(500).json({ error: 'Failed to upload attachment' });
+    }
+});
+app.get('/api/articles', (req, res) => {
+    try {
+        let articles = stmts.getAllArticles.all();
+        const { search } = req.query;
+        if (search) {
+            const q = search.toLowerCase();
+            articles = articles.filter(a => a.title.toLowerCase().includes(q) ||
+                a.content.toLowerCase().includes(q) ||
+                a.category.toLowerCase().includes(q));
+        }
+        res.json(articles);
+    }
+    catch (err) {
+        console.error('GET /api/articles error:', err);
+        res.status(500).json({ error: 'Failed to fetch articles' });
+    }
+});
+app.get('/api/articles/:id', (req, res) => {
+    try {
+        const article = stmts.getArticleById.get(req.params.id);
+        if (!article) {
+            res.status(404).json({ error: 'Article not found' });
+            return;
+        }
+        res.json(article);
+    }
+    catch (err) {
+        console.error('GET /api/articles/:id error:', err);
+        res.status(500).json({ error: 'Failed to fetch article' });
+    }
+});
+app.post('/api/articles', (req, res) => {
+    try {
+        const { title, content, category = 'General', author = 'Admin' } = req.body;
+        if (!title || !content) {
+            res.status(400).json({ error: 'Title and content required' });
+            return;
+        }
+        const id = `KB-${Date.now()}`;
+        const now = nowISO();
+        const article = { id, title, content, category, author, createdAt: now, updatedAt: now };
+        stmts.insertArticle.run(article);
+        res.status(201).json(article);
+    }
+    catch (err) {
+        console.error('POST /api/articles error:', err);
+        res.status(500).json({ error: 'Failed to create article' });
+    }
+});
+app.put('/api/articles/:id', (req, res) => {
+    try {
+        const existing = stmts.getArticleById.get(req.params.id);
+        if (!existing) {
+            res.status(404).json({ error: 'Article not found' });
+            return;
+        }
+        const allowed = ['title', 'content', 'category'];
+        const setClauses = [];
+        const values = {};
+        for (const key of allowed) {
+            if (req.body[key] !== undefined) {
+                setClauses.push(`${key} = @${key}`);
+                values[key] = req.body[key];
+            }
+        }
+        if (setClauses.length === 0) {
+            res.status(400).json({ error: 'No fields to update' });
+            return;
+        }
+        setClauses.push('updatedAt = @updatedAt');
+        values.updatedAt = nowISO();
+        values.id = req.params.id;
+        db.prepare(`UPDATE articles SET ${setClauses.join(', ')} WHERE id = @id`).run(values);
+        res.json(stmts.getArticleById.get(req.params.id));
+    }
+    catch (err) {
+        console.error('PUT /api/articles/:id error:', err);
+        res.status(500).json({ error: 'Failed to update article' });
+    }
+});
+app.delete('/api/articles/:id', (req, res) => {
+    try {
+        const existing = stmts.getArticleById.get(req.params.id);
+        if (!existing) {
+            res.status(404).json({ error: 'Article not found' });
+            return;
+        }
+        stmts.deleteArticle.run(req.params.id);
+        res.json({ success: true, id: req.params.id });
+    }
+    catch (err) {
+        console.error('DELETE /api/articles/:id error:', err);
+        res.status(500).json({ error: 'Failed to delete article' });
     }
 });
 app.get('/api/stats', (req, res) => {

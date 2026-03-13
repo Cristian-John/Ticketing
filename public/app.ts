@@ -1220,31 +1220,31 @@
 
     // ==================== NEW TICKET MODAL ====================
 
-    const createModal = $('#create-modal');
+    const createModal = $('#ticket-modal');
 
     function openTicketModal() {
         if (!createModal) return;
         createModal.classList.add('show');
-        const dSel = $('#create-dept');
+        const dSel = $('#ticket-department');
         if (dSel) html(dSel, `<option value="" disabled selected>Select Department</option>${DEPARTMENTS.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}<option value="other">Other...</option>`);
-        ($('#create-name') as HTMLInputElement)?.focus();
+        ($('#ticket-title') as HTMLInputElement)?.focus();
     }
 
     function closeTicketModal() {
         if (!createModal) return;
         createModal.classList.remove('show');
-        ($('#create-form') as HTMLFormElement)?.reset();
-        const cg = $('#create-custom-dept-group');
+        ($('#ticket-form') as HTMLFormElement)?.reset();
+        const cg = $('#custom-dept-group');
         if (cg) cg.style.display = 'none';
     }
 
-    $('#btn-new-ticket')?.addEventListener('click', openTicketModal);
-    $('#admin-new-ticket')?.addEventListener('click', openTicketModal);
-    $$('#create-modal .modal-close, #create-cancel').forEach(b => b.addEventListener('click', closeTicketModal));
+    $('#client-new-ticket-btn')?.addEventListener('click', openTicketModal);
+    $('#admin-new-ticket-btn')?.addEventListener('click', openTicketModal);
+    $$('#close-modal-btn, #cancel-modal-btn').forEach(b => b.addEventListener('click', closeTicketModal));
 
-    const createDept = $('#create-dept') as HTMLSelectElement;
-    const createCustomGroup = $('#create-custom-dept-group');
-    const createCustomDept = $('#create-custom-dept') as HTMLInputElement;
+    const createDept = $('#ticket-department') as HTMLSelectElement;
+    const createCustomGroup = $('#custom-dept-group');
+    const createCustomDept = $('#ticket-custom-department') as HTMLInputElement;
 
     if (createDept && createCustomGroup && createCustomDept) {
         createDept.addEventListener('change', function () {
@@ -1259,20 +1259,20 @@
         });
     }
 
-    const createForm = $('#create-form');
+    const createForm = $('#ticket-form');
     if (createForm) {
         createForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const title = ($('#create-title') as HTMLInputElement)?.value.trim();
-            const desc = ($('#create-desc') as HTMLTextAreaElement)?.value.trim();
-            let dept = ($('#create-dept') as HTMLSelectElement)?.value;
-            const sev = ($('#create-sev') as HTMLSelectElement)?.value;
-            const cat = ($('#create-cat') as HTMLSelectElement)?.value;
+            const title = ($('#ticket-title') as HTMLInputElement)?.value.trim();
+            const desc = ($('#ticket-description') as HTMLTextAreaElement)?.value.trim();
+            let dept = ($('#ticket-department') as HTMLSelectElement)?.value;
+            const sev = ($('#ticket-severity') as HTMLSelectElement)?.value;
+            const cat = ($('#ticket-category') as HTMLSelectElement)?.value;
             const req = currentUser?.username || 'Unknown User';
 
             if (dept === 'other') {
-                dept = ($('#create-custom-dept') as HTMLInputElement)?.value.trim();
+                dept = ($('#ticket-custom-department') as HTMLInputElement)?.value.trim();
                 if (!dept) {
                     showToast('Please specify the custom department', 'error');
                     return;
@@ -1285,7 +1285,7 @@
             }
 
             try {
-                const btn = $('#create-submit') as HTMLButtonElement;
+                const btn = $('#submit-ticket-btn') as HTMLButtonElement;
                 if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
                 
                 const ticket = await ticketsAPI.create({
@@ -1306,7 +1306,7 @@
             } catch (err) {
                  showToast('Failed to create ticket', 'error');
             } finally {
-                 const btn = $('#create-submit') as HTMLButtonElement;
+                 const btn = $('#submit-ticket-btn') as HTMLButtonElement;
                  if (btn) { btn.disabled = false; btn.textContent = 'Submit Request'; }
             }
         });
@@ -1563,9 +1563,76 @@
         });
     }
 
+    // ==================== THEME TOGGLE ====================
+
+    const THEME_KEY = 'itsupport_theme';
+
+    function getStoredTheme(): string {
+        return localStorage.getItem(THEME_KEY) || 'dark';
+    }
+
+    function applyTheme(theme: string) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+
+        // Update all toggle buttons
+        $$('.theme-toggle').forEach(btn => {
+            const icon = btn.querySelector('.theme-icon');
+            const label = btn.querySelector('span:last-child');
+            if (icon) icon.textContent = theme === 'light' ? '☀️' : '🌙';
+            if (label) label.textContent = theme === 'light' ? 'Light Mode' : 'Dark Mode';
+        });
+    }
+
+    function toggleTheme() {
+        const current = getStoredTheme();
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // Wire up theme toggles
+    $('#client-theme-toggle')?.addEventListener('click', toggleTheme);
+    $('#admin-theme-toggle')?.addEventListener('click', toggleTheme);
+    $('#login-theme-toggle')?.addEventListener('click', toggleTheme);
+
+    // ==================== MOBILE SIDEBAR TOGGLE ====================
+
+    function setupSidebarToggle(toggleId: string, sidebarId: string, overlayId: string) {
+        const toggle = $(`#${toggleId}`);
+        const sidebar = $(`#${sidebarId}`);
+        const overlay = $(`#${overlayId}`);
+
+        if (!toggle || !sidebar) return;
+
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay?.classList.toggle('show');
+        });
+
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        });
+
+        // Close sidebar when a nav button is clicked (mobile)
+        sidebar.querySelectorAll('.sb-nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                    overlay?.classList.remove('show');
+                }
+            });
+        });
+    }
+
+    setupSidebarToggle('client-sidebar-toggle', 'client-sidebar', 'client-sidebar-overlay');
+    setupSidebarToggle('admin-sidebar-toggle', 'admin-sidebar', 'admin-sidebar-overlay');
+
     // ==================== APP INIT ====================
 
     function init() {
+        // Apply saved theme
+        applyTheme(getStoredTheme());
+
         const session = getSession();
         if (session) {
             currentUser = session;
