@@ -8,6 +8,10 @@ import Database from 'better-sqlite3';
 import cors from 'cors';
 import path from 'path';
 import multer from 'multer';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '../uploads'),
@@ -76,7 +80,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── Database Setup ───────────────────────────────────────────────────────────
-const db = new Database(path.join(__dirname, '../tickets.db'));
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../tickets.db');
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
@@ -532,12 +537,29 @@ app.get('/api/stats', (req: Request, res: Response) => {
     }
 });
 
+// ─── Auth API ─────────────────────────────────────────────────────────────────
+app.post('/api/login', (req: Request, res: Response) => {
+    const { role, password } = req.body;
+    
+    if (role === 'admin') {
+        const truePassword = process.env.ADMIN_PASSWORD || '@inspireSupport';
+        if (password === truePassword) {
+            res.json({ success: true, message: 'Authenticated' });
+        } else {
+            res.status(401).json({ error: 'Incorrect admin password' });
+        }
+    } else {
+        // Client login doesn't require password currently
+        res.json({ success: true, message: 'Authenticated' });
+    }
+});
+
 // ─── Catch-all: serve index.html for SPA ──────────────────────────────────────
 app.get('{*path}', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// ─── Tickets API ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`\n  🎫  IT Support Ticketing System (TypeScript)`);
     console.log(`  ──────────────────────────────────────────`);

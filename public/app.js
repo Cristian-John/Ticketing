@@ -308,21 +308,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         });
     }
     if (loginForm) {
-        loginForm.addEventListener('submit', function (e) {
+        loginForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const usernameInput = $('#login-username');
             const roleInput = $('#login-role');
             const passInput = $('#login-password');
             const role = roleInput === null || roleInput === void 0 ? void 0 : roleInput.value;
             let username;
+            
+            const password = passInput === null || passInput === void 0 ? void 0 : passInput.value.trim();
+
             if (role === 'admin') {
-                const password = passInput === null || passInput === void 0 ? void 0 : passInput.value.trim();
                 if (!password) {
                     showToast('Password is required for admin login', 'error');
-                    return;
-                }
-                if (password !== '@inspireSupport') {
-                    showToast('Incorrect admin password', 'error');
                     return;
                 }
                 username = 'Admin';
@@ -333,17 +331,35 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     return;
                 }
             }
+            
+            // Verify with server
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role, password })
+                });
+                const data = await res.json();
+                
+                if (!res.ok || !data.success) {
+                    showToast(data.error || 'Login failed', 'error');
+                    return;
+                }
+            } catch (err) {
+                showToast('Network error during login', 'error');
+                return;
+            }
+
             currentUser = { username, role };
             setSession(currentUser);
             if (role === 'admin')
                 enterAdmin();
             else
                 enterClient();
+            
             loginForm.reset();
-            if (passwordGroup)
-                passwordGroup.style.display = 'none';
-            const usernameGroup = $('#username-group');
-            if (usernameGroup) usernameGroup.style.display = '';
+            if (roleInput) roleInput.dispatchEvent(new Event('change'));
+            
             showToast(`Welcome, ${username}!`, 'success');
         });
     }
