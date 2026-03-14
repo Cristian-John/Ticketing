@@ -14,7 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     'use strict';
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     // ==================== CONSTANTS ====================
     const DEPARTMENTS = [
         'Executive', 'Marketing', 'I-Wallet', 'Admin', 'I-Tech',
@@ -287,9 +287,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     if (loginRole && passwordGroup) {
         loginRole.addEventListener('change', function () {
             var _a, _b;
+            const usernameGroup = $('#username-group');
             if (this.value === 'admin') {
                 passwordGroup.style.display = '';
                 (_a = $('#login-password')) === null || _a === void 0 ? void 0 : _a.setAttribute('required', 'true');
+                if (usernameGroup) usernameGroup.style.display = 'none';
+                const u = $('#login-username');
+                if (u) { u.removeAttribute('required'); u.value = ''; }
             }
             else {
                 passwordGroup.style.display = 'none';
@@ -297,6 +301,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 const p = $('#login-password');
                 if (p)
                     p.value = '';
+                if (usernameGroup) usernameGroup.style.display = '';
+                const u = $('#login-username');
+                if (u) u.setAttribute('required', 'true');
             }
         });
     }
@@ -306,12 +313,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const usernameInput = $('#login-username');
             const roleInput = $('#login-role');
             const passInput = $('#login-password');
-            const username = usernameInput === null || usernameInput === void 0 ? void 0 : usernameInput.value.trim();
             const role = roleInput === null || roleInput === void 0 ? void 0 : roleInput.value;
-            if (!username) {
-                showToast('Please enter your name', 'error');
-                return;
-            }
+            let username;
             if (role === 'admin') {
                 const password = passInput === null || passInput === void 0 ? void 0 : passInput.value.trim();
                 if (!password) {
@@ -320,6 +323,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 }
                 if (password !== '@inspireSupport') {
                     showToast('Incorrect admin password', 'error');
+                    return;
+                }
+                username = 'Admin';
+            } else {
+                username = usernameInput === null || usernameInput === void 0 ? void 0 : usernameInput.value.trim();
+                if (!username) {
+                    showToast('Please enter your name', 'error');
                     return;
                 }
             }
@@ -332,6 +342,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             loginForm.reset();
             if (passwordGroup)
                 passwordGroup.style.display = 'none';
+            const usernameGroup = $('#username-group');
+            if (usernameGroup) usernameGroup.style.display = '';
             showToast(`Welcome, ${username}!`, 'success');
         });
     }
@@ -1519,10 +1531,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const current = getStoredTheme();
         applyTheme(current === 'dark' ? 'light' : 'dark');
     }
-    // Wire up theme toggles
-    (_h = $('#client-theme-toggle')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', toggleTheme);
-    (_j = $('#admin-theme-toggle')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', toggleTheme);
-    (_k = $('#login-theme-toggle')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', toggleTheme);
+    // Wire up theme toggle
+    (_h = $('#global-theme-toggle')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', toggleTheme);
     // ==================== MOBILE SIDEBAR TOGGLE ====================
     function setupSidebarToggle(toggleId, sidebarId, overlayId) {
         const toggle = $(`#${toggleId}`);

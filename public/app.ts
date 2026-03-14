@@ -1589,10 +1589,8 @@
         applyTheme(current === 'dark' ? 'light' : 'dark');
     }
 
-    // Wire up theme toggles
-    $('#client-theme-toggle')?.addEventListener('click', toggleTheme);
-    $('#admin-theme-toggle')?.addEventListener('click', toggleTheme);
-    $('#login-theme-toggle')?.addEventListener('click', toggleTheme);
+    // Wire up theme toggle
+    $('#global-theme-toggle')?.addEventListener('click', toggleTheme);
 
     // ==================== MOBILE SIDEBAR TOGGLE ====================
 

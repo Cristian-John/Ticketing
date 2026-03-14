@@ -8,20 +8,21 @@
     <title>IT Support Ticketing System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="index.css">
 </head>
 
 <body>
 
+    <!-- Global Theme Toggle -->
+    <button class="theme-toggle global-theme-toggle" id="global-theme-toggle">
+        <span class="theme-icon">🌙</span>
+        <span>Dark Mode</span>
+    </button>
+
     <!-- ==================== LOGIN SCREEN ==================== -->
     <div id="login-screen" class="screen active">
-        <div class="login-bg-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-        </div>
         <div class="login-container">
             <div class="login-card glass-card">
                 <div class="login-logo">
@@ -52,7 +53,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="username-group">
                         <label for="login-username">Name</label>
                         <div class="input-wrapper">
                             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -82,14 +83,9 @@
                             <path d="M12 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <p class="login-hint">
-                        <strong>Clients:</strong> Just enter your name. <strong>Admins:</strong> Name + password required.
-                    </p>
+
                 </form>
-                <button class="theme-toggle" id="login-theme-toggle" style="margin:16px auto 0;width:fit-content">
-                    <span class="theme-icon">🌙</span>
-                    <span>Dark Mode</span>
-                </button>
+
             </div>
         </div>
     </div>
@@ -137,10 +133,7 @@
                 </div>
 
                 <div class="sb-bottom">
-                    <button class="theme-toggle" id="client-theme-toggle">
-                        <span class="theme-icon">🌙</span>
-                        <span>Dark Mode</span>
-                    </button>
+
                     <button class="btn btn-primary sb-new-btn" id="client-new-ticket-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Submit Ticket
@@ -222,10 +215,7 @@
                 </div>
 
                 <div class="sb-bottom">
-                    <button class="theme-toggle" id="admin-theme-toggle">
-                        <span class="theme-icon">🌙</span>
-                        <span>Dark Mode</span>
-                    </button>
+
                     <button class="btn btn-primary sb-new-btn" id="admin-new-ticket-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         New Ticket
@@ -433,6 +423,7 @@
     <!-- Toast notification -->
     <div class="toast-container" id="toast-container"></div>
 
+    <script src="hexagon-bg.js"></script>
     <script src="app.js"></script>
 </body>
 
