@@ -59,6 +59,7 @@ interface Article {
     author: string;
     createdAt: string;
     updatedAt: string;
+    sortOrder: number;
 }
 
 interface Attachment {
@@ -141,6 +142,18 @@ try {
     // Column likely already exists
 }
 
+try {
+    // Add sortOrder column for article ordering
+    db.exec('ALTER TABLE articles ADD COLUMN sortOrder INTEGER DEFAULT 0');
+    // Set initial sort order based on existing rows
+    const existingArticles = db.prepare('SELECT id FROM articles ORDER BY updatedAt DESC').all() as { id: string }[];
+    existingArticles.forEach((a, i) => {
+        db.prepare('UPDATE articles SET sortOrder = ? WHERE id = ?').run(i, a.id);
+    });
+} catch (e) {
+    // Column likely already exists
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function generateId(): string {
     const now = new Date();
@@ -166,11 +179,12 @@ const stmts = {
     insertNote: db.prepare(`
         INSERT INTO notes (ticketId, text, author, time) VALUES (@ticketId, @text, @author, @time)
     `),
-    getAllArticles: db.prepare(`SELECT * FROM articles ORDER BY updatedAt DESC`),
+    getAllArticles: db.prepare(`SELECT * FROM articles ORDER BY sortOrder ASC, updatedAt DESC`),
     getArticleById: db.prepare(`SELECT * FROM articles WHERE id = ?`),
+    getMaxSortOrder: db.prepare(`SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM articles`),
     insertArticle: db.prepare(`
-        INSERT INTO articles (id, title, content, category, author, createdAt, updatedAt)
-        VALUES (@id, @title, @content, @category, @author, @createdAt, @updatedAt)
+        INSERT INTO articles (id, title, content, category, author, createdAt, updatedAt, sortOrder)
+        VALUES (@id, @title, @content, @category, @author, @createdAt, @updatedAt, @sortOrder)
     `),
     deleteArticle: db.prepare(`DELETE FROM articles WHERE id = ?`),
     getAttachments: db.prepare(`SELECT * FROM attachments WHERE ticketId = ?`),
@@ -296,7 +310,7 @@ app.put('/api/tickets/:id', (req: Request, res: Response): void => {
              return;
         }
 
-        const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment'];
+        const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment', 'dueAt'];
         const setClauses: string[] = [];
         const values: Record<string, any> = {};
 
@@ -455,13 +469,34 @@ app.post('/api/articles', (req: Request, res: Response): void => {
         
         const id = `KB-${Date.now()}`;
         const now = nowISO();
-        const article: Article = { id, title, content, category, author, createdAt: now, updatedAt: now };
+        const { maxOrder } = stmts.getMaxSortOrder.get() as { maxOrder: number };
+        const article: Article = { id, title, content, category, author, createdAt: now, updatedAt: now, sortOrder: maxOrder + 1 };
         
         stmts.insertArticle.run(article);
         res.status(201).json(article);
     } catch (err) {
         console.error('POST /api/articles error:', err);
         res.status(500).json({ error: 'Failed to create article' });
+    }
+});
+
+// Reorder articles (must be before :id route)
+app.put('/api/articles/reorder', (req: Request, res: Response): void => {
+    try {
+        const { order } = req.body; // array of article IDs in desired order
+        if (!Array.isArray(order)) {
+            res.status(400).json({ error: 'order must be an array of article IDs' });
+            return;
+        }
+        const updateSort = db.prepare('UPDATE articles SET sortOrder = ? WHERE id = ?');
+        const reorderAll = db.transaction((ids: string[]) => {
+            ids.forEach((id, index) => updateSort.run(index, id));
+        });
+        reorderAll(order);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('PUT /api/articles/reorder error:', err);
+        res.status(500).json({ error: 'Failed to reorder articles' });
     }
 });
 

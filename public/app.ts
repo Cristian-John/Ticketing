@@ -136,6 +136,7 @@
         create: (data: Partial<Article>): Promise<Article> => api<Article>('/articles', { method: 'POST', body: JSON.stringify(data) }),
         update: (id: string, data: Partial<Article>): Promise<Article> => api<Article>(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: string): Promise<{ success: boolean; id: string }> => api<{ success: boolean; id: string }>(`/articles/${id}`, { method: 'DELETE' }),
+        reorder: (order: string[]): Promise<{ success: boolean }> => api<{ success: boolean }>('/articles/reorder', { method: 'PUT', body: JSON.stringify({ order }) }),
     };
 
     // ==================== SESSION ====================
@@ -589,16 +590,26 @@
                             </div>
                         ` : ''}
                     </div>
-                    ${notes.length > 0 ? `
                     <div class="panel">
-                        <div class="panel-header" style="color:var(--status-progress)">💬 IT Support Updates</div>
-                        ${notes.map(n => `
-                            <div class="note-item">
+                        <div class="panel-header" style="color:var(--status-progress)">💬 Conversation</div>
+                        ${notes.length > 0 ? notes.map(n => `
+                            <div class="note-item ${n.author === currentUser?.username ? 'note-mine' : ''}">
                                 <span class="note-author">${esc(n.author)}<span class="note-time">${esc(n.time)}</span></span>
                                 <div class="note-text">${esc(n.text)}</div>
                             </div>
-                        `).join('')}
-                    </div>` : ''}
+                        `).join('') : '<p style="color:#666;font-size:13px;margin:0 0 12px">No messages yet. Send a message to IT Support below.</p>'}
+                        ${!done ? `
+                        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+                            <textarea id="client-reply-text" rows="3" placeholder="Type your reply or question..." style="width:100%;resize:vertical;margin-bottom:8px"></textarea>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label class="btn btn-ghost" style="cursor:pointer;font-size:12px;padding:6px 10px" for="client-reply-file">📎 Attach</label>
+                                <input type="file" id="client-reply-file" style="display:none">
+                                <span id="client-reply-filename" style="font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                                <button class="btn btn-primary" id="client-reply-btn" style="font-size:12px;padding:6px 16px">Send</button>
+                            </div>
+                        </div>
+                        ` : '<p style="color:#555;font-size:11px;margin:12px 0 0;font-style:italic">This ticket is ${ticket.status.toLowerCase()}. Replies are disabled.</p>'}
+                    </div>
                     ${done ? `
                     <div class="panel" style="border:1px solid ${ticket.rating !== null ? 'rgba(240,192,64,0.3)' : 'var(--border)'}">
                         <div class="panel-header" style="color:var(--severity-moderate)">⭐ Rate this Service</div>
@@ -633,6 +644,41 @@
             clientView = 'my-tickets';
             selectedTicketId = null;
             renderClientView();
+        });
+
+        // Client reply handler
+        const replyFileInput = $('#client-reply-file') as HTMLInputElement;
+        const replyFilename = $('#client-reply-filename');
+        if (replyFileInput && replyFilename) {
+            replyFileInput.addEventListener('change', () => {
+                replyFilename.textContent = replyFileInput.files?.[0]?.name || '';
+            });
+        }
+
+        $('#client-reply-btn')?.addEventListener('click', async () => {
+            const txt = ($('#client-reply-text') as HTMLTextAreaElement)?.value.trim();
+            const fileInput = $('#client-reply-file') as HTMLInputElement;
+            const file = fileInput?.files?.[0];
+            if (!txt && !file) return;
+
+            try {
+                const btn = $('#client-reply-btn') as HTMLButtonElement;
+                if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+                if (txt) {
+                    await ticketsAPI.addNote(ticket.id, { text: txt, author: currentUser?.username || 'User' });
+                }
+                if (file) {
+                    await ticketsAPI.uploadAttachment(ticket.id, file);
+                }
+
+                showToast('Reply sent!');
+                await loadAndRenderClient();
+            } catch (err) {
+                showToast('Failed to send reply', 'error');
+                const btn = $('#client-reply-btn') as HTMLButtonElement;
+                if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+            }
         });
 
         const rateBtn = $('#detail-rate-btn');
@@ -1118,6 +1164,27 @@
                         </div>
                     </div>
 
+                    ${!isResolved(ticket) ? `
+                    <div class="panel" style="border:1px solid ${ticket.dueAt && Date.parse(ticket.dueAt) < Date.now() ? 'rgba(239,68,68,0.3)' : ticket.dueAt && (Date.parse(ticket.dueAt) - Date.now()) < 7200000 ? 'rgba(249,115,22,0.3)' : 'var(--border)'}">
+                        <div class="panel-header" style="color:${ticket.dueAt && Date.parse(ticket.dueAt) < Date.now() ? 'var(--severity-severe)' : 'var(--status-progress)'}">⏱ SLA Management</div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-key">Due</span>
+                            <span class="detail-info-val">${formatDateTime(ticket.dueAt)}</span>
+                        </div>
+                        <div class="detail-info-row" style="margin-bottom:12px">
+                            <span class="detail-info-key">Status</span>
+                            <span class="detail-info-val">${ticket.dueAt ? (Date.parse(ticket.dueAt) < Date.now() ? '<span style="color:var(--severity-severe);font-weight:700">⚠ Breached</span>' : (Date.parse(ticket.dueAt) - Date.now()) < 7200000 ? '<span style="color:var(--status-open);font-weight:700">⚡ At Risk</span>' : '<span style="color:var(--status-resolved);font-weight:700">✓ On Track</span>') : '—'}</span>
+                        </div>
+                        <label style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;display:block;margin-bottom:6px">Extend Deadline</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                            <button class="btn btn-ghost sla-extend-btn" data-hours="2" style="font-size:11px;padding:6px 8px;justify-content:center">+2 hours</button>
+                            <button class="btn btn-ghost sla-extend-btn" data-hours="4" style="font-size:11px;padding:6px 8px;justify-content:center">+4 hours</button>
+                            <button class="btn btn-ghost sla-extend-btn" data-hours="8" style="font-size:11px;padding:6px 8px;justify-content:center">+8 hours</button>
+                            <button class="btn btn-ghost sla-extend-btn" data-hours="24" style="font-size:11px;padding:6px 8px;justify-content:center">+24 hours</button>
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div class="panel">
                         <div class="panel-header">Information</div>
                         ${[['Department', ticket.department], ['Requester', ticket.requester], ['Created', formatDateTime(ticket.createdAt)], ['Updated', formatDateTime(ticket.updatedAt)]].map(([k, v]) => `
@@ -1216,6 +1283,29 @@
                 if (btn) btn.disabled = false;
             }
         });
+
+        // SLA Extend buttons
+        $$('.sla-extend-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const hours = parseInt((btn as HTMLElement).dataset.hours || '0');
+                if (!hours) return;
+                try {
+                    (btn as HTMLButtonElement).disabled = true;
+                    const baseTime = ticket.dueAt ? Math.max(Date.parse(ticket.dueAt), Date.now()) : Date.now();
+                    const newDue = new Date(baseTime + hours * 3600000).toISOString();
+                    await ticketsAPI.addNote(ticket.id, {
+                        text: `SLA deadline extended by ${hours} hour${hours > 1 ? 's' : ''} to ${new Date(newDue).toLocaleString()}`,
+                        author: currentUser?.username || 'Admin'
+                    });
+                    await ticketsAPI.update(ticket.id, { dueAt: newDue } as any);
+                    showToast(`SLA extended by ${hours} hour${hours > 1 ? 's' : ''}`);
+                    await loadAndRenderAdmin();
+                } catch (err) {
+                    showToast('Failed to extend SLA', 'error');
+                    (btn as HTMLButtonElement).disabled = false;
+                }
+            });
+        });
     }
 
     // ==================== NEW TICKET MODAL ====================
@@ -1227,6 +1317,11 @@
         createModal.classList.add('show');
         const dSel = $('#ticket-department');
         if (dSel) html(dSel, `<option value="" disabled selected>Select Department</option>${DEPARTMENTS.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}<option value="other">Other...</option>`);
+        // Reset custom department group state
+        const cg = $('#custom-dept-group');
+        if (cg) cg.style.display = 'none';
+        const cd = $('#ticket-custom-department') as HTMLInputElement;
+        if (cd) { cd.removeAttribute('required'); cd.value = ''; }
         ($('#ticket-title') as HTMLInputElement)?.focus();
     }
 
@@ -1236,6 +1331,8 @@
         ($('#ticket-form') as HTMLFormElement)?.reset();
         const cg = $('#custom-dept-group');
         if (cg) cg.style.display = 'none';
+        const cd = $('#ticket-custom-department') as HTMLInputElement;
+        if (cd) { cd.removeAttribute('required'); cd.value = ''; }
     }
 
     $('#client-new-ticket-btn')?.addEventListener('click', openTicketModal);
@@ -1453,7 +1550,10 @@
         
         container.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                <p style="color:var(--text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
+                <div>
+                    <p style="color:var(--text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
+                    <p style="color:var(--text-muted);font-size:11px;margin:4px 0 0;opacity:0.7">⠿ Drag rows to reorder</p>
+                </div>
                 <button class="btn btn-primary" id="btn-new-article">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     New Article
@@ -1461,6 +1561,7 @@
             </div>
             <div class="table-wrap">
                 <div class="table-head">
+                    <span style="flex:0 0 36px"></span>
                     <span style="flex:1">Title</span>
                     <span style="flex:0 0 150px">Category</span>
                     <span style="flex:0 0 120px">Author</span>
@@ -1475,9 +1576,12 @@
         if (allArticles.length === 0 && body) {
             body.innerHTML = '<div class="empty-state" style="padding:30px">No articles found.</div>';
         } else if (body) {
+            let dragSrcId: string | null = null;
+
             allArticles.forEach(a => {
-                const row = el('div', { className: 'table-row' });
+                const row = el('div', { className: 'table-row kb-drag-row', draggable: 'true', 'data-id': a.id });
                 row.innerHTML = `
+                    <span class="kb-drag-handle" style="flex:0 0 36px;cursor:grab;color:var(--text-muted);font-size:16px;user-select:none;display:flex;align-items:center">⠿</span>
                     <span style="flex:1;font-weight:600;color:#eee;font-size:13px">${esc(a.title)}</span>
                     <span style="flex:0 0 150px"><span class="badge-cat">${esc(a.category)}</span></span>
                     <span style="flex:0 0 120px;color:#aaa;font-size:12px">${esc(a.author)}</span>
@@ -1487,6 +1591,59 @@
                         <button class="btn-ghost del-art-btn" style="padding:4px 8px;font-size:11px;color:var(--severity-severe)" data-id="${esc(a.id)}">Del</button>
                     </span>
                 `;
+
+                row.addEventListener('dragstart', (e: DragEvent) => {
+                    dragSrcId = a.id;
+                    row.classList.add('kb-dragging');
+                    if (e.dataTransfer) {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', a.id);
+                    }
+                });
+
+                row.addEventListener('dragend', () => {
+                    row.classList.remove('kb-dragging');
+                    $$('.kb-drag-row').forEach(r => r.classList.remove('kb-drag-over'));
+                    dragSrcId = null;
+                });
+
+                row.addEventListener('dragover', (e: DragEvent) => {
+                    e.preventDefault();
+                    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                    if (dragSrcId && dragSrcId !== a.id) {
+                        $$('.kb-drag-row').forEach(r => r.classList.remove('kb-drag-over'));
+                        row.classList.add('kb-drag-over');
+                    }
+                });
+
+                row.addEventListener('dragleave', () => {
+                    row.classList.remove('kb-drag-over');
+                });
+
+                row.addEventListener('drop', async (e: DragEvent) => {
+                    e.preventDefault();
+                    row.classList.remove('kb-drag-over');
+                    if (!dragSrcId || dragSrcId === a.id) return;
+
+                    // Compute new order
+                    const ids = allArticles.map(x => x.id);
+                    const fromIdx = ids.indexOf(dragSrcId);
+                    const toIdx = ids.indexOf(a.id);
+                    if (fromIdx === -1 || toIdx === -1) return;
+
+                    ids.splice(fromIdx, 1);
+                    ids.splice(toIdx, 0, dragSrcId);
+
+                    try {
+                        await articlesAPI.reorder(ids);
+                        showToast('Articles reordered');
+                        await fetchKnowledgeBase();
+                        renderAdminKnowledgeBase(container);
+                    } catch (err) {
+                        showToast('Failed to reorder', 'error');
+                    }
+                });
+
                 body.appendChild(row);
             });
         }
