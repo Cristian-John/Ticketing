@@ -1,12 +1,13 @@
 /**
  * Animated Hexagonal Grid Background
  * Single global canvas fixed behind all content.
- * Dark hex cells with glowing cyan edges and a subtle center radial glow.
+ * Supports both dark and light themes with gradient hexagons and glowing edges.
  */
 (function () {
   'use strict';
 
-  const GLOW_COLOR = '#00e5ff';
+  const GLOW_COLOR_DARK = '#00e5ff';
+  const GLOW_COLOR_LIGHT = '#00bcd4';
   const HEX_RADIUS = 32;
   const LINE_WIDTH = 0.8;
   const GLOW_LINE_WIDTH = 1.8;
@@ -118,13 +119,9 @@
   function draw(now) {
     ctx.clearRect(0, 0, w, h);
 
-    // Subtle radial center glow (like the reference image)
-    const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxDist * 0.85);
-    grad.addColorStop(0, 'rgba(0,60,80,0.25)');
-    grad.addColorStop(0.35, 'rgba(0,30,40,0.10)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
+    // Detect theme
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const GLOW_COLOR = isLight ? GLOW_COLOR_LIGHT : GLOW_COLOR_DARK;
 
     // Reset glow
     for (let i = 0; i < hexagons.length; i++) hexagons[i].glow = 0;
@@ -149,38 +146,93 @@
       }
     }
 
-    // Draw hexagons
+    // Draw hexagons with radial fade from center
     for (let i = 0; i < hexagons.length; i++) {
       const hex = hexagons[i];
 
-      // Distance-based edge brightness (brighter near center, like the reference)
+      // Distance from center for radial fade
       const dx = hex.x - centerX;
       const dy = hex.y - centerY;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const proximity = 1 - Math.min(dist / (maxDist * 0.8), 1);
-      const baseAlpha = 0.04 + proximity * 0.12;
+      const distFactor = Math.min(dist / (maxDist * 0.75), 1);
+      const centerBrightness = 1 - distFactor; // Brighter at center, darker at edges
 
-      // Fill hex cell
-      hexPath(hex.x, hex.y);
-      ctx.fillStyle = `rgba(6,10,9,${(0.7 + proximity * 0.2).toFixed(2)})`;
-      ctx.fill();
-
-      // Base edges (distance-tinted)
-      hexPath(hex.x, hex.y);
-      ctx.strokeStyle = `rgba(0,180,212,${baseAlpha.toFixed(3)})`;
-      ctx.lineWidth = LINE_WIDTH;
-      ctx.stroke();
-
-      // Animated glow edges
-      if (hex.glow > 0.05) {
+      if (isLight) {
+        // Light mode: clean hexagons with radial fade
+        
+        // Fill - subtle and fades toward edges
         hexPath(hex.x, hex.y);
-        const alpha = hex.glow * 0.65;
-        ctx.strokeStyle = `rgba(0,229,255,${alpha.toFixed(3)})`;
-        ctx.lineWidth = GLOW_LINE_WIDTH;
-        ctx.shadowColor = GLOW_COLOR;
-        ctx.shadowBlur = 10 * hex.glow;
+        const fillOpacity = (0.12 + centerBrightness * 0.18) * (1 - distFactor * 0.5);
+        ctx.fillStyle = `rgba(210, 225, 235, ${fillOpacity})`;
+        ctx.fill();
+
+        // Base edges - cyan tint, fades with distance
+        hexPath(hex.x, hex.y);
+        const edgeAlpha = (0.15 + centerBrightness * 0.3) * (1 - distFactor * 0.65);
+        ctx.strokeStyle = `rgba(0, 188, 212, ${edgeAlpha})`;
+        ctx.lineWidth = LINE_WIDTH;
         ctx.stroke();
-        ctx.shadowBlur = 0;
+
+        // Animated glow
+        if (hex.glow > 0.05) {
+          hexPath(hex.x, hex.y);
+          const glowAlpha = hex.glow * (0.75 + centerBrightness * 0.25);
+          ctx.strokeStyle = `rgba(0, 229, 255, ${glowAlpha})`;
+          ctx.lineWidth = GLOW_LINE_WIDTH * 1.5;
+          ctx.shadowColor = GLOW_COLOR;
+          ctx.shadowBlur = 16 * hex.glow;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          
+          // Inner glow fill
+          hexPath(hex.x, hex.y);
+          const innerGlow = ctx.createRadialGradient(
+            hex.x, hex.y, 0,
+            hex.x, hex.y, HEX_RADIUS * 0.75
+          );
+          innerGlow.addColorStop(0, `rgba(0, 229, 255, ${hex.glow * 0.2})`);
+          innerGlow.addColorStop(1, 'rgba(0, 229, 255, 0)');
+          ctx.fillStyle = innerGlow;
+          ctx.fill();
+        }
+      } else {
+        // Dark mode: clean hexagons with radial fade
+        
+        // Fill - darker at edges
+        hexPath(hex.x, hex.y);
+        const fillOpacity = (0.5 + centerBrightness * 0.3) * (1 - distFactor * 0.5);
+        ctx.fillStyle = `rgba(8, 12, 15, ${fillOpacity})`;
+        ctx.fill();
+
+        // Base edges - fade with distance
+        hexPath(hex.x, hex.y);
+        const edgeAlpha = (0.1 + centerBrightness * 0.25) * (1 - distFactor * 0.7);
+        ctx.strokeStyle = `rgba(0, 180, 212, ${edgeAlpha})`;
+        ctx.lineWidth = LINE_WIDTH;
+        ctx.stroke();
+
+        // Animated glow
+        if (hex.glow > 0.05) {
+          hexPath(hex.x, hex.y);
+          const glowAlpha = hex.glow * (0.8 + centerBrightness * 0.2);
+          ctx.strokeStyle = `rgba(0, 229, 255, ${glowAlpha})`;
+          ctx.lineWidth = GLOW_LINE_WIDTH * 1.3;
+          ctx.shadowColor = GLOW_COLOR;
+          ctx.shadowBlur = 16 * hex.glow;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          
+          // Inner glow fill
+          hexPath(hex.x, hex.y);
+          const innerGlow = ctx.createRadialGradient(
+            hex.x, hex.y, 0,
+            hex.x, hex.y, HEX_RADIUS * 0.7
+          );
+          innerGlow.addColorStop(0, `rgba(0, 229, 255, ${hex.glow * 0.25})`);
+          innerGlow.addColorStop(1, 'rgba(0, 229, 255, 0)');
+          ctx.fillStyle = innerGlow;
+          ctx.fill();
+        }
       }
     }
   }

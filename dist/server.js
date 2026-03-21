@@ -3,6 +3,39 @@
    IT Support Ticketing System
    Node.js / Express Backend (TypeScript)
    =================================== */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -12,6 +45,9 @@ const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
 const multer_1 = __importDefault(require("multer"));
+const dotenv = __importStar(require("dotenv"));
+// Load environment variables from .env file
+dotenv.config();
 const storage = multer_1.default.diskStorage({
     destination: path_1.default.join(__dirname, '../uploads'),
     filename: (req, file, cb) => {
@@ -28,7 +64,8 @@ app.use(express_1.default.json());
 app.use(express_1.default.static(path_1.default.join(__dirname, '../public')));
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
 // ─── Database Setup ───────────────────────────────────────────────────────────
-const db = new better_sqlite3_1.default(path_1.default.join(__dirname, '../tickets.db'));
+const dbPath = process.env.DB_PATH || path_1.default.join(__dirname, '../tickets.db');
+const db = new better_sqlite3_1.default(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 // Create tables
@@ -86,6 +123,25 @@ try {
 catch (e) {
     // Column likely already exists
 }
+try {
+    // Add ratingRequested column for prompting users to rate resolved tickets
+    db.exec('ALTER TABLE tickets ADD COLUMN ratingRequested INTEGER DEFAULT 0');
+}
+catch (e) {
+    // Column likely already exists
+}
+try {
+    // Add sortOrder column for article ordering
+    db.exec('ALTER TABLE articles ADD COLUMN sortOrder INTEGER DEFAULT 0');
+    // Set initial sort order based on existing rows
+    const existingArticles = db.prepare('SELECT id FROM articles ORDER BY updatedAt DESC').all();
+    existingArticles.forEach((a, i) => {
+        db.prepare('UPDATE articles SET sortOrder = ? WHERE id = ?').run(i, a.id);
+    });
+}
+catch (e) {
+    // Column likely already exists
+}
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function generateId() {
     const now = new Date();
@@ -109,11 +165,12 @@ const stmts = {
     insertNote: db.prepare(`
         INSERT INTO notes (ticketId, text, author, time) VALUES (@ticketId, @text, @author, @time)
     `),
-    getAllArticles: db.prepare(`SELECT * FROM articles ORDER BY updatedAt DESC`),
+    getAllArticles: db.prepare(`SELECT * FROM articles ORDER BY sortOrder ASC, updatedAt DESC`),
     getArticleById: db.prepare(`SELECT * FROM articles WHERE id = ?`),
+    getMaxSortOrder: db.prepare(`SELECT COALESCE(MAX(sortOrder), -1) as maxOrder FROM articles`),
     insertArticle: db.prepare(`
-        INSERT INTO articles (id, title, content, category, author, createdAt, updatedAt)
-        VALUES (@id, @title, @content, @category, @author, @createdAt, @updatedAt)
+        INSERT INTO articles (id, title, content, category, author, createdAt, updatedAt, sortOrder)
+        VALUES (@id, @title, @content, @category, @author, @createdAt, @updatedAt, @sortOrder)
     `),
     deleteArticle: db.prepare(`DELETE FROM articles WHERE id = ?`),
     getAttachments: db.prepare(`SELECT * FROM attachments WHERE ticketId = ?`),
@@ -222,7 +279,7 @@ app.put('/api/tickets/:id', (req, res) => {
             res.status(404).json({ error: 'Ticket not found' });
             return;
         }
-        const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment'];
+        const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment', 'dueAt', 'ratingRequested'];
         const setClauses = [];
         const values = {};
         for (const key of allowed) {
@@ -364,13 +421,34 @@ app.post('/api/articles', (req, res) => {
         }
         const id = `KB-${Date.now()}`;
         const now = nowISO();
-        const article = { id, title, content, category, author, createdAt: now, updatedAt: now };
+        const { maxOrder } = stmts.getMaxSortOrder.get();
+        const article = { id, title, content, category, author, createdAt: now, updatedAt: now, sortOrder: maxOrder + 1 };
         stmts.insertArticle.run(article);
         res.status(201).json(article);
     }
     catch (err) {
         console.error('POST /api/articles error:', err);
         res.status(500).json({ error: 'Failed to create article' });
+    }
+});
+// Reorder articles (must be before :id route)
+app.put('/api/articles/reorder', (req, res) => {
+    try {
+        const { order } = req.body; // array of article IDs in desired order
+        if (!Array.isArray(order)) {
+            res.status(400).json({ error: 'order must be an array of article IDs' });
+            return;
+        }
+        const updateSort = db.prepare('UPDATE articles SET sortOrder = ? WHERE id = ?');
+        const reorderAll = db.transaction((ids) => {
+            ids.forEach((id, index) => updateSort.run(index, id));
+        });
+        reorderAll(order);
+        res.json({ success: true });
+    }
+    catch (err) {
+        console.error('PUT /api/articles/reorder error:', err);
+        res.status(500).json({ error: 'Failed to reorder articles' });
     }
 });
 app.put('/api/articles/:id', (req, res) => {
@@ -437,11 +515,28 @@ app.get('/api/stats', (req, res) => {
         res.status(500).json({ error: 'Failed to fetch stats' });
     }
 });
+// ─── Auth API ─────────────────────────────────────────────────────────────────
+app.post('/api/login', (req, res) => {
+    const { role, password } = req.body;
+    if (role === 'admin') {
+        const truePassword = process.env.ADMIN_PASSWORD || '@inspireSupport';
+        if (password === truePassword) {
+            res.json({ success: true, message: 'Authenticated' });
+        }
+        else {
+            res.status(401).json({ error: 'Incorrect admin password' });
+        }
+    }
+    else {
+        // Client login doesn't require password currently
+        res.json({ success: true, message: 'Authenticated' });
+    }
+});
 // ─── Catch-all: serve index.html for SPA ──────────────────────────────────────
 app.get('{*path}', (req, res) => {
     res.sendFile(path_1.default.join(__dirname, '../public', 'index.html'));
 });
-// ─── Start ────────────────────────────────────────────────────────────────────
+// ─── Tickets API ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`\n  🎫  IT Support Ticketing System (TypeScript)`);
     console.log(`  ──────────────────────────────────────────`);

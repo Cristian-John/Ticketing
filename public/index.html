@@ -385,8 +385,19 @@
                 <h3>⭐ Rate Support Service</h3>
                 <button class="modal-close" id="close-rating-modal-btn">&times;</button>
             </div>
-            <div id="rating-modal-body">
-                <!-- Populated by JS -->
+            <div id="rating-modal-body" style="padding:20px">
+                <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px">How would you rate the support you received?</p>
+                <div id="rating-stars" style="display:flex;gap:4px;justify-content:center;margin-bottom:16px">
+                    <!-- Stars populated by JS -->
+                </div>
+                <div class="form-group">
+                    <label for="rating-comment">Comment (Optional)</label>
+                    <textarea id="rating-comment" rows="3" placeholder="Tell us about your experience..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" id="rating-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="rating-submit">Submit Rating</button>
+                </div>
             </div>
         </div>
     </div>

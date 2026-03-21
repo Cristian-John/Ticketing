@@ -143,6 +143,13 @@ try {
 }
 
 try {
+    // Add ratingRequested column for prompting users to rate resolved tickets
+    db.exec('ALTER TABLE tickets ADD COLUMN ratingRequested INTEGER DEFAULT 0');
+} catch (e) {
+    // Column likely already exists
+}
+
+try {
     // Add sortOrder column for article ordering
     db.exec('ALTER TABLE articles ADD COLUMN sortOrder INTEGER DEFAULT 0');
     // Set initial sort order based on existing rows
@@ -310,7 +317,7 @@ app.put('/api/tickets/:id', (req: Request, res: Response): void => {
              return;
         }
 
-        const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment', 'dueAt'];
+        const allowed = ['title', 'description', 'category', 'department', 'priority', 'severity', 'status', 'assignee', 'requester', 'rating', 'ratingComment', 'dueAt', 'ratingRequested'];
         const setClauses: string[] = [];
         const values: Record<string, any> = {};
 

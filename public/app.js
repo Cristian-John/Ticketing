@@ -284,84 +284,91 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     // ==================== AUTH ====================
     const loginForm = $('#login-form');
     const passwordGroup = $('#password-group');
+    const usernameGroup = $('#username-group');
     const loginRole = $('#login-role');
-    if (loginRole && passwordGroup) {
+    if (loginRole && passwordGroup && usernameGroup) {
         loginRole.addEventListener('change', function () {
-            var _a, _b;
-            const usernameGroup = $('#username-group');
+            var _a, _b, _c, _d;
             if (this.value === 'admin') {
                 passwordGroup.style.display = '';
+                usernameGroup.style.display = 'none';
                 (_a = $('#login-password')) === null || _a === void 0 ? void 0 : _a.setAttribute('required', 'true');
-                if (usernameGroup) usernameGroup.style.display = 'none';
-                const u = $('#login-username');
-                if (u) { u.removeAttribute('required'); u.value = ''; }
+                (_b = $('#login-username')) === null || _b === void 0 ? void 0 : _b.removeAttribute('required');
             }
             else {
                 passwordGroup.style.display = 'none';
-                (_b = $('#login-password')) === null || _b === void 0 ? void 0 : _b.removeAttribute('required');
+                usernameGroup.style.display = '';
+                (_c = $('#login-password')) === null || _c === void 0 ? void 0 : _c.removeAttribute('required');
+                (_d = $('#login-username')) === null || _d === void 0 ? void 0 : _d.setAttribute('required', 'true');
                 const p = $('#login-password');
                 if (p)
                     p.value = '';
-                if (usernameGroup) usernameGroup.style.display = '';
-                const u = $('#login-username');
-                if (u) u.setAttribute('required', 'true');
             }
         });
     }
     if (loginForm) {
-        loginForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const usernameInput = $('#login-username');
-            const roleInput = $('#login-role');
-            const passInput = $('#login-password');
-            const role = roleInput === null || roleInput === void 0 ? void 0 : roleInput.value;
-            let username;
-            
-            const password = passInput === null || passInput === void 0 ? void 0 : passInput.value.trim();
-
-            if (role === 'admin') {
-                if (!password) {
-                    showToast('Password is required for admin login', 'error');
-                    return;
+        loginForm.addEventListener('submit', function (e) {
+            return __awaiter(this, void 0, void 0, function* () {
+                e.preventDefault();
+                const usernameInput = $('#login-username');
+                const roleInput = $('#login-role');
+                const passInput = $('#login-password');
+                const loginBtn = $('#login-btn');
+                const role = roleInput === null || roleInput === void 0 ? void 0 : roleInput.value;
+                let username = '';
+                if (role === 'admin') {
+                    const password = passInput === null || passInput === void 0 ? void 0 : passInput.value.trim();
+                    if (!password) {
+                        showToast('Password is required for admin login', 'error');
+                        return;
+                    }
+                    // Validate password via backend API
+                    try {
+                        if (loginBtn) {
+                            loginBtn.disabled = true;
+                            loginBtn.textContent = 'Signing in...';
+                        }
+                        yield api('/login', { method: 'POST', body: JSON.stringify({ role: 'admin', password }) });
+                    }
+                    catch (err) {
+                        showToast(err.message || 'Incorrect admin password', 'error');
+                        if (loginBtn) {
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = '<span>Sign In</span>';
+                        }
+                        return;
+                    }
+                    finally {
+                        if (loginBtn) {
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = '<span>Sign In</span>';
+                        }
+                    }
+                    username = 'Admin';
                 }
-                username = 'Admin';
-            } else {
-                username = usernameInput === null || usernameInput === void 0 ? void 0 : usernameInput.value.trim();
-                if (!username) {
-                    showToast('Please enter your name', 'error');
-                    return;
+                else {
+                    username = usernameInput === null || usernameInput === void 0 ? void 0 : usernameInput.value.trim();
+                    if (!username) {
+                        showToast('Please enter your name', 'error');
+                        return;
+                    }
                 }
-            }
-            
-            // Verify with server
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ role, password })
-                });
-                const data = await res.json();
-                
-                if (!res.ok || !data.success) {
-                    showToast(data.error || 'Login failed', 'error');
-                    return;
-                }
-            } catch (err) {
-                showToast('Network error during login', 'error');
-                return;
-            }
-
-            currentUser = { username, role };
-            setSession(currentUser);
-            if (role === 'admin')
-                enterAdmin();
-            else
-                enterClient();
-            
-            loginForm.reset();
-            if (roleInput) roleInput.dispatchEvent(new Event('change'));
-            
-            showToast(`Welcome, ${username}!`, 'success');
+                currentUser = { username, role };
+                setSession(currentUser);
+                if (role === 'admin')
+                    enterAdmin();
+                else
+                    enterClient();
+                loginForm.reset();
+                if (passwordGroup)
+                    passwordGroup.style.display = 'none';
+                if (usernameGroup)
+                    usernameGroup.style.display = '';
+                // Dispatch change event to reset form validation state
+                if (loginRole)
+                    loginRole.dispatchEvent(new Event('change'));
+                showToast(`Welcome, ${username}!`, 'success');
+            });
         });
     }
     function logout() {
@@ -404,13 +411,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         var _a;
         if (!currentUser)
             return;
-        const mine = allTickets.filter(t => t.requester === currentUser.username);
+        const myUsername = currentUser.username.toLowerCase();
+        const mine = allTickets.filter(t => t.requester.toLowerCase() === myUsername);
         const setStat = (id, val) => { const e = $(`#${id}`); if (e)
             e.textContent = String(val); };
         setStat('cs-open', mine.filter(t => t.status === 'Open').length);
         setStat('cs-active', mine.filter(t => t.status === 'In Progress').length);
         setStat('cs-resolved', mine.filter(t => isResolved(t)).length);
-        const toRate = mine.filter(t => isResolved(t) && t.rating === null).length;
+        const toRate = mine.filter(t => isResolved(t) && t.rating === null && t.ratingRequested === 1).length;
         const rateBadge = $('#client-to-rate-badge');
         if (rateBadge) {
             if (toRate > 0) {
@@ -442,7 +450,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             else {
                 renderClientList(content, mine);
                 if (!ratingPromptShown) {
-                    const unrated = mine.find(t => isResolved(t) && t.rating === null);
+                    const unrated = mine.find(t => isResolved(t) && t.rating === null && t.ratingRequested === 1);
                     if (unrated) {
                         ratingPromptShown = true;
                         setTimeout(() => openRatingModal(unrated), 400);
@@ -455,7 +463,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const ticket = allTickets.find(t => t.id === selectedTicketId);
             if (ticket) {
                 renderClientDetail(content, ticket);
-                if (!ratingPromptShown && isResolved(ticket) && ticket.rating === null) {
+                if (!ratingPromptShown && isResolved(ticket) && ticket.rating === null && ticket.ratingRequested === 1) {
                     ratingPromptShown = true;
                     setTimeout(() => openRatingModal(ticket), 400);
                 }
@@ -486,8 +494,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             <span class="${severityClass(t.severity)}">${esc(t.severity)}</span>
                             <span class="badge-dept">${esc(t.department)}</span>
                         </div>
-                        <div style="font-weight:600;font-size:15px;color:#eee;margin-bottom:4px">${esc(t.title)}${getSLAHtml(t)}</div>
-                        <div style="font-size:12px;color:#666">${esc(t.category)} · ${formatAssignees(t)} · ${formatDate(t.updatedAt)}</div>
+                        <div style="font-weight:600;font-size:15px;color:var(--text-heading);margin-bottom:4px">${esc(t.title)}${getSLAHtml(t)}</div>
+                        <div style="font-size:12px;color:var(--text-muted)">${esc(t.category)} · ${formatAssignees(t)} · ${formatDate(t.updatedAt)}</div>
                         ${lastNote ? `<div class="latest-note">💬 ${esc(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
                     </div>
                     <div style="flex-shrink:0;text-align:right">
@@ -517,9 +525,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         });
     }
     function renderClientDetail(container, ticket) {
-        var _a;
+        var _a, _b;
+        const done = isResolved(ticket);
         const notes = ticket.notes || [];
-        const done = ticket.status === 'Resolved' || ticket.status === 'Closed';
         container.innerHTML = `
             <div class="detail-header">
                 <div>
@@ -539,10 +547,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 <div class="detail-main">
                     <div class="panel">
                         <div class="panel-header">Issue Description</div>
-                        <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
+                        <p style="color:var(--text-secondary);line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
                         ${(ticket.attachments && ticket.attachments.length > 0) ? `
                             <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
-                                <strong style="color:#ddd;font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
+                                <strong style="color:var(--text-heading);font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
                                 <div style="display:flex;gap:10px;flex-wrap:wrap">
                                     ${ticket.attachments.map((a) => `
                                         <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
@@ -556,11 +564,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     <div class="panel">
                         <div class="panel-header" style="color:var(--status-progress)">💬 Conversation</div>
                         ${notes.length > 0 ? notes.map(n => `
-                            <div class="note-item ${n.author === (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) ? 'note-mine' : ''}">
+                            <div class="note-item ${n.author.toLowerCase() === (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username.toLowerCase()) ? 'note-mine' : ''}">
                                 <span class="note-author">${esc(n.author)}<span class="note-time">${esc(n.time)}</span></span>
                                 <div class="note-text">${esc(n.text)}</div>
                             </div>
-                        `).join('') : '<p style="color:#666;font-size:13px;margin:0 0 12px">No messages yet. Send a message to IT Support below.</p>'}
+                        `).join('') : '<p style="color:var(--text-muted);font-size:13px;margin:0 0 12px">No messages yet. Send a message to IT Support below.</p>'}
                         ${!done ? `
                         <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
                             <textarea id="client-reply-text" rows="3" placeholder="Type your reply or question..." style="width:100%;resize:vertical;margin-bottom:8px"></textarea>
@@ -571,7 +579,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                                 <button class="btn btn-primary" id="client-reply-btn" style="font-size:12px;padding:6px 16px">Send</button>
                             </div>
                         </div>
-                        ` : '<p style="color:#555;font-size:11px;margin:12px 0 0;font-style:italic">This ticket is ' + ticket.status.toLowerCase() + '. Replies are disabled.</p>'}
+                        ` : '<p style="color:var(--text-muted);font-size:11px;margin:12px 0 0;font-style:italic">This ticket is ${ticket.status.toLowerCase()}. Replies are disabled.</p>'}
                     </div>
                     ${done ? `
                     <div class="panel" style="border:1px solid ${ticket.rating !== null ? 'rgba(240,192,64,0.3)' : 'var(--border)'}">
@@ -584,7 +592,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             </div>
                             ${ticket.ratingComment ? `<div class="rating-comment">"${esc(ticket.ratingComment)}"</div>` : ''}
                         ` : `
-                            <p style="color:#888;font-size:13px;margin:0 0 12px">This ticket has been resolved. How was our support?</p>
+                            <p style="color:var(--text-muted);font-size:13px;margin:0 0 12px">This ticket has been resolved. How was our support?</p>
                             <button class="btn-rate" id="detail-rate-btn">⭐ Leave a Rating</button>
                         `}
                     </div>` : ''}
@@ -612,44 +620,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const replyFilename = $('#client-reply-filename');
         if (replyFileInput && replyFilename) {
             replyFileInput.addEventListener('change', () => {
-                var _a;
-                replyFilename.textContent = ((_a = replyFileInput.files) === null || _a === void 0 ? void 0 : _a[0].name) || '';
+                var _a, _b;
+                replyFilename.textContent = ((_b = (_a = replyFileInput.files) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.name) || '';
             });
         }
-        const clientReplyBtn = $('#client-reply-btn');
-        if (clientReplyBtn) {
-            clientReplyBtn.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
-                var _b;
-                const txt = (_b = $('#client-reply-text')) === null || _b === void 0 ? void 0 : _b.value.trim();
-                const fileInput = $('#client-reply-file');
-                const file = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files[0];
-                if (!txt && !file)
-                    return;
-                try {
-                    const btn = $('#client-reply-btn');
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.textContent = 'Sending...';
-                    }
-                    if (txt) {
-                        yield ticketsAPI.addNote(ticket.id, { text: txt, author: (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'User' });
-                    }
-                    if (file) {
-                        yield ticketsAPI.uploadAttachment(ticket.id, file);
-                    }
-                    showToast('Reply sent!');
-                    yield loadAndRenderClient();
+        (_b = $('#client-reply-btn')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            const txt = (_a = $('#client-reply-text')) === null || _a === void 0 ? void 0 : _a.value.trim();
+            const fileInput = $('#client-reply-file');
+            const file = (_b = fileInput === null || fileInput === void 0 ? void 0 : fileInput.files) === null || _b === void 0 ? void 0 : _b[0];
+            if (!txt && !file)
+                return;
+            try {
+                const btn = $('#client-reply-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Sending...';
                 }
-                catch (err) {
-                    showToast('Failed to send reply', 'error');
-                    const btn = $('#client-reply-btn');
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = 'Send';
-                    }
+                if (txt) {
+                    yield ticketsAPI.addNote(ticket.id, { text: txt, author: (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'User' });
                 }
-            }));
-        }
+                if (file) {
+                    yield ticketsAPI.uploadAttachment(ticket.id, file);
+                }
+                showToast('Reply sent!');
+                yield loadAndRenderClient();
+            }
+            catch (err) {
+                showToast('Failed to send reply', 'error');
+                const btn = $('#client-reply-btn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Send';
+                }
+            }
+        }));
         const rateBtn = $('#detail-rate-btn');
         if (rateBtn) {
             rateBtn.addEventListener('click', () => openRatingModal(ticket));
@@ -886,13 +891,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
             else {
                 topRated.forEach(t => {
-                    const row = el('div', { style: { padding: '8px 0', borderBottom: '1px solid rgba(26,26,32,0.6)' } });
+                    const row = el('div', { style: { padding: '8px 0', borderBottom: '1px solid var(--border)' } });
                     row.innerHTML = `
                         <div style="display:flex;justify-content:space-between;align-items:center">
-                            <span style="font-size:12px;color:#ccc;font-weight:600">${esc(t.title.slice(0, 36))}${t.title.length > 36 ? '…' : ''}</span>
+                            <span style="font-size:12px;color:var(--text-primary);font-weight:600">${esc(t.title.slice(0, 36))}${t.title.length > 36 ? '…' : ''}</span>
                             ${starsHTML(t.rating, true)}
                         </div>
-                        ${t.ratingComment ? `<div style="font-size:11px;color:#666;margin-top:2px;font-style:italic">"${esc(t.ratingComment)}"</div>` : ''}
+                        ${t.ratingComment ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;font-style:italic">"${esc(t.ratingComment)}"</div>` : ''}
                     `;
                     ratingsList.appendChild(row);
                 });
@@ -950,11 +955,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const row = el('div', { className: 'table-row' });
             row.innerHTML = `
                 <span style="flex:0 0 88px;font-family:monospace;font-size:10px;color:var(--text-muted)">${esc(t.id)}</span>
-                <span style="flex:1;font-weight:600;color:#eee;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}${getSLAHtml(t)}</span>
+                <span style="flex:1;font-weight:600;color:var(--text-heading);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}${getSLAHtml(t)}</span>
                 <span style="flex:0 0 110px"><span class="badge-dept">${esc(t.department)}</span></span>
                 <span style="flex:0 0 86px"><span class="${severityClass(t.severity)}">${esc(t.severity)}</span></span>
                 <span style="flex:0 0 108px"><span class="${statusClass(t.status)}">${esc(t.status)}</span></span>
-                <span style="flex:0 0 100px;color:#777;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.requester)}</span>
+                <span style="flex:0 0 100px;color:var(--text-muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.requester)}</span>
                 <span style="flex:0 0 56px;color:var(--severity-moderate);font-size:12px">${t.rating != null ? t.rating + '★' : '—'}</span>
                 <span style="flex:0 0 86px;color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</span>
             `;
@@ -1008,10 +1013,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const row = el('div', { className: 'table-row' });
             row.innerHTML = `
                 <span style="flex:0 0 88px;font-family:monospace;font-size:10px;color:var(--text-muted)">${esc(t.id)}</span>
-                <span style="flex:1;font-weight:600;color:#eee;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</span>
-                <span style="flex:0 0 100px;color:#999;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.requester)}</span>
-                <span style="flex:0 0 100px">${t.rating != null ? starsHTML(t.rating, true) : '<span style="color:#555;font-size:12px;font-style:italic">Unrated</span>'}</span>
-                <span style="flex:1;color:#aaa;font-size:12px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.ratingComment ? '"' + esc(t.ratingComment) + '"' : ''}</span>
+                <span style="flex:1;font-weight:600;color:var(--text-heading);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</span>
+                <span style="flex:0 0 100px;color:var(--text-secondary);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.requester)}</span>
+                <span style="flex:0 0 100px">${t.rating != null ? starsHTML(t.rating, true) : '<span style="color:var(--text-muted);font-size:12px;font-style:italic">Unrated</span>'}</span>
+                <span style="flex:1;color:var(--text-secondary);font-size:12px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.ratingComment ? '"' + esc(t.ratingComment) + '"' : ''}</span>
                 <span style="flex:0 0 86px;color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</span>
             `;
             row.addEventListener('click', () => {
@@ -1023,7 +1028,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         });
     }
     function renderAdminDetail(container, ticket) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         const notes = ticket.notes || [];
         container.innerHTML = `
             <div class="detail-header">
@@ -1038,20 +1043,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         ${getSLAHtml(ticket)}
                     </div>
                 </div>
-                <div style="display:flex;gap:10px">
-                    <button class="btn btn-primary" id="admin-update-btn">Update Status/Assignee</button>
-                    <button class="btn-back" id="admin-back-btn">← Back</button>
-                </div>
             </div>
 
             <div class="detail-grid">
                 <div class="detail-main">
                     <div class="panel">
                         <div class="panel-header">Issue Details</div>
-                        <p style="color:#aaa;line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
+                        <p style="color:var(--text-secondary);line-height:1.75;margin:0;font-size:14px;white-space:pre-wrap">${esc(ticket.description)}</p>
                         ${(ticket.attachments && ticket.attachments.length > 0) ? `
                             <div style="margin-top:15px;padding-top:15px;border-top:1px solid var(--border)">
-                                <strong style="color:#ddd;font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
+                                <strong style="color:var(--text-heading);font-size:13px;display:block;margin-bottom:8px">Attachments</strong>
                                 <div style="display:flex;gap:10px;flex-wrap:wrap">
                                     ${ticket.attachments.map((a) => `
                                         <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
@@ -1063,7 +1064,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         ` : ''}
                     </div>
 
-                    <div class="panel" style="background:#131318">
+                    <div class="panel" style="background:var(--bg-body)">
                         <div class="panel-header">📝 Internal Notes & Support Log</div>
                         ${notes.length === 0 ? '<div class="empty-state" style="padding:20px">No notes yet</div>' : `
                             <div class="notes-list">
@@ -1076,9 +1077,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             </div>
                         `}
                         <div class="note-compose" style="margin-top:20px">
-                            <textarea id="reply-text" placeholder="Type a message or internal note..." style="width:100%;background:#1a1a20;border:1px solid #333;color:#eee;padding:12px;border-radius:6px;min-height:80px;font-family:inherit;margin-bottom:10px"></textarea>
+                            <textarea id="reply-text" placeholder="Type a message or internal note..." style="width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:12px;border-radius:6px;min-height:80px;font-family:inherit;margin-bottom:10px"></textarea>
                             <div style="display:flex;justify-content:space-between;align-items:center">
-                                <input type="file" id="reply-file" style="font-size:12px;color:#aaa">
+                                <input type="file" id="reply-file" style="font-size:12px;color:var(--text-secondary)">
                                 <button class="btn btn-primary" id="btn-reply">Send Reply</button>
                             </div>
                         </div>
@@ -1128,6 +1129,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                                 `).join('')}
                             </div>
                         </div>
+                        <button class="btn btn-primary" id="admin-update-side-btn" style="width:100%;margin-top:16px;">Update Status/Assignee</button>
+                        ${isResolved(ticket) && ticket.rating === null && !ticket.ratingRequested ? `
+                            <button class="btn btn-ghost" id="prompt-rating-btn" style="width:100%;margin-top:8px;background:var(--severity-moderate-bg);color:var(--severity-moderate);border:1px solid rgba(240,192,64,0.3)">⭐ Prompt User to Rate</button>
+                        ` : ''}
+                        ${isResolved(ticket) && ticket.rating === null && ticket.ratingRequested ? `
+                            <div style="margin-top:8px;text-align:center;font-size:12px;color:var(--severity-moderate);">Pending User Rating...</div>
+                        ` : ''}
+                        <button class="btn-back" id="admin-back-btn" style="width:100%;margin-top:8px;">← Back</button>
                     </div>
 
                     ${!isResolved(ticket) ? `
@@ -1169,7 +1178,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             selectedTicketId = null;
             renderAdminView();
         });
-        (_b = $('#btn-reply')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+        // Prompt rating button - sends notification to client
+        (_b = $('#prompt-rating-btn')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const btn = $('#prompt-rating-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Sending...';
+                }
+                // Set ratingRequested flag on the ticket
+                yield ticketsAPI.update(ticket.id, { ratingRequested: 1 });
+                // Add a note to prompt the user
+                yield ticketsAPI.addNote(ticket.id, {
+                    text: `Admin prompted user to rate this ticket`,
+                    author: (currentUser === null || currentUser === void 0 ? void 0 : currentUser.username) || 'Admin'
+                });
+                showToast('Rating prompt sent to client', 'success');
+                yield loadAndRenderAdmin();
+            }
+            catch (err) {
+                showToast('Failed to send prompt', 'error');
+                const btn = $('#prompt-rating-btn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '⭐ Prompt User to Rate';
+                }
+            }
+        }));
+        (_c = $('#btn-reply')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
             const txt = (_a = $('#reply-text')) === null || _a === void 0 ? void 0 : _a.value.trim();
             const fileInput = $('#reply-file');
@@ -1196,15 +1232,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     btn.disabled = false;
             }
         }));
-        (_c = $('#admin-update-btn')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+        (_d = $('#admin-update-side-btn')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             const stat = (_a = $('#dt-status')) === null || _a === void 0 ? void 0 : _a.value;
             const sev = (_b = $('#dt-severity')) === null || _b === void 0 ? void 0 : _b.value;
             const pri = (_c = $('#dt-priority')) === null || _c === void 0 ? void 0 : _c.value;
             const checkboxes = Array.from($$('.dt-assignee-cb'));
             const assigns = checkboxes.filter(cb => cb.checked).map(cb => cb.value).join(', ');
+            // Prevent closing a ticket that hasn't been rated
+            if (stat === 'Closed' && ticket.rating === null) {
+                showToast('Cannot close ticket — client has not submitted a rating yet', 'error');
+                return;
+            }
             try {
-                const btn = $('#admin-update-btn');
+                const btn = $('#admin-update-side-btn');
                 if (btn) {
                     btn.disabled = true;
                     btn.textContent = 'Updating...';
@@ -1227,14 +1268,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
             catch (err) {
                 showToast('Failed to update ticket', 'error');
-                const btn = $('#admin-update-btn');
+                const btn = $('#admin-update-side-btn');
                 if (btn) {
                     btn.disabled = false;
                     btn.textContent = 'Update Status/Assignee';
                 }
             }
         }));
-        (_d = $('#admin-delete-btn')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+        (_e = $('#admin-delete-btn')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
             if (!confirm(`Delete ticket ${ticket.id}? This cannot be undone.`))
                 return;
             try {
@@ -1258,7 +1299,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         $$('.sla-extend-btn').forEach(btn => {
             btn.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
                 const hours = parseInt(btn.dataset.hours || '0');
-                if (!hours) return;
+                if (!hours)
+                    return;
                 try {
                     btn.disabled = true;
                     const baseTime = ticket.dueAt ? Math.max(Date.parse(ticket.dueAt), Date.now()) : Date.now();
@@ -1270,7 +1312,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     yield ticketsAPI.update(ticket.id, { dueAt: newDue });
                     showToast(`SLA extended by ${hours} hour${hours > 1 ? 's' : ''}`);
                     yield loadAndRenderAdmin();
-                } catch (err) {
+                }
+                catch (err) {
                     showToast('Failed to extend SLA', 'error');
                     btn.disabled = false;
                 }
@@ -1289,9 +1332,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             html(dSel, `<option value="" disabled selected>Select Department</option>${DEPARTMENTS.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}<option value="other">Other...</option>`);
         // Reset custom department group state
         const cg = $('#custom-dept-group');
-        if (cg) cg.style.display = 'none';
+        if (cg)
+            cg.style.display = 'none';
         const cd = $('#ticket-custom-department');
-        if (cd) { cd.removeAttribute('required'); cd.value = ''; }
+        if (cd) {
+            cd.removeAttribute('required');
+            cd.value = '';
+        }
         (_a = $('#ticket-title')) === null || _a === void 0 ? void 0 : _a.focus();
     }
     function closeTicketModal() {
@@ -1304,7 +1351,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         if (cg)
             cg.style.display = 'none';
         const cd = $('#ticket-custom-department');
-        if (cd) { cd.removeAttribute('required'); cd.value = ''; }
+        if (cd) {
+            cd.removeAttribute('required');
+            cd.value = '';
+        }
     }
     (_c = $('#client-new-ticket-btn')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openTicketModal);
     (_d = $('#admin-new-ticket-btn')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', openTicketModal);
@@ -1524,7 +1574,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
                 <div>
                     <p style="color:var(--text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
-                    <p style="color:var(--text-muted);font-size:11px;margin:4px 0 0;opacity:0.7">⠰ Drag rows to reorder</p>
+                    <p style="color:var(--text-muted);font-size:11px;margin:4px 0 0;opacity:0.7">⠿ Drag rows to reorder</p>
                 </div>
                 <button class="btn btn-primary" id="btn-new-article">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1552,7 +1602,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 allArticles.forEach(a => {
                     const row = el('div', { className: 'table-row kb-drag-row', draggable: 'true', 'data-id': a.id });
                     row.innerHTML = `
-                    <span class="kb-drag-handle" style="flex:0 0 36px;cursor:grab;color:var(--text-muted);font-size:16px;user-select:none;display:flex;align-items:center">⠰</span>
+                    <span class="kb-drag-handle" style="flex:0 0 36px;cursor:grab;color:var(--text-muted);font-size:16px;user-select:none;display:flex;align-items:center">⠿</span>
                     <span style="flex:1;font-weight:600;color:#eee;font-size:13px">${esc(a.title)}</span>
                     <span style="flex:0 0 150px"><span class="badge-cat">${esc(a.category)}</span></span>
                     <span style="flex:0 0 120px;color:#aaa;font-size:12px">${esc(a.author)}</span>
@@ -1577,7 +1627,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     });
                     row.addEventListener('dragover', (e) => {
                         e.preventDefault();
-                        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                        if (e.dataTransfer)
+                            e.dataTransfer.dropEffect = 'move';
                         if (dragSrcId && dragSrcId !== a.id) {
                             $$('.kb-drag-row').forEach(r => r.classList.remove('kb-drag-over'));
                             row.classList.add('kb-drag-over');
@@ -1589,11 +1640,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     row.addEventListener('drop', (e) => __awaiter(this, void 0, void 0, function* () {
                         e.preventDefault();
                         row.classList.remove('kb-drag-over');
-                        if (!dragSrcId || dragSrcId === a.id) return;
+                        if (!dragSrcId || dragSrcId === a.id)
+                            return;
+                        // Compute new order
                         const ids = allArticles.map(x => x.id);
                         const fromIdx = ids.indexOf(dragSrcId);
                         const toIdx = ids.indexOf(a.id);
-                        if (fromIdx === -1 || toIdx === -1) return;
+                        if (fromIdx === -1 || toIdx === -1)
+                            return;
                         ids.splice(fromIdx, 1);
                         ids.splice(toIdx, 0, dragSrcId);
                         try {
@@ -1601,7 +1655,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             showToast('Articles reordered');
                             yield fetchKnowledgeBase();
                             renderAdminKnowledgeBase(container);
-                        } catch (err) {
+                        }
+                        catch (err) {
                             showToast('Failed to reorder', 'error');
                         }
                     }));

@@ -175,9 +175,6 @@ body {
     z-index: -1;
     pointer-events: none;
 }
-[data-theme="light"] #hex-bg-global {
-    opacity: 0.08;
-}
 
 /* ============================
    APP SHELL — SIDEBAR LAYOUT
@@ -1154,21 +1151,31 @@ textarea {
     flex-wrap: wrap;
 }
 .btn-back {
-    padding: 7px 14px;
-    background: transparent;
-    border: 1px solid var(--border);
+    width: 100%;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #6A6E79, #00b8d4);
+    border: 1px solid rgba(0, 229, 255, 0.25);
     border-radius: 6px;
-    color: var(--text-muted);
+    color: #fff;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     flex-shrink: 0;
-    margin-left: 16px;
+    margin-top: 16px;
     font-family: var(--font);
     transition: var(--transition);
+    box-shadow: 0 2px 12px var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 .btn-back:hover {
-    background: var(--bg-input);
-    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 229, 255, 0.20);
+}
+[data-theme="light"] .btn-back {
+    box-shadow: 0 2px 8px rgba(74,78,88,0.15);
 }
 
 .detail-grid {
@@ -1240,6 +1247,16 @@ textarea {
     color: var(--text-secondary);
     margin-top: 2px;
     line-height: 1.5;
+}
+.note-mine {
+    background: var(--status-progress-bg);
+    border-left: 3px solid var(--status-progress);
+    padding: 10px 12px;
+    border-radius: 0 8px 8px 0;
+    margin-left: 16px;
+}
+.note-mine .note-author {
+    color: var(--accent);
 }
 
 /* ──── Empty State ──── */
@@ -1589,4 +1606,89 @@ textarea {
 .kb-drag-over {
     background: rgba(0, 200, 200, 0.08) !important;
     box-shadow: inset 0 -2px 0 0 var(--accent);
+}
+
+/* ==================== KNOWLEDGE BASE ARTICLE CARDS ==================== */
+.kb-article-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.kb-article-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--accent), var(--primary));
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.kb-article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-hover);
+}
+
+.kb-article-card:hover::before {
+    opacity: 1;
+}
+
+.kb-article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.kb-article-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.kb-article-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.kb-article-title {
+    color: var(--text-heading);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+}
+
+.kb-article-content {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Responsive adjustments for KB */
+@media (max-width: 768px) {
+    .kb-article-card {
+        padding: 18px;
+    }
+    
+    .kb-article-title {
+        font-size: 16px;
+    }
+    
+    .kb-article-content {
+        font-size: 13px;
+    }
 }
