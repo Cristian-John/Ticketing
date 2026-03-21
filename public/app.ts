@@ -590,7 +590,6 @@
                         ${getSLAHtml(ticket)}
                     </div>
                 </div>
-                <button class="btn-back" id="client-back-btn">← Back</button>
             </div>
             <div class="detail-grid detail-grid-client">
                 <div class="detail-main">
@@ -656,6 +655,7 @@
                             </div>
                         `).join('')}
                     </div>
+                    <button class="btn-back" id="client-back-btn" style="width:100%;margin-top:12px">← Back</button>
                 </div>
             </div>
         `;

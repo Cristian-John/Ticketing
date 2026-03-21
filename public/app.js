@@ -541,7 +541,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         ${getSLAHtml(ticket)}
                     </div>
                 </div>
-                <button class="btn-back" id="client-back-btn">← Back</button>
             </div>
             <div class="detail-grid detail-grid-client">
                 <div class="detail-main">
@@ -607,6 +606,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             </div>
                         `).join('')}
                     </div>
+                    <button class="btn-back" id="client-back-btn" style="width:100%;margin-top:12px">← Back</button>
                 </div>
             </div>
         `;
