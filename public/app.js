@@ -1602,10 +1602,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 allArticles.forEach(a => {
                     const row = el('div', { className: 'table-row kb-drag-row', draggable: 'true', 'data-id': a.id });
                     row.innerHTML = `
-                    <span class="kb-drag-handle" style="flex:0 0 36px;cursor:grab;color:var(--text-muted);font-size:16px;user-select:none;display:flex;align-items:center">⠿</span>
-                    <span style="flex:1;font-weight:600;color:#eee;font-size:13px">${esc(a.title)}</span>
+                    <span style="flex:0 0 36px;cursor:grab;color:var(--text-muted);font-size:16px;user-select:none;display:flex;align-items:center">⠿</span>
+                    <span style="flex:1;font-weight:600;color:var(--text-heading);font-size:13px">${esc(a.title)}</span>
                     <span style="flex:0 0 150px"><span class="badge-cat">${esc(a.category)}</span></span>
-                    <span style="flex:0 0 120px;color:#aaa;font-size:12px">${esc(a.author)}</span>
+                    <span style="flex:0 0 120px;color:var(--text-secondary);font-size:12px">${esc(a.author)}</span>
                     <span style="flex:0 0 100px;color:var(--text-muted);font-size:11px">${formatDate(a.updatedAt)}</span>
                     <span style="flex:0 0 100px;text-align:right">
                         <button class="btn-ghost edit-art-btn" style="padding:4px 8px;font-size:11px" data-id="${esc(a.id)}">Edit</button>
@@ -1713,8 +1713,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             <span class="badge-cat">${esc(a.category)}</span>
                             <span style="margin-left:10px">Updated ${formatDate(a.updatedAt)}</span>
                         </div>
-                        <h3 style="color:#eee;margin:0 0 12px 0;">${esc(a.title)}</h3>
-                        <div style="color:#bbb;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(a.content)}</div>
+                        <h3 style="color:var(--text-heading);margin:0 0 12px 0;">${esc(a.title)}</h3>
+                        <div style="color:var(--text-secondary);font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(a.content)}</div>
                     `;
                         list.appendChild(card);
                     });
