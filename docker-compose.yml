@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    container_name: ticketing-app
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/app/data/tickets.db
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-@inspireSupport}
+    volumes:
+      - db_data:/app/data
+      - uploads_data:/app/uploads
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: ticketing-nginx
+    ports:
+      - "3002:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    restart: always
+
+volumes:
+  db_data:
+  uploads_data:
