@@ -1396,7 +1396,6 @@
     }
 
     $('#client-new-ticket-btn')?.addEventListener('click', openTicketModal);
-    $('#admin-new-ticket-btn')?.addEventListener('click', openTicketModal);
     $$('#close-modal-btn, #cancel-modal-btn').forEach(b => b.addEventListener('click', closeTicketModal));
 
     const createDept = $('#ticket-department') as HTMLSelectElement;

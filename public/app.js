@@ -14,7 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     'use strict';
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g;
     // ==================== CONSTANTS ====================
     const DEPARTMENTS = [
         'Executive', 'Marketing', 'I-Wallet', 'Admin', 'I-Tech',
@@ -1357,7 +1357,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
     }
     (_c = $('#client-new-ticket-btn')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openTicketModal);
-    (_d = $('#admin-new-ticket-btn')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', openTicketModal);
     $$('#close-modal-btn, #cancel-modal-btn').forEach(b => b.addEventListener('click', closeTicketModal));
     const createDept = $('#ticket-department');
     const createCustomGroup = $('#custom-dept-group');
@@ -1527,9 +1526,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         if (articleModal)
             articleModal.classList.remove('show');
     }
-    (_e = $('#close-article-modal-btn')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', closeArticleModal);
-    (_f = $('#cancel-article-modal-btn')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', closeArticleModal);
-    (_g = $('#article-form')) === null || _g === void 0 ? void 0 : _g.addEventListener('submit', (e) => __awaiter(this, void 0, void 0, function* () {
+    (_d = $('#close-article-modal-btn')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', closeArticleModal);
+    (_e = $('#cancel-article-modal-btn')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', closeArticleModal);
+    (_f = $('#article-form')) === null || _f === void 0 ? void 0 : _f.addEventListener('submit', (e) => __awaiter(this, void 0, void 0, function* () {
         e.preventDefault();
         const id = $('#article-id').value;
         const title = $('#article-title').value.trim();
@@ -1756,7 +1755,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         applyTheme(current === 'dark' ? 'light' : 'dark');
     }
     // Wire up theme toggle
-    (_h = $('#global-theme-toggle')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', toggleTheme);
+    (_g = $('#global-theme-toggle')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', toggleTheme);
     // ==================== MOBILE SIDEBAR TOGGLE ====================
     function setupSidebarToggle(toggleId, sidebarId, overlayId) {
         const toggle = $(`#${toggleId}`);
