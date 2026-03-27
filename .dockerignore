@@ -15,10 +15,7 @@ dist
 # Uploads (persist via docker volume)
 uploads
 
-# TypeScript sources not needed at runtime
-src
-public/app.ts
-public/tsconfig.json
+# TypeScript sources are needed for builder, excluded from final image by multi-stage Dockerfile
 
 # Audio files not used in code
 notifsound.wav
