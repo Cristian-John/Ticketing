@@ -72,3 +72,11 @@ export function getSeverityBadgeClass(severity: string): string {
         default: return 'badge-default';
     }
 }
+
+export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number = 300): (...args: Parameters<T>) => void {
+    let timer: any;
+    return (...args: Parameters<T>) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}

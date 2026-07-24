@@ -87,11 +87,11 @@ export class TicketService {
         return { ...ticket, notes: [], attachments: [] };
     }
 
-    public static update(id: string, updateData: Record<string, any>): Ticket | null {
+    public static update(id: string, updateData: Partial<Ticket>): Ticket | null {
         const existing = stmts.getTicketById.get(id) as Ticket | undefined;
         if (!existing) return null;
 
-        const allowed = [
+        const allowed: (keyof Ticket)[] = [
             'title', 'description', 'category', 'department', 'priority', 
             'severity', 'status', 'assignee', 'requester', 'rating', 
             'ratingComment', 'dueAt', 'ratingRequested'

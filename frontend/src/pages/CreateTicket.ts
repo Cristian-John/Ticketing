@@ -2,8 +2,6 @@ import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
 import { showToast } from '../components/Toast';
 import { ModalsComponent } from '../components/Modals';
-import { TicketsPage } from './Tickets';
-import { DashboardPage } from './Dashboard';
 
 export class CreateTicketPage {
     public static init(): void {
@@ -57,9 +55,9 @@ export class CreateTicketPage {
                 form.reset();
                 ModalsComponent.closeModal('create-ticket-modal');
 
-                // Reload tickets and dashboard views
-                DashboardPage.load();
-                TicketsPage.load();
+                // Re-fetch all tickets and notify store subscribers (Dashboard, Tickets, Admin) reactively
+                const updatedTickets = await ticketsAPI.getAll();
+                store.setTickets(updatedTickets);
             } catch (err: any) {
                 showToast(err.message || 'Failed to create ticket', 'error');
             }

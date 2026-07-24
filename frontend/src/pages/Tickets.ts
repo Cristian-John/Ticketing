@@ -2,6 +2,7 @@ import { store } from '../state/store';
 import { ticketsAPI } from '../services/api';
 import { TicketTableComponent } from '../components/TicketTable';
 import { ModalsComponent } from '../components/Modals';
+import { debounce } from '../utils/formatters';
 
 export class TicketsPage {
     public static init(): void {
@@ -48,13 +49,11 @@ export class TicketsPage {
 
     private static initSearch(): void {
         const searchInput = document.getElementById('global-search') as HTMLInputElement;
-        let debounceTimer: any;
-        searchInput?.addEventListener('input', () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                store.setSearch(searchInput.value.trim());
-                this.load();
-            }, 300);
-        });
+        const handleSearch = debounce(() => {
+            store.setSearch(searchInput.value.trim());
+            this.load();
+        }, 300);
+
+        searchInput?.addEventListener('input', handleSearch);
     }
 }

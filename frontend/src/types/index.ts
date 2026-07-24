@@ -11,12 +11,20 @@ export interface Ticket {
     requester: string;
     rating: number | null;
     ratingComment: string | null;
-    ratingRequested?: number;
     createdAt: string;
     updatedAt: string;
     dueAt?: string;
     notes?: Note[];
     attachments?: Attachment[];
+    ratingRequested?: number;
+}
+
+export interface Note {
+    id: number;
+    ticketId: string;
+    text: string;
+    author: string;
+    time: string;
 }
 
 export interface Article {
@@ -27,14 +35,7 @@ export interface Article {
     author: string;
     createdAt: string;
     updatedAt: string;
-}
-
-export interface Note {
-    id: number;
-    ticketId: string;
-    text: string;
-    author: string;
-    time: string;
+    sortOrder?: number;
 }
 
 export interface Attachment {

@@ -1,6 +1,6 @@
 import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
-import { escapeHTML, formatDate } from '../utils/formatters';
+import { escapeHTML, formatDate, debounce } from '../utils/formatters';
 import { showToast } from '../components/Toast';
 import { ModalsComponent } from '../components/Modals';
 
@@ -51,15 +51,13 @@ export class ArticlesPage {
 
     private static initSearch(): void {
         const searchInput = document.getElementById('kb-search') as HTMLInputElement;
-        let debounceTimer: any;
-        searchInput?.addEventListener('input', async () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(async () => {
-                const query = searchInput.value.trim();
-                const filtered = await articlesAPI.getAll(query);
-                this.renderArticles(filtered);
-            }, 300);
-        });
+        const handleSearch = debounce(async () => {
+            const query = searchInput.value.trim();
+            const filtered = await articlesAPI.getAll(query);
+            this.renderArticles(filtered);
+        }, 300);
+
+        searchInput?.addEventListener('input', handleSearch);
     }
 
     private static initArticleModal(): void {

@@ -1,3 +1,4 @@
+import { Stats } from '../types';
 import { statsAPI } from '../services/api';
 import { store } from '../state/store';
 import { StatCardsComponent } from '../components/StatCards';
@@ -7,38 +8,42 @@ export class StatisticsPage {
         try {
             const stats = await statsAPI.get();
             store.setStats(stats);
+
+            // Reuse the shared StatCards component for header metrics
             StatCardsComponent.render(stats);
+
+            // Render the detailed breakdown (unique to the Statistics view)
             this.renderBreakdown(stats);
         } catch (err) {
             console.error('Failed to load statistics:', err);
         }
     }
 
-    private static renderBreakdown(stats: any): void {
+    private static renderBreakdown(stats: Stats): void {
         const container = document.getElementById('stats-breakdown-content');
         if (!container) return;
+
+        const resolveRate = stats.total > 0
+            ? ((stats.resolved / stats.total) * 100).toFixed(1)
+            : '0.0';
 
         container.innerHTML = `
             <div class="stats-grid">
                 <div class="stat-box">
-                    <h4>Total Tickets Created</h4>
-                    <div class="stat-number">${stats.total}</div>
+                    <h4>Resolution Rate</h4>
+                    <div class="stat-number">${resolveRate}%</div>
                 </div>
                 <div class="stat-box">
-                    <h4>Open Tickets</h4>
-                    <div class="stat-number text-open">${stats.open}</div>
+                    <h4>Active (Open + In Progress)</h4>
+                    <div class="stat-number text-open">${stats.open + stats.inProgress}</div>
                 </div>
                 <div class="stat-box">
-                    <h4>In Progress</h4>
-                    <div class="stat-number text-progress">${stats.inProgress}</div>
+                    <h4>Critical / Severe SLA Breaches</h4>
+                    <div class="stat-number text-severe">${stats.severe + stats.critical}</div>
                 </div>
                 <div class="stat-box">
-                    <h4>Resolved / Closed</h4>
-                    <div class="stat-number text-resolved">${stats.resolved}</div>
-                </div>
-                <div class="stat-box">
-                    <h4>Critical / Severe SLA</h4>
-                    <div class="stat-number text-severe">${stats.severe}</div>
+                    <h4>Rated Tickets</h4>
+                    <div class="stat-number">${stats.rated}</div>
                 </div>
                 <div class="stat-box">
                     <h4>Average User Rating</h4>

@@ -13,7 +13,7 @@ export interface Ticket {
     ratingComment: string | null;
     createdAt: string;
     updatedAt: string;
-    dueAt: string;
+    dueAt?: string;
     notes?: Note[];
     attachments?: Attachment[];
     ratingRequested?: number;
@@ -35,7 +35,7 @@ export interface Article {
     author: string;
     createdAt: string;
     updatedAt: string;
-    sortOrder: number;
+    sortOrder?: number;
 }
 
 export interface Attachment {
@@ -45,6 +45,11 @@ export interface Attachment {
     originalname: string;
     size: number;
     uploadedAt: string;
+}
+
+export interface UserSession {
+    username: string;
+    role: string;
 }
 
 export interface Stats {
