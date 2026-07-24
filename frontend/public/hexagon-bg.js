@@ -38,6 +38,8 @@
 
   const ctx = canvas.getContext('2d');
   let cols, rows, hexagons = [], clusters = [], lastFrame = 0;
+  let themeProgress = document.documentElement.getAttribute('data-theme') === 'light' ? 1.0 : 0.0;
+  let lastThemeTime = performance.now();
   let w, h, centerX, centerY, maxDist;
 
   function resize() {
@@ -119,9 +121,39 @@
   function draw(now) {
     ctx.clearRect(0, 0, w, h);
 
-    // Detect theme
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    const GLOW_COLOR = isLight ? GLOW_COLOR_LIGHT : GLOW_COLOR_DARK;
+    // Interpolate themeProgress
+    const targetLight = document.documentElement.getAttribute('data-theme') === 'light' ? 1 : 0;
+    const timeDelta = now - lastThemeTime;
+    lastThemeTime = now;
+    
+    // Smooth transition over ~300ms
+    const rate = 1 / 300;
+    const step = timeDelta * rate;
+    if (themeProgress !== targetLight) {
+      if (Math.abs(themeProgress - targetLight) < step) {
+        themeProgress = targetLight;
+      } else {
+        if (themeProgress < targetLight) {
+          themeProgress += step;
+        } else {
+          themeProgress -= step;
+        }
+      }
+    }
+
+    // Colors & properties interpolation
+    const r = 8 + (210 - 8) * themeProgress;
+    const g = 12 + (225 - 12) * themeProgress;
+    const b = 15 + (235 - 15) * themeProgress;
+
+    const er = 0;
+    const eg = 180 + (188 - 180) * themeProgress;
+    const eb = 212;
+
+    const gr = 0;
+    const gg = 229 + (188 - 229) * themeProgress;
+    const gb = 255 + (212 - 255) * themeProgress;
+    const GLOW_COLOR = `rgb(${gr}, ${Math.round(gg)}, ${gb})`;
 
     // Reset glow
     for (let i = 0; i < hexagons.length; i++) hexagons[i].glow = 0;
@@ -157,82 +189,46 @@
       const distFactor = Math.min(dist / (maxDist * 0.75), 1);
       const centerBrightness = 1 - distFactor; // Brighter at center, darker at edges
 
-      if (isLight) {
-        // Light mode: clean hexagons with radial fade
-        
-        // Fill - subtle and fades toward edges
-        hexPath(hex.x, hex.y);
-        const fillOpacity = (0.12 + centerBrightness * 0.18) * (1 - distFactor * 0.5);
-        ctx.fillStyle = `rgba(210, 225, 235, ${fillOpacity})`;
-        ctx.fill();
+      // Base fill
+      hexPath(hex.x, hex.y);
+      const baseFillOpacity = (0.5 - 0.38 * themeProgress) + centerBrightness * (0.3 - 0.12 * themeProgress);
+      const fillOpacity = baseFillOpacity * (1 - distFactor * 0.5);
+      ctx.fillStyle = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${fillOpacity})`;
+      ctx.fill();
 
-        // Base edges - cyan tint, fades with distance
+      // Base edges
+      hexPath(hex.x, hex.y);
+      const baseEdgeOpacity = (0.1 + 0.05 * themeProgress) + centerBrightness * (0.25 + 0.05 * themeProgress);
+      const edgeDistFactorMult = 0.7 - 0.05 * themeProgress;
+      const edgeAlpha = baseEdgeOpacity * (1 - distFactor * edgeDistFactorMult);
+      ctx.strokeStyle = `rgba(${er}, ${Math.round(eg)}, ${eb}, ${edgeAlpha})`;
+      ctx.lineWidth = LINE_WIDTH;
+      ctx.stroke();
+
+      // Animated glow
+      if (hex.glow > 0.05) {
         hexPath(hex.x, hex.y);
-        const edgeAlpha = (0.15 + centerBrightness * 0.3) * (1 - distFactor * 0.65);
-        ctx.strokeStyle = `rgba(0, 188, 212, ${edgeAlpha})`;
-        ctx.lineWidth = LINE_WIDTH;
+        const baseGlowAlpha = (0.8 - 0.05 * themeProgress) + centerBrightness * (0.2 + 0.05 * themeProgress);
+        const glowAlpha = hex.glow * baseGlowAlpha;
+        ctx.strokeStyle = `rgba(0, 229, 255, ${glowAlpha})`;
+        ctx.lineWidth = GLOW_LINE_WIDTH * (1.3 + 0.2 * themeProgress);
+        ctx.shadowColor = GLOW_COLOR;
+        ctx.shadowBlur = 16 * hex.glow;
         ctx.stroke();
-
-        // Animated glow
-        if (hex.glow > 0.05) {
-          hexPath(hex.x, hex.y);
-          const glowAlpha = hex.glow * (0.75 + centerBrightness * 0.25);
-          ctx.strokeStyle = `rgba(0, 229, 255, ${glowAlpha})`;
-          ctx.lineWidth = GLOW_LINE_WIDTH * 1.5;
-          ctx.shadowColor = GLOW_COLOR;
-          ctx.shadowBlur = 16 * hex.glow;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-          
-          // Inner glow fill
-          hexPath(hex.x, hex.y);
-          const innerGlow = ctx.createRadialGradient(
-            hex.x, hex.y, 0,
-            hex.x, hex.y, HEX_RADIUS * 0.75
-          );
-          innerGlow.addColorStop(0, `rgba(0, 229, 255, ${hex.glow * 0.2})`);
-          innerGlow.addColorStop(1, 'rgba(0, 229, 255, 0)');
-          ctx.fillStyle = innerGlow;
-          ctx.fill();
-        }
-      } else {
-        // Dark mode: clean hexagons with radial fade
+        ctx.shadowBlur = 0;
         
-        // Fill - darker at edges
+        // Inner glow fill
         hexPath(hex.x, hex.y);
-        const fillOpacity = (0.5 + centerBrightness * 0.3) * (1 - distFactor * 0.5);
-        ctx.fillStyle = `rgba(8, 12, 15, ${fillOpacity})`;
+        const innerGlowRadiusMult = 0.7 + 0.05 * themeProgress;
+        const innerGlow = ctx.createRadialGradient(
+          hex.x, hex.y, 0,
+          hex.x, hex.y, HEX_RADIUS * innerGlowRadiusMult
+        );
+        const innerGlowStartOpacity = hex.glow * (0.25 - 0.05 * themeProgress);
+        innerGlow.addColorStop(0, `rgba(0, 229, 255, ${innerGlowStartOpacity})`);
+        innerGlow.addColorStop(1, 'rgba(0, 229, 255, 0)');
+        ctx.fillStyle = innerGlow;
         ctx.fill();
-
-        // Base edges - fade with distance
-        hexPath(hex.x, hex.y);
-        const edgeAlpha = (0.1 + centerBrightness * 0.25) * (1 - distFactor * 0.7);
-        ctx.strokeStyle = `rgba(0, 180, 212, ${edgeAlpha})`;
-        ctx.lineWidth = LINE_WIDTH;
-        ctx.stroke();
-
-        // Animated glow
-        if (hex.glow > 0.05) {
-          hexPath(hex.x, hex.y);
-          const glowAlpha = hex.glow * (0.8 + centerBrightness * 0.2);
-          ctx.strokeStyle = `rgba(0, 229, 255, ${glowAlpha})`;
-          ctx.lineWidth = GLOW_LINE_WIDTH * 1.3;
-          ctx.shadowColor = GLOW_COLOR;
-          ctx.shadowBlur = 16 * hex.glow;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-          
-          // Inner glow fill
-          hexPath(hex.x, hex.y);
-          const innerGlow = ctx.createRadialGradient(
-            hex.x, hex.y, 0,
-            hex.x, hex.y, HEX_RADIUS * 0.7
-          );
-          innerGlow.addColorStop(0, `rgba(0, 229, 255, ${hex.glow * 0.25})`);
-          innerGlow.addColorStop(1, 'rgba(0, 229, 255, 0)');
-          ctx.fillStyle = innerGlow;
-          ctx.fill();
-        }
       }
     }
   }

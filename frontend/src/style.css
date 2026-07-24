@@ -72,7 +72,8 @@
     --space-2xl: 2.5rem;   /* 40px */
 
     /* ──── Theme Transition Rules ──── */
-    --theme-transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    --theme-transition-fast: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --theme-transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --scrollbar-track: #0e100f;
     --scrollbar-thumb: #2a2d30;
@@ -147,6 +148,7 @@ html {
     font-size: 15px;
     scroll-behavior: smooth;
     background: var(--bg-body);
+    transition: var(--theme-transition);
 }
 
 body {
@@ -160,6 +162,8 @@ body {
 }
 
 /* ──── Global Smooth Theme Transitions ──── */
+html,
+body,
 .sidebar,
 .topbar,
 .glass-card,
@@ -170,10 +174,34 @@ body {
 .profile-section,
 .users-table th,
 .users-table td,
+.table-wrap,
+.table-head,
+.table-row,
+.mini-card,
+.client-card,
+.badge,
+.badge-dept,
+.badge-cat,
+.badge-sla,
 input,
 select,
 textarea,
-.btn {
+.btn,
+.sb-nav-btn,
+.theme-toggle,
+.sidebar-toggle,
+a,
+h1, h2, h3, h4, h5, h6,
+p,
+span,
+label,
+svg,
+path,
+circle,
+rect,
+line,
+polyline,
+polygon {
     transition: var(--theme-transition);
 }
 
