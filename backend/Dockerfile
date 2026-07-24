@@ -6,31 +6,26 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY src/ ./src/
 COPY tsconfig.json ./
-COPY public/ ./public/
+COPY src/ ./src/
 
-RUN npx tsc && npx tsc -p public/tsconfig.json
+RUN npx tsc
 
 # ── Stage 2: Production ────────────────────────────────────────────────────────
 FROM node:20-alpine
 
+# Python and make are sometimes needed for better-sqlite3 native rebuild if node versions differ,
+# but using same node base image typically compiles fine.
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm install --omit=dev && npm cache clean --force
 
-# Copy compiled server from builder
+# Copy compiled files from builder stage
 COPY --from=builder /app/dist/ ./dist/
 
-# Copy only the runtime public assets (no .ts files)
-COPY --from=builder /app/public/app.js ./public/app.js
-COPY --from=builder /app/public/hexagon-bg.js ./public/hexagon-bg.js
-COPY --from=builder /app/public/index.css ./public/index.css
-COPY --from=builder /app/public/index.html ./public/index.html
-
-# Create data and uploads directories
-RUN mkdir -p uploads data
+# Create uploads directory (database is mounted to a external volume)
+RUN mkdir -p uploads
 
 EXPOSE 3000
 

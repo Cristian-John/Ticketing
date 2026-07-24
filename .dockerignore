@@ -1,28 +1,27 @@
-node_modules
-npm-debug.log
-dist
+# Git
 .git
 .gitignore
-.npmrc
-.env
-.vscode
 
-# Database files (persist via docker volume)
+# Dependencies (each service installs its own in Docker)
+node_modules/
+
+# Environment files
+.env
+*.env.local
+
+# Database files
 *.db
+*.db-journal
 *.db-shm
 *.db-wal
 
-# Uploads (persist via docker volume)
-uploads
+# IDE
+.vscode
+.agent
 
-# TypeScript sources are needed for builder, excluded from final image by multi-stage Dockerfile
+# OS
+.DS_Store
+Thumbs.db
 
-# Audio files not used in code
-notifsound.wav
-severealarm.wav
-
-# Docker files
-Dockerfile
-docker-compose.yml
-nginx.conf
-.dockerignore
+# Uploads (mounted as volume)
+uploads/

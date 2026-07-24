@@ -1,13 +1,17 @@
 {
   "name": "ticketing",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/server.js",
+  "description": "IT Support Ticketing System - Monorepo",
+  "private": true,
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
-    "build": "tsc && tsc -p public/tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "start": "npm --prefix backend run start"
   },
   "repository": {
     "type": "git",
@@ -16,25 +20,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Cristian-John/Ticketing/issues"
   },
   "homepage": "https://github.com/Cristian-John/Ticketing#readme",
-  "dependencies": {
-    "better-sqlite3": "^12.6.2",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "multer": "^2.1.1"
-  },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/multer": "^2.1.0",
-    "@types/node": "^25.4.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "concurrently": "^9.1.0"
   }
 }
