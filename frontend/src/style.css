@@ -61,6 +61,19 @@
 
     --sidebar-width: 240px;
 
+    /* ──── Spacing System Variables ──── */
+    --space-3xs: 0.125rem; /* 2px */
+    --space-2xs: 0.25rem;  /* 4px */
+    --space-xs:  0.5rem;   /* 8px */
+    --space-sm:  0.75rem;  /* 12px */
+    --space-md:  1rem;     /* 16px */
+    --space-lg:  1.5rem;   /* 24px */
+    --space-xl:  2rem;     /* 32px */
+    --space-2xl: 2.5rem;   /* 40px */
+
+    /* ──── Theme Transition Rules ──── */
+    --theme-transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+
     --scrollbar-track: #0e100f;
     --scrollbar-thumb: #2a2d30;
 
@@ -143,7 +156,25 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     line-height: 1.6;
-    transition: color 0.3s ease;
+    transition: var(--theme-transition);
+}
+
+/* ──── Global Smooth Theme Transitions ──── */
+.sidebar,
+.topbar,
+.glass-card,
+.panel,
+.stat-card,
+.ticket-row-item,
+.kb-article-card,
+.profile-section,
+.users-table th,
+.users-table td,
+input,
+select,
+textarea,
+.btn {
+    transition: var(--theme-transition);
 }
 
 /* ──── Scrollbar ──── */
@@ -203,10 +234,10 @@ body {
 .sb-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 18px 18px;
+    gap: var(--space-sm);
+    padding: 0 var(--space-lg) var(--space-lg);
     border-bottom: 1px solid var(--border);
-    margin-bottom: 14px;
+    margin-bottom: var(--space-sm);
 }
 .sb-logo-icon {
     width: 38px;
@@ -234,8 +265,8 @@ body {
 
 /* Sidebar User Card */
 .sb-user-card {
-    margin: 0 14px 14px;
-    padding: 10px 12px;
+    margin: 0 var(--space-sm) var(--space-sm);
+    padding: var(--space-sm);
     background: var(--status-progress-bg);
     border: 1px solid rgba(0, 229, 255, 0.2);
     border-radius: 8px;
@@ -261,14 +292,14 @@ body {
 .sb-nav {
     display: flex;
     flex-direction: column;
-    padding: 0 10px;
-    gap: 3px;
+    padding: 0 var(--space-sm);
+    gap: var(--space-3xs);
 }
 .sb-nav-btn {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 10px 13px;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-sm);
     border-radius: 7px;
     border: none;
     background: transparent;
@@ -307,8 +338,8 @@ body {
 
 /* Sidebar Stats */
 .sb-stats-box {
-    margin: 14px 14px 0;
-    padding: 12px;
+    margin: var(--space-sm) var(--space-sm) 0;
+    padding: var(--space-sm);
     background: var(--bg-body);
     border-radius: 8px;
     border: 1px solid var(--border);
@@ -436,12 +467,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 24px;
+    padding: var(--space-sm) var(--space-lg);
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-xs);
 }
 .page-title {
     margin: 0;
@@ -452,7 +483,7 @@ body {
 
 .filter-row {
     display: flex;
-    gap: 7px;
+    gap: var(--space-xs);
     flex-wrap: wrap;
 }
 .search-box {
@@ -469,7 +500,7 @@ body {
 }
 .search-box:focus {
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 2px var(--primary-light);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 .filter-sel {
     padding: 6px 9px;
@@ -485,12 +516,13 @@ body {
 }
 .filter-sel:focus {
     border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .content-area {
     flex: 1;
     overflow: auto;
-    padding: 24px;
+    padding: var(--space-lg);
 }
 
 /* ============================
@@ -576,7 +608,7 @@ body {
 
 /* ──── Form Elements ──── */
 .form-group {
-    margin-bottom: 1.15rem;
+    margin-bottom: var(--space-md);
 }
 .form-group label {
     display: block;
@@ -594,7 +626,7 @@ body {
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: var(--space-sm);
 }
 
 .input-wrapper {
@@ -781,14 +813,14 @@ textarea {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
 }
 .stat-card {
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 9px;
-    padding: 14px 16px;
+    padding: var(--space-sm) var(--space-md);
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -815,14 +847,14 @@ textarea {
 .panel {
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 16px;
+    border-radius: var(--radius);
+    padding: var(--space-md);
 }
 .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-sm);
     font-size: 12px;
     font-weight: 700;
 }
@@ -840,8 +872,8 @@ textarea {
 .dash-grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
 }
 
 /* ──── Mini Ticket Card ──── */
@@ -849,7 +881,7 @@ textarea {
     background: var(--bg-body);
     border-radius: 7px;
     padding: 10px;
-    margin-bottom: 7px;
+    margin-bottom: var(--space-xs);
     cursor: pointer;
     border: 1px solid var(--border);
     transition: var(--transition);
@@ -937,12 +969,12 @@ textarea {
 .table-wrap {
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 9px;
+    border-radius: var(--radius);
     overflow: hidden;
 }
 .table-head {
     display: flex;
-    padding: 10px 16px;
+    padding: var(--space-sm) var(--space-md);
     background: var(--table-head-bg);
     font-size: 10px;
     color: var(--text-muted);
@@ -954,7 +986,7 @@ textarea {
 .table-row {
     display: flex;
     align-items: center;
-    padding: 11px 16px;
+    padding: var(--space-sm) var(--space-md);
     border-bottom: 1px solid var(--border);
     cursor: pointer;
     transition: var(--transition);
@@ -1127,11 +1159,11 @@ textarea {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-md);
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 18px;
+    border-radius: var(--radius);
+    padding: var(--space-lg);
 }
 .detail-id {
     font-family: monospace;
@@ -1182,7 +1214,7 @@ textarea {
 .detail-grid {
     display: grid;
     grid-template-columns: 1fr 290px;
-    gap: 16px;
+    gap: var(--space-md);
 }
 .detail-grid-client {
     grid-template-columns: 1fr 260px;
@@ -1190,12 +1222,12 @@ textarea {
 .detail-main {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-md);
 }
 .detail-side {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-md);
 }
 
 .detail-info-row {
@@ -1262,7 +1294,7 @@ textarea {
 
 /* ──── Empty State ──── */
 .empty-state {
-    padding: 40px 20px;
+    padding: var(--space-2xl) var(--space-xl);
     text-align: center;
     color: var(--text-muted);
     font-size: 13px;
@@ -1282,11 +1314,11 @@ textarea {
 .client-card {
     background: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 16px;
+    border-radius: var(--radius);
+    padding: var(--space-md);
     cursor: pointer;
     transition: var(--transition);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-sm);
 }
 .client-card:hover {
     background: var(--bg-card-hover);
@@ -1373,7 +1405,7 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px;
+    padding: var(--space-lg) var(--space-xl);
     border-bottom: 1px solid var(--border);
 }
 .modal-header h3 {
@@ -1405,15 +1437,15 @@ textarea {
 
 .modal form,
 .modal .modal-body {
-    padding: 20px;
+    padding: var(--space-xl);
 }
 
 .modal-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.7rem;
-    margin-top: 12px;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
 }
 
 /* ──── Hidden Utility ──── */
@@ -1751,7 +1783,7 @@ textarea {
     color: var(--text-heading);
     font-size: 18px;
     font-weight: 700;
-    margin: 0 0 16px 0;
+    margin: 0 0 var(--space-md) 0;
     line-height: 1.4;
     letter-spacing: -0.01em;
 }
@@ -1783,14 +1815,14 @@ textarea {
 .profile-page {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--space-xl);
     max-width: 800px;
     margin: 0 auto;
-    padding: 1rem 0;
+    padding: var(--space-md) 0;
 }
 
 .profile-section {
-    padding: 2rem;
+    padding: var(--space-xl);
     position: relative;
     overflow: hidden;
 }
@@ -1798,9 +1830,9 @@ textarea {
 .profile-header {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
     border-bottom: 1px solid var(--border);
 }
 
@@ -1822,13 +1854,13 @@ textarea {
 .profile-name {
     font-size: 1.6rem;
     font-weight: 700;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--space-xs) 0;
     color: var(--text-heading);
 }
 
 .profile-role-badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
+    padding: var(--space-2xs) var(--space-sm);
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -1840,13 +1872,13 @@ textarea {
 .profile-info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
+    gap: var(--space-lg);
 }
 
 .profile-info-item {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-xs);
 }
 
 .profile-info-item label {
@@ -1861,9 +1893,9 @@ textarea {
     font-size: 1rem;
     font-weight: 500;
     color: var(--text-primary);
-    padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     min-height: 42px;
     display: flex;
@@ -1875,7 +1907,7 @@ textarea {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    margin-right: 8px;
+    margin-right: var(--space-xs);
 }
 
 .profile-info-value .status-dot.active {
@@ -1886,11 +1918,11 @@ textarea {
 .profile-section-title {
     font-size: 1.2rem;
     font-weight: 600;
-    margin: 0 0 1.5rem 0;
+    margin: 0 0 var(--space-lg) 0;
     color: var(--text-heading);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-sm);
 }
 
 .profile-section-title svg {
@@ -1900,13 +1932,13 @@ textarea {
 .change-password-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--space-md);
     max-width: 500px;
 }
 
 .password-hint {
     display: block;
-    margin-top: 0.25rem;
+    margin-top: var(--space-2xs);
     font-size: 0.78rem;
     color: var(--text-muted);
 }
