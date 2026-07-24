@@ -33,59 +33,103 @@
                             <path d="M9 12l2 2 4-4" />
                         </svg>
                     </div>
-                    <h1>IT Support</h1>
-                    <p class="login-subtitle">Ticketing System</p>
+                    <h1 id="auth-title">Sign In</h1>
+                    <p class="login-subtitle" id="auth-subtitle">IT Support Ticketing System</p>
                 </div>
                 <form id="login-form" class="login-form">
-                    <div class="form-group">
-                        <label for="login-role">Login as</label>
-                        <div class="input-wrapper">
-                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="8.5" cy="7" r="4" />
-                                <path d="M20 8v6" />
-                                <path d="M23 11h-6" />
-                            </svg>
-                            <select id="login-role">
-                                <option value="client">Client</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group" id="username-group">
-                        <label for="login-username">Name</label>
+                    <!-- Full Name (Register Only) -->
+                    <div class="form-group" id="fullName-group" style="display:none">
+                        <label for="login-fullname">Full Name</label>
                         <div class="input-wrapper">
                             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                                 <circle cx="12" cy="7" r="4" />
                             </svg>
-                            <input type="text" id="login-username" placeholder="Enter your name" required>
+                            <input type="text" id="login-fullname" placeholder="Enter your full name">
                         </div>
                     </div>
-                    <div class="form-group" id="password-group" style="display:none">
+
+                    <!-- Username (Both) -->
+                    <div class="form-group" id="username-group">
+                        <label for="login-username">Username</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <input type="text" id="login-username" placeholder="Enter username" required>
+                        </div>
+                    </div>
+
+                    <!-- Email (Register Only) -->
+                    <div class="form-group" id="email-group" style="display:none">
+                        <label for="login-email">Email</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="4" />
+                                <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+                            </svg>
+                            <input type="email" id="login-email" placeholder="Enter your email">
+                        </div>
+                    </div>
+
+                    <!-- Password (Both) -->
+                    <div class="form-group" id="password-group">
                         <label for="login-password">Password</label>
+                        <div class="input-wrapper" style="position:relative">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <input type="password" id="login-password" placeholder="Enter password" required>
+                            <button type="button" class="password-toggle" id="login-password-toggle" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:5px;">👁️</button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password (Register Only) -->
+                    <div class="form-group" id="confirm-password-group" style="display:none">
+                        <label for="login-confirm-password">Confirm Password</label>
                         <div class="input-wrapper">
                             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input type="password" id="login-password" placeholder="Enter admin password">
+                            <input type="password" id="login-confirm-password" placeholder="Confirm password">
                         </div>
                     </div>
+
+                    <!-- Remember Me (Sign In Only) -->
+                    <div class="form-group checkbox-group" id="remember-me-group" style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
+                        <input type="checkbox" id="login-remember" style="width:16px; height:16px; cursor:pointer;">
+                        <label for="login-remember" style="margin:0; cursor:pointer; font-size:14px; color:rgba(255,255,255,0.7)">Remember Me</label>
+                    </div>
+
                     <button type="submit" class="btn btn-primary btn-login" id="login-btn">
-                        <span>Sign In</span>
+                        <span id="login-btn-text">Sign In</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M5 12h14" />
                             <path d="M12 5l7 7-7 7" />
                         </svg>
                     </button>
+                    
+                    <div class="auth-toggle-container" style="text-align:center; margin-top:20px; font-size:14px; color:rgba(255,255,255,0.6)">
+                        <span id="auth-toggle-message">Don't have an account?</span>
+                        <a href="#" id="toggle-auth-mode" style="color:var(--accent); text-decoration:none; font-weight:600; margin-left:4px;">Register</a>
+                    </div>
 
+                    <div id="forgot-password-container" style="text-align:center; margin-top:12px;">
+                        <a href="#" id="forgot-password-link" style="color:var(--text-muted); text-decoration:none; font-size:13px;">Forgot Password?</a>
+                        <div id="forgot-password-message" style="display:none; margin-top:8px; padding:10px; background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.15); border-radius:6px; font-size:12px; color:var(--text-secondary);">
+                            🔒 This is an internal system. Please contact your <strong>System Administrator</strong> to reset your password.
+                        </div>
+                    </div>
                 </form>
-
             </div>
         </div>
     </div>
@@ -138,6 +182,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Submit Ticket
                     </button>
+                    <button class="sb-nav-btn" data-view="profile">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Profile
+                    </button>
                     <button class="btn btn-ghost sb-logout-btn" id="client-logout-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                         Logout
@@ -185,6 +233,11 @@
                     </div>
                 </div>
 
+                <div class="sb-user-card">
+                    <div class="sb-user-label">LOGGED IN AS</div>
+                    <div class="sb-user-name" id="admin-sidebar-name">User</div>
+                </div>
+
                 <nav class="sb-nav">
                     <button class="sb-nav-btn active" data-view="dashboard">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -203,6 +256,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                         <span>Knowledge Base</span>
                     </button>
+                    <button class="sb-nav-btn" data-view="users" id="admin-nav-users" style="display:none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span>Users</span>
+                    </button>
                 </nav>
 
                 <div class="sb-stats-box">
@@ -216,6 +273,10 @@
 
                 <div class="sb-bottom">
 
+                    <button class="sb-nav-btn" data-view="profile">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Profile
+                    </button>
                     <button class="btn btn-ghost sb-logout-btn" id="admin-logout-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                         Logout
@@ -371,6 +432,135 @@
             <div id="view-modal-body">
                 <!-- Populated by JS -->
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== EDIT TICKET MODAL ==================== -->
+    <div class="modal-overlay" id="edit-ticket-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3>✏️ Edit Ticket</h3>
+                <button class="modal-close" id="close-edit-modal-btn">&times;</button>
+            </div>
+            <form id="edit-ticket-form">
+                <div class="form-group">
+                    <label for="edit-ticket-status">Status</label>
+                    <select id="edit-ticket-status">
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-ticket-severity">Severity</label>
+                        <select id="edit-ticket-severity">
+                            <option value="Low">Low</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Severe">Severe</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-ticket-priority">Priority</label>
+                        <select id="edit-ticket-priority">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-ticket-assignee">Assignee</label>
+                    <select id="edit-ticket-assignee">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-ticket-due">Due Date & Time</label>
+                    <input type="datetime-local" id="edit-ticket-due" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" id="cancel-edit-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== USER MODAL ==================== -->
+    <div class="modal-overlay" id="user-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3 id="user-modal-title">Create User</h3>
+                <button class="modal-close" id="close-user-modal-btn">&times;</button>
+            </div>
+            <form id="user-form">
+                <input type="hidden" id="user-id-field">
+                <div class="form-group">
+                    <label for="user-fullname">Full Name</label>
+                    <input type="text" id="user-fullname" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                </div>
+                <div class="form-group">
+                    <label for="user-username">Username</label>
+                    <input type="text" id="user-username" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                </div>
+                <div class="form-group">
+                    <label for="user-email">Email Address</label>
+                    <input type="email" id="user-email" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                </div>
+                <div class="form-group" id="user-password-group">
+                    <label for="user-password">Password</label>
+                    <div class="input-wrapper" style="position:relative">
+                        <input type="password" id="user-password" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                        <button type="button" class="password-toggle" id="user-password-toggle" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:5px;">👁️</button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="user-role">Role</label>
+                        <select id="user-role" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                            <option value="it-support">IT Support</option>
+                            <option value="admin">Admin</option>
+                            <option value="client">Client</option>
+                        </select>
+                    </div>
+                    <div class="form-group checkbox-group" id="user-active-group" style="display:flex; align-items:center; gap:8px; margin-top:28px;">
+                        <input type="checkbox" id="user-active" checked style="width:16px; height:16px; cursor:pointer;">
+                        <label for="user-active" style="margin:0; cursor:pointer; font-size:14px; color:rgba(255,255,255,0.7)">Active</label>
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top:20px">
+                    <button type="button" class="btn btn-ghost" id="cancel-user-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== RESET PASSWORD MODAL ==================== -->
+    <div class="modal-overlay" id="reset-password-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <button class="modal-close" id="close-reset-modal-btn">&times;</button>
+            </div>
+            <form id="reset-password-form">
+                <input type="hidden" id="reset-user-id-field">
+                <div class="form-group">
+                    <label for="reset-password-val">New Password</label>
+                    <input type="password" id="reset-password-val" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                </div>
+                <div class="form-group">
+                    <label for="reset-password-confirm">Confirm Password</label>
+                    <input type="password" id="reset-password-confirm" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                </div>
+                <div class="modal-actions" style="margin-top:20px">
+                    <button type="button" class="btn btn-ghost" id="cancel-reset-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reset Password</button>
+                </div>
+            </form>
         </div>
     </div>
 

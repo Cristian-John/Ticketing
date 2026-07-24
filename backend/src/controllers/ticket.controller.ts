@@ -6,12 +6,16 @@ export class TicketController {
     public static getAll(req: Request, res: Response, next: NextFunction): void {
         try {
             const { status, priority, severity, department, search } = req.query;
+            const user = (req as any).user;
+            const userIdFilter = user.role === 'client' ? user.id : (req.query.userId as string);
+
             const tickets = TicketService.getAll({
                 status: status as string,
                 priority: priority as string,
                 severity: severity as string,
                 department: department as string,
                 search: search as string,
+                userId: userIdFilter,
             });
             res.json(tickets);
         } catch (err) {
@@ -24,6 +28,12 @@ export class TicketController {
             const ticket = TicketService.getById(String(req.params.id));
             if (!ticket) {
                 res.status(404).json({ error: 'Ticket not found' });
+                return;
+            }
+
+            const user = (req as any).user;
+            if (user.role === 'client' && ticket.userId !== user.id && ticket.requester.toLowerCase() !== user.username.toLowerCase()) {
+                res.status(403).json({ error: 'Access denied: you do not own this ticket.' });
                 return;
             }
             res.json(ticket);
@@ -40,6 +50,8 @@ export class TicketController {
                 requester, assignee = 'Unassigned'
             } = req.body;
 
+            const user = (req as any).user;
+
             // Input Validation
             if (!title || typeof title !== 'string' || !title.trim()) {
                 res.status(400).json({ error: 'Missing or invalid required field: title' });
@@ -49,7 +61,7 @@ export class TicketController {
                 res.status(400).json({ error: 'Missing or invalid required field: description' });
                 return;
             }
-            if (!requester || typeof requester !== 'string' || !requester.trim()) {
+            if (!user && (!requester || typeof requester !== 'string' || !requester.trim())) {
                 res.status(400).json({ error: 'Missing or invalid required field: requester' });
                 return;
             }
@@ -67,6 +79,9 @@ export class TicketController {
             else if (severity === 'Low') dueHours = 48;
             
             const dueAt = new Date(Date.now() + dueHours * 3600000).toISOString();
+            
+            const finalRequester = user ? user.fullName : requester.trim();
+            const userId = user ? user.id : null;
 
             const ticket = TicketService.create({
                 id,
@@ -77,10 +92,11 @@ export class TicketController {
                 priority,
                 severity,
                 assignee: assignee || 'Unassigned',
-                requester: requester.trim(),
+                requester: finalRequester,
                 createdAt: now,
                 updatedAt: now,
-                dueAt
+                dueAt,
+                userId
             });
 
             res.status(201).json(ticket);
@@ -100,7 +116,8 @@ export class TicketController {
                 }
             }
 
-            const ticket = TicketService.update(String(req.params.id), req.body);
+            const { changedBy, ...updates } = req.body;
+            const ticket = TicketService.update(String(req.params.id), updates, changedBy);
             if (!ticket) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -127,18 +144,27 @@ export class TicketController {
     public static addNote(req: Request, res: Response, next: NextFunction): void {
         try {
             const { text, author } = req.body;
+            const user = (req as any).user;
 
             // Input Validation
             if (!text || typeof text !== 'string' || !text.trim()) {
                 res.status(400).json({ error: 'Missing or invalid required field: text' });
                 return;
             }
-            if (!author || typeof author !== 'string' || !author.trim()) {
-                res.status(400).json({ error: 'Missing or invalid required field: author' });
+
+            const ticket = TicketService.getById(String(req.params.id));
+            if (!ticket) {
+                res.status(404).json({ error: 'Ticket not found' });
                 return;
             }
 
-            const note = TicketService.addNote(String(req.params.id), text.trim(), author.trim());
+            if (user && user.role === 'client' && ticket.userId !== user.id && ticket.requester.toLowerCase() !== user.username.toLowerCase()) {
+                res.status(403).json({ error: 'Access denied: you do not own this ticket.' });
+                return;
+            }
+
+            const noteAuthor = user ? user.fullName : (author || 'User').trim();
+            const note = TicketService.addNote(String(req.params.id), text.trim(), noteAuthor);
             if (!note) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -154,6 +180,12 @@ export class TicketController {
             const existing = TicketService.getById(String(req.params.id));
             if (!existing) {
                 res.status(404).json({ error: 'Ticket not found' });
+                return;
+            }
+
+            const user = (req as any).user;
+            if (user && user.role === 'client' && existing.userId !== user.id && existing.requester.toLowerCase() !== user.username.toLowerCase()) {
+                res.status(403).json({ error: 'Access denied: you do not own this ticket.' });
                 return;
             }
 

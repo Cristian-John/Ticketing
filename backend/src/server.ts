@@ -11,6 +11,7 @@ import ticketRoutes from './routes/tickets';
 import articleRoutes from './routes/articles';
 import statRoutes from './routes/stats';
 import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
 
 const app = express();
 
@@ -18,6 +19,9 @@ const app = express();
 app.use(securityHeaders()); // helmet headers
 app.use(cors());
 app.use(express.json());
+
+// ─── Serve Uploads ────────────────────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── Root Endpoint ────────────────────────────────────────────────────────────
 app.get('/', (req: Request, res: Response) => {
@@ -63,7 +67,8 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/v1/tickets', apiLimiter, ticketRoutes);
 app.use('/api/v1/articles', apiLimiter, articleRoutes);
 app.use('/api/v1/stats', apiLimiter, statRoutes);
-app.use('/api/v1/auth', apiLimiter, authRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', apiLimiter, userRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

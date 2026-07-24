@@ -17,6 +17,7 @@ export interface Ticket {
     notes?: Note[];
     attachments?: Attachment[];
     ratingRequested?: number;
+    userId?: string;
 }
 
 export interface Note {
@@ -48,8 +49,12 @@ export interface Attachment {
 }
 
 export interface UserSession {
+    id: string;
     username: string;
+    fullName: string;
+    email: string;
     role: string;
+    token: string;
 }
 
 export interface Stats {
@@ -61,4 +66,15 @@ export interface Stats {
     critical: number;
     avgRating: string | null;
     rated: number;
+}
+
+export interface User {
+    id: string;
+    username: string;
+    fullName: string;
+    email: string;
+    role: string;
+    active: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 }

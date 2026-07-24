@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { ENV } from './env';
+import bcrypt from 'bcryptjs';
 
 const db = new Database(ENV.DB_PATH);
 
@@ -24,6 +25,25 @@ db.exec(`
         ratingComment TEXT DEFAULT '',
         createdAt     TEXT NOT NULL,
         updatedAt     TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+        id        TEXT PRIMARY KEY,
+        username  TEXT NOT NULL UNIQUE,
+        fullName  TEXT NOT NULL,
+        email     TEXT NOT NULL UNIQUE,
+        password  TEXT NOT NULL,
+        role      TEXT NOT NULL DEFAULT 'client',
+        active    INTEGER NOT NULL DEFAULT 1,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+        id        TEXT PRIMARY KEY,
+        userId    TEXT NOT NULL,
+        expiresAt TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS notes (
@@ -81,6 +101,55 @@ try {
     });
 } catch (e) {
     // Column likely already exists
+}
+
+try {
+    // Add userId column for User Account tracking if it doesn't already exist
+    db.exec('ALTER TABLE tickets ADD COLUMN userId TEXT DEFAULT NULL');
+} catch (e) {
+    // Column likely already exists
+}
+
+try {
+    // Seed default admin account
+    const adminExists = db.prepare('SELECT 1 FROM users WHERE role = ?').get('admin');
+    if (!adminExists) {
+        const adminId = 'USR-admin';
+        const salt = bcrypt.genSaltSync(10);
+        const hashedPassword = bcrypt.hashSync(ENV.ADMIN_PASSWORD, salt);
+        const now = new Date().toISOString();
+        db.prepare(`
+            INSERT INTO users (id, username, fullName, email, password, role, active, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+        `).run(adminId, 'admin', 'System Administrator', 'admin@support.com', hashedPassword, 'admin', now, now);
+        console.log('[Database] Default admin account seeded.');
+    }
+} catch (err) {
+    console.error('Failed to seed default admin:', err);
+}
+
+try {
+    // Run one-time ticket migration to match requester to userId
+    const unmigratedTickets = db.prepare('SELECT id, requester FROM tickets WHERE userId IS NULL').all() as { id: string, requester: string }[];
+    if (unmigratedTickets.length > 0) {
+        let matchedCount = 0;
+        let orphanedCount = 0;
+        
+        for (const t of unmigratedTickets) {
+            const userMatch = db.prepare('SELECT id FROM users WHERE LOWER(username) = LOWER(?)').all(t.requester) as { id: string }[];
+            if (userMatch.length === 1) {
+                db.prepare('UPDATE tickets SET userId = ? WHERE id = ?').run(userMatch[0].id, t.id);
+                matchedCount++;
+            } else {
+                orphanedCount++;
+            }
+        }
+        if (matchedCount > 0 || orphanedCount > 0) {
+            console.log(`[Database] Data migration: matched ${matchedCount} tickets to user accounts, ${orphanedCount} tickets left orphaned (requester preserved).`);
+        }
+    }
+} catch (err) {
+    console.error('Failed to run tickets data migration:', err);
 }
 
 console.log('[Database] Connection initialized and schemas validated.');

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { TicketController } from '../controllers/ticket.controller';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -14,6 +15,8 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage });
+
+router.use(requireAuth());
 
 // Ticket routes
 router.get('/', TicketController.getAll);

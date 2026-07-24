@@ -29,7 +29,8 @@ class Store {
         currentView: 'dashboard',
     };
 
-    private listeners: (() => void)[] = [];
+    private viewListeners: Array<(view: string) => void> = [];
+    private sessionListeners: Array<() => void> = [];
 
     constructor() {
         this.loadSession();
@@ -39,20 +40,28 @@ class Store {
         return this.state;
     }
 
-    public subscribe(listener: () => void): () => void {
-        this.listeners.push(listener);
+    /** Fires only when navigation view changes (setView). */
+    public subscribeToView(listener: (view: string) => void): () => void {
+        this.viewListeners.push(listener);
         return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
+            this.viewListeners = this.viewListeners.filter(l => l !== listener);
         };
     }
 
-    private notify(): void {
-        this.listeners.forEach(l => l());
+    /** Fires only when login session changes (setSession). */
+    public subscribeToSession(listener: () => void): () => void {
+        this.sessionListeners.push(listener);
+        return () => {
+            this.sessionListeners = this.sessionListeners.filter(l => l !== listener);
+        };
     }
 
     public loadSession(): UserSession | null {
         try {
-            const raw = localStorage.getItem(SESSION_KEY);
+            let raw = localStorage.getItem(SESSION_KEY);
+            if (!raw) {
+                raw = sessionStorage.getItem(SESSION_KEY);
+            }
             if (raw) {
                 this.state.currentUser = JSON.parse(raw);
             }
@@ -62,49 +71,58 @@ class Store {
         return this.state.currentUser;
     }
 
-    public setSession(session: UserSession | null): void {
+    public setSession(session: UserSession | null, rememberMe = false): void {
         this.state.currentUser = session;
         if (session) {
-            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+            const raw = JSON.stringify(session);
+            if (rememberMe) {
+                localStorage.setItem(SESSION_KEY, raw);
+                sessionStorage.removeItem(SESSION_KEY);
+            } else {
+                sessionStorage.setItem(SESSION_KEY, raw);
+                localStorage.removeItem(SESSION_KEY);
+            }
         } else {
             localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem(SESSION_KEY);
         }
-        this.notify();
+        this.sessionListeners.forEach(l => l());
     }
 
+    /** Updates cached tickets without notifying subscribers (no page reload). */
     public setTickets(tickets: Ticket[]): void {
         this.state.tickets = tickets;
-        this.notify();
     }
 
+    /** Updates cached articles without notifying subscribers. */
     public setArticles(articles: Article[]): void {
         this.state.articles = articles;
-        this.notify();
     }
 
+    /** Updates cached stats without notifying subscribers. */
     public setStats(stats: Stats): void {
         this.state.stats = stats;
-        this.notify();
     }
 
     public setFilter(status: string): void {
         this.state.activeFilter = status;
-        this.notify();
     }
 
     public setDepartment(dept: string): void {
         this.state.activeDepartment = dept;
-        this.notify();
     }
 
     public setSearch(query: string): void {
         this.state.searchQuery = query;
-        this.notify();
     }
 
-    public setView(view: string): void {
+    /** Triggers view subscribers when the view changes, or when force is true. */
+    public setView(view: string, options?: { force?: boolean }): void {
+        const unchanged = this.state.currentView === view;
         this.state.currentView = view;
-        this.notify();
+        if (!unchanged || options?.force) {
+            this.viewListeners.forEach(l => l(view));
+        }
     }
 }
 

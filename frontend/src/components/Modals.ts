@@ -1,32 +1,41 @@
-import { Ticket, Article } from '../types';
+import { Ticket } from '../types';
 import { escapeHTML, formatDate, formatAssignees, getStatusBadgeClass, getPriorityBadgeClass, getSeverityBadgeClass } from '../utils/formatters';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
 import { showToast } from './Toast';
+import { EditTicketModal } from './EditTicketModal';
 
 export class ModalsComponent {
     public static openModal(modalId: string): void {
         const modal = document.getElementById(modalId);
-        if (modal) modal.classList.add('active');
+        if (modal) modal.classList.add('show');
     }
 
     public static closeModal(modalId: string): void {
         const modal = document.getElementById(modalId);
-        if (modal) modal.classList.remove('active');
+        if (modal) modal.classList.remove('show');
     }
 
     public static initModalCloseListeners(): void {
-        document.querySelectorAll('.modal-close, .modal-overlay').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modal = (e.target as HTMLElement).closest('.modal');
-                if (modal) modal.classList.remove('active');
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const overlay = btn.closest('.modal-overlay');
+                if (overlay) overlay.classList.remove('show');
+            });
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
             });
         });
     }
 
     public static showTicketDetail(ticket: Ticket, onRefresh: () => void): void {
-        const modal = document.getElementById('ticket-detail-modal');
-        const container = document.getElementById('ticket-detail-content');
+        const modal = document.getElementById('view-ticket-modal');
+        const container = document.getElementById('view-modal-body');
         if (!modal || !container) return;
 
         const user = store.getState().currentUser;
@@ -37,10 +46,17 @@ export class ModalsComponent {
                     <span class="ticket-id-lg">${escapeHTML(ticket.id)}</span>
                     <h2>${escapeHTML(ticket.title)}</h2>
                 </div>
-                <div class="detail-badges">
-                    <span class="badge ${getStatusBadgeClass(ticket.status)}">${ticket.status}</span>
-                    <span class="badge ${getPriorityBadgeClass(ticket.priority)}">${ticket.priority}</span>
-                    <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${ticket.severity}</span>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                    <div class="detail-badges">
+                        <span class="badge ${getStatusBadgeClass(ticket.status)}">${ticket.status}</span>
+                        <span class="badge ${getPriorityBadgeClass(ticket.priority)}">${ticket.priority}</span>
+                        <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${ticket.severity}</span>
+                    </div>
+                    ${user && (user.role === 'admin' || user.role === 'it-support') ? `
+                        <button class="btn btn-secondary btn-sm" id="detail-edit-btn" style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                            ✏️ Edit Ticket
+                        </button>
+                    ` : ''}
                 </div>
             </div>
 
@@ -94,9 +110,21 @@ export class ModalsComponent {
             </div>
         `;
 
-        modal.classList.add('active');
+        modal.classList.add('show');
 
-        // Note form submission handler
+        const editBtn = document.getElementById('detail-edit-btn');
+        editBtn?.addEventListener('click', () => {
+            EditTicketModal.open(ticket, async () => {
+                try {
+                    const updated = await ticketsAPI.getById(ticket.id);
+                    this.showTicketDetail(updated, onRefresh);
+                    onRefresh();
+                } catch (err) {
+                    console.error('Failed to reload ticket after update:', err);
+                }
+            });
+        });
+
         const noteForm = document.getElementById('add-note-form');
         noteForm?.addEventListener('submit', async (e) => {
             e.preventDefault();

@@ -6,8 +6,8 @@ const stmts = {
     getAllTickets: db.prepare(`SELECT * FROM tickets ORDER BY createdAt DESC`),
     getTicketById: db.prepare(`SELECT * FROM tickets WHERE id = ?`),
     insertTicket: db.prepare(`
-        INSERT INTO tickets (id, title, description, category, department, priority, severity, status, assignee, requester, rating, ratingComment, createdAt, updatedAt, dueAt)
-        VALUES (@id, @title, @description, @category, @department, @priority, @severity, @status, @assignee, @requester, @rating, @ratingComment, @createdAt, @updatedAt, @dueAt)
+        INSERT INTO tickets (id, title, description, category, department, priority, severity, status, assignee, requester, rating, ratingComment, createdAt, updatedAt, dueAt, userId)
+        VALUES (@id, @title, @description, @category, @department, @priority, @severity, @status, @assignee, @requester, @rating, @ratingComment, @createdAt, @updatedAt, @dueAt, @userId)
     `),
     deleteTicket: db.prepare(`DELETE FROM tickets WHERE id = ?`),
     getNotes: db.prepare(`SELECT * FROM notes WHERE ticketId = ? ORDER BY id ASC`),
@@ -29,6 +29,7 @@ export class TicketService {
         severity?: string;
         department?: string;
         search?: string;
+        userId?: string;
     }): Ticket[] {
         let tickets = stmts.getAllTickets.all() as Ticket[];
 
@@ -53,6 +54,15 @@ export class TicketService {
                 t.requester.toLowerCase().includes(q) ||
                 t.department.toLowerCase().includes(q) ||
                 (t.description || '').toLowerCase().includes(q)
+            );
+        }
+
+        if (filters.userId) {
+            const user = db.prepare('SELECT username FROM users WHERE id = ?').get(filters.userId) as { username: string } | undefined;
+            const username = user?.username;
+            tickets = tickets.filter(t => 
+                t.userId === filters.userId || 
+                (username && t.requester && t.requester.toLowerCase() === username.toLowerCase())
             );
         }
 
@@ -87,7 +97,7 @@ export class TicketService {
         return { ...ticket, notes: [], attachments: [] };
     }
 
-    public static update(id: string, updateData: Partial<Ticket>): Ticket | null {
+    public static update(id: string, updateData: Partial<Ticket>, changedBy?: string): Ticket | null {
         const existing = stmts.getTicketById.get(id) as Ticket | undefined;
         if (!existing) return null;
 
@@ -116,6 +126,21 @@ export class TicketService {
 
         const sql = `UPDATE tickets SET ${setClauses.join(', ')} WHERE id = @id`;
         db.prepare(sql).run(values);
+
+        // Generate system notes for operational changes
+        const fieldsToTrack: (keyof Ticket)[] = ['status', 'severity', 'priority', 'assignee', 'dueAt'];
+        const changer = changedBy || 'Admin';
+        for (const field of fieldsToTrack) {
+            if (updateData[field] !== undefined && updateData[field] !== existing[field]) {
+                const oldVal = String(existing[field] ?? 'Unassigned');
+                const newVal = String(updateData[field] ?? 'Unassigned');
+                if (oldVal === newVal) continue;
+
+                const fieldNameFormatted = field === 'dueAt' ? 'due date' : field;
+                const noteText = `${changer} changed ${fieldNameFormatted} from ${oldVal} to ${newVal}`;
+                this.addNote(id, noteText, 'System');
+            }
+        }
 
         return this.getById(id);
     }

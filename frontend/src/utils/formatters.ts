@@ -74,9 +74,20 @@ export function getSeverityBadgeClass(severity: string): string {
 }
 
 export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number = 300): (...args: Parameters<T>) => void {
-    let timer: any;
+    let timer: ReturnType<typeof setTimeout>;
     return (...args: Parameters<T>) => {
         clearTimeout(timer);
         timer = setTimeout(() => fn(...args), delay);
     };
+}
+
+export function isResolved(ticket: Ticket): boolean {
+    return ticket.status === 'Resolved' || ticket.status === 'Closed';
+}
+
+export function getSeverityColor(severity: string): string {
+    if (severity === 'Severe') return 'var(--severity-severe)';
+    if (severity === 'High') return 'var(--severity-high)';
+    if (severity === 'Moderate') return 'var(--severity-moderate)';
+    return 'var(--severity-low)';
 }
