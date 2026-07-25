@@ -1,6 +1,7 @@
 import { store } from '../state/store';
 import { Router } from '../router/router';
 import { showToast } from './Toast';
+import { ModalsComponent } from './Modals';
 
 const THEME_KEY = 'itsupport_theme';
 
@@ -55,12 +56,21 @@ export class NavbarComponent {
     }
 
     private static initLogout(): void {
-        const handleLogout = () => {
-            Router.logout();
-            showToast('Logged out successfully', 'info');
+        const handleLogoutClick = () => {
+            ModalsComponent.openModal('logout-confirm-modal');
         };
 
-        document.getElementById('client-logout-btn')?.addEventListener('click', handleLogout);
-        document.getElementById('admin-logout-btn')?.addEventListener('click', handleLogout);
+        document.getElementById('client-logout-btn')?.addEventListener('click', handleLogoutClick);
+        document.getElementById('admin-logout-btn')?.addEventListener('click', handleLogoutClick);
+
+        document.getElementById('cancel-logout-btn')?.addEventListener('click', () => {
+            ModalsComponent.closeModal('logout-confirm-modal');
+        });
+
+        document.getElementById('confirm-logout-btn')?.addEventListener('click', () => {
+            ModalsComponent.closeModal('logout-confirm-modal');
+            Router.logout();
+            showToast('Logged out successfully', 'info');
+        });
     }
 }
