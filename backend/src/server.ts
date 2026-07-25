@@ -95,7 +95,7 @@ if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
         console.log(`  ──────────────────────────────────────────`);
         console.log(`  Server running at http://localhost:${ENV.PORT}`);
         console.log(`  Environment: ${ENV.NODE_ENV}`);
-        console.log(`  Database path: ${ENV.DB_PATH}\n`);
+        console.log(`  Database: Supabase PostgreSQL\n`);
     });
 }
 
