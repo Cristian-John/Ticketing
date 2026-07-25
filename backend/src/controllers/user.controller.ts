@@ -4,29 +4,29 @@ import { db } from '../config/db';
 import bcrypt from 'bcryptjs';
 
 export class UserController {
-    public static getAll(req: Request, res: Response, next: NextFunction): void {
+    public static async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { search } = req.query;
-            const users = UserService.getAll({ search: search as string });
+            const users = await UserService.getAll({ search: search as string });
             res.json(users);
         } catch (err) {
             next(err);
         }
     }
 
-    public static getActiveByRole(req: Request, res: Response, next: NextFunction): void {
+    public static async getActiveByRole(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const role = String(req.query.role || 'it-support');
-            const users = UserService.getActiveByRole(role);
+            const users = await UserService.getActiveByRole(role);
             res.json(users);
         } catch (err) {
             next(err);
         }
     }
 
-    public static getById(req: Request, res: Response, next: NextFunction): void {
+    public static async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const user = UserService.getById(String(req.params.id));
+            const user = await UserService.getById(String(req.params.id));
             if (!user) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -37,14 +37,14 @@ export class UserController {
         }
     }
 
-    public static create(req: Request, res: Response, next: NextFunction): void {
+    public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { username, fullName, email, password, role } = req.body;
             if (!username || !fullName || !email || !password || !role) {
                 res.status(400).json({ error: 'Missing required fields: username, fullName, email, password, role' });
                 return;
             }
-            const user = UserService.create({
+            const user = await UserService.create({
                 username,
                 fullName,
                 email,
@@ -57,9 +57,9 @@ export class UserController {
         }
     }
 
-    public static update(req: Request, res: Response, next: NextFunction): void {
+    public static async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const user = UserService.update(String(req.params.id), req.body);
+            const user = await UserService.update(String(req.params.id), req.body);
             if (!user) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -70,9 +70,9 @@ export class UserController {
         }
     }
 
-    public static deactivate(req: Request, res: Response, next: NextFunction): void {
+    public static async deactivate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const success = UserService.deactivate(String(req.params.id));
+            const success = await UserService.deactivate(String(req.params.id));
             if (!success) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -83,14 +83,14 @@ export class UserController {
         }
     }
 
-    public static resetPassword(req: Request, res: Response, next: NextFunction): void {
+    public static async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { password } = req.body;
             if (!password) {
                 res.status(400).json({ error: 'Missing password field' });
                 return;
             }
-            const success = UserService.resetPassword(String(req.params.id), password);
+            const success = await UserService.resetPassword(String(req.params.id), password);
             if (!success) {
                 res.status(404).json({ error: 'User not found' });
                 return;
@@ -101,7 +101,7 @@ export class UserController {
         }
     }
 
-    public static changePassword(req: Request, res: Response, next: NextFunction): void {
+    public static async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const user = (req as any).user;
             const { currentPassword, newPassword, confirmPassword } = req.body;
@@ -117,7 +117,7 @@ export class UserController {
             }
 
             // Fetch full user record with password hash
-            const fullUser = UserService.getByUsername(user.username);
+            const fullUser = await UserService.getByUsername(user.username);
             if (!fullUser) {
                 res.status(404).json({ error: 'User not found.' });
                 return;
@@ -144,14 +144,14 @@ export class UserController {
             }
 
             // Update password
-            UserService.resetPassword(user.id, newPassword);
+            await UserService.resetPassword(user.id, newPassword);
 
             // Invalidate all sessions for this user except the current one
             const currentToken = req.headers.authorization?.split(' ')[1];
             if (currentToken) {
-                db.prepare('DELETE FROM sessions WHERE userId = ? AND id != ?').run(user.id, currentToken);
+                await db.query('DELETE FROM sessions WHERE "userId" = $1 AND id != $2', [user.id, currentToken]);
             } else {
-                db.prepare('DELETE FROM sessions WHERE userId = ?').run(user.id);
+                await db.query('DELETE FROM sessions WHERE "userId" = $1', [user.id]);
             }
 
             res.json({ success: true, message: 'Password changed successfully. All other sessions have been invalidated.' });

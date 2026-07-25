@@ -8,14 +8,14 @@ const router = Router();
 router.use(requireAuth());
 
 // GET / can be accessed by admin, or it-support (but it-support can only list it-support role)
-router.get('/', (req: any, res: any, next: any) => {
+router.get('/', async (req: any, res: any, next: any) => {
     if (req.user.role === 'admin') {
-        return UserController.getAll(req, res, next);
+        return await UserController.getAll(req, res, next);
     }
     if (req.user.role === 'it-support') {
         // Enforce role=it-support query filter for non-admins
         req.query.role = 'it-support';
-        return UserController.getActiveByRole(req, res, next);
+        return await UserController.getActiveByRole(req, res, next);
     }
     res.status(403).json({ error: 'Access denied.' });
 });

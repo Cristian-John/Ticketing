@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
 export class AuthController {
-    public static login(req: Request, res: Response, next: NextFunction): void {
+    public static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { username, password } = req.body;
 
@@ -14,7 +14,7 @@ export class AuthController {
                 return;
             }
 
-            const user = UserService.getByUsername(username);
+            const user = await UserService.getByUsername(username);
             if (!user) {
                 res.status(401).json({ error: 'Invalid username or password' });
                 return;
@@ -37,9 +37,9 @@ export class AuthController {
             const token = crypto.randomUUID();
             const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-            db.prepare(`
-                INSERT INTO sessions (id, userId, expiresAt) VALUES (?, ?, ?)
-            `).run(token, user.id, expiresAt);
+            await db.query(`
+                INSERT INTO sessions (id, "userId", "expiresAt") VALUES ($1, $2, $3)
+            `, [token, user.id, new Date(expiresAt)]);
 
             res.json({
                 success: true,
@@ -57,7 +57,7 @@ export class AuthController {
         }
     }
 
-    public static register(req: Request, res: Response, next: NextFunction): void {
+    public static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { fullName, username, email, password } = req.body;
             if (!fullName || !username || !email || !password) {
@@ -66,7 +66,7 @@ export class AuthController {
             }
 
             // Client role is hardcoded for self-registration
-            const user = UserService.create({
+            const user = await UserService.create({
                 username,
                 fullName,
                 email,
@@ -83,7 +83,7 @@ export class AuthController {
         }
     }
 
-    public static validate(req: Request, res: Response, next: NextFunction): void {
+    public static async validate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const authHeader = req.headers.authorization;
             const token = authHeader && authHeader.split(' ')[1];
@@ -93,20 +93,22 @@ export class AuthController {
                 return;
             }
 
-            const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(token) as { userId: string, expiresAt: string } | undefined;
+            const sessionRes = await db.query('SELECT * FROM sessions WHERE id = $1', [token]);
+            const session = sessionRes.rows[0] as { userId: string, expiresAt: any } | undefined;
             if (!session) {
                 res.status(401).json({ error: 'Invalid or expired session' });
                 return;
             }
 
+            const expiresDate = session.expiresAt instanceof Date ? session.expiresAt : new Date(session.expiresAt);
             // Check if expired
-            if (new Date(session.expiresAt) < new Date()) {
-                db.prepare('DELETE FROM sessions WHERE id = ?').run(token);
+            if (expiresDate < new Date()) {
+                await db.query('DELETE FROM sessions WHERE id = $1', [token]);
                 res.status(401).json({ error: 'Session expired' });
                 return;
             }
 
-            const user = UserService.getById(session.userId);
+            const user = await UserService.getById(session.userId);
             if (!user || Number(user.active) !== 1) {
                 res.status(401).json({ error: 'User account is inactive or not found' });
                 return;
@@ -128,13 +130,13 @@ export class AuthController {
         }
     }
 
-    public static logout(req: Request, res: Response, next: NextFunction): void {
+    public static async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const authHeader = req.headers.authorization;
             const token = authHeader && authHeader.split(' ')[1];
 
             if (token) {
-                db.prepare('DELETE FROM sessions WHERE id = ?').run(token);
+                await db.query('DELETE FROM sessions WHERE id = $1', [token]);
             }
 
             res.json({ success: true });

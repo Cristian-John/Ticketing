@@ -13,7 +13,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const requireAuth = (): RequestHandler => {
-    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
             const authHeader = req.headers.authorization;
             const token = authHeader && authHeader.split(' ')[1];
@@ -23,7 +23,8 @@ export const requireAuth = (): RequestHandler => {
                 return;
             }
 
-            const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(token) as { userId: string, expiresAt: string } | undefined;
+            const sessionRes = await db.query('SELECT * FROM sessions WHERE id = ?', [token]);
+            const session = sessionRes.rows[0] as { userId: string, expiresAt: string } | undefined;
             if (!session) {
                 res.status(401).json({ error: 'Invalid or expired session. Please sign in again.' });
                 return;
@@ -31,12 +32,12 @@ export const requireAuth = (): RequestHandler => {
 
             // Expiry check
             if (new Date(session.expiresAt) < new Date()) {
-                db.prepare('DELETE FROM sessions WHERE id = ?').run(token);
+                await db.query('DELETE FROM sessions WHERE id = ?', [token]);
                 res.status(401).json({ error: 'Session expired. Please sign in again.' });
                 return;
             }
 
-            const user = UserService.getById(session.userId);
+            const user = await UserService.getById(session.userId);
             if (!user || Number(user.active) !== 1) {
                 res.status(401).json({ error: 'User account is inactive or not found.' });
                 return;

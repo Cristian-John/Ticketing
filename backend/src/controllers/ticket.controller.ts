@@ -1,15 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { TicketService } from '../services/ticket.service';
 import { Attachment } from '../types';
+import { supabase } from '../config/supabase';
+import { ENV } from '../config/env';
 
 export class TicketController {
-    public static getAll(req: Request, res: Response, next: NextFunction): void {
+    public static async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { status, priority, severity, department, search } = req.query;
             const user = (req as any).user;
             const userIdFilter = user.role === 'client' ? user.id : (req.query.userId as string);
 
-            const tickets = TicketService.getAll({
+            const tickets = await TicketService.getAll({
                 status: status as string,
                 priority: priority as string,
                 severity: severity as string,
@@ -23,9 +25,9 @@ export class TicketController {
         }
     }
 
-    public static getById(req: Request, res: Response, next: NextFunction): void {
+    public static async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const ticket = TicketService.getById(String(req.params.id));
+            const ticket = await TicketService.getById(String(req.params.id));
             if (!ticket) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -42,7 +44,7 @@ export class TicketController {
         }
     }
 
-    public static create(req: Request, res: Response, next: NextFunction): void {
+    public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const {
                 title, description = '', category = 'Other',
@@ -83,7 +85,7 @@ export class TicketController {
             const finalRequester = user ? user.fullName : requester.trim();
             const userId = user ? user.id : null;
 
-            const ticket = TicketService.create({
+            const ticket = await TicketService.create({
                 id,
                 title: title.trim(),
                 description: description.trim(),
@@ -105,7 +107,7 @@ export class TicketController {
         }
     }
 
-    public static update(req: Request, res: Response, next: NextFunction): void {
+    public static async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             // Input Validation
             if (req.body.rating !== undefined) {
@@ -117,7 +119,7 @@ export class TicketController {
             }
 
             const { changedBy, ...updates } = req.body;
-            const ticket = TicketService.update(String(req.params.id), updates, changedBy);
+            const ticket = await TicketService.update(String(req.params.id), updates, changedBy);
             if (!ticket) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -128,9 +130,9 @@ export class TicketController {
         }
     }
 
-    public static delete(req: Request, res: Response, next: NextFunction): void {
+    public static async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const success = TicketService.delete(String(req.params.id));
+            const success = await TicketService.delete(String(req.params.id));
             if (!success) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -141,7 +143,7 @@ export class TicketController {
         }
     }
 
-    public static addNote(req: Request, res: Response, next: NextFunction): void {
+    public static async addNote(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { text, author } = req.body;
             const user = (req as any).user;
@@ -152,7 +154,7 @@ export class TicketController {
                 return;
             }
 
-            const ticket = TicketService.getById(String(req.params.id));
+            const ticket = await TicketService.getById(String(req.params.id));
             if (!ticket) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -164,7 +166,7 @@ export class TicketController {
             }
 
             const noteAuthor = user ? user.fullName : (author || 'User').trim();
-            const note = TicketService.addNote(String(req.params.id), text.trim(), noteAuthor);
+            const note = await TicketService.addNote(String(req.params.id), text.trim(), noteAuthor);
             if (!note) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -175,9 +177,9 @@ export class TicketController {
         }
     }
 
-    public static uploadAttachment(req: Request, res: Response, next: NextFunction): void {
+    public static async uploadAttachment(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const existing = TicketService.getById(String(req.params.id));
+            const existing = await TicketService.getById(String(req.params.id));
             if (!existing) {
                 res.status(404).json({ error: 'Ticket not found' });
                 return;
@@ -195,16 +197,31 @@ export class TicketController {
             }
 
             const id = `ATT-${Date.now()}`;
+            const filename = `${id}-${req.file.originalname}`;
+
+            // Upload the memory buffer to Supabase Storage
+            const { data, error } = await supabase.storage
+                .from(ENV.SUPABASE_STORAGE_BUCKET)
+                .upload(filename, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (error) {
+                res.status(500).json({ error: `Supabase storage upload failed: ${error.message}` });
+                return;
+            }
+
             const attachment: Attachment = {
                 id,
                 ticketId: String(req.params.id),
-                filename: req.file.filename,
+                filename,
                 originalname: req.file.originalname,
                 size: req.file.size,
                 uploadedAt: new Date().toISOString(),
             };
 
-            const result = TicketService.addAttachment(attachment);
+            const result = await TicketService.addAttachment(attachment);
             res.status(201).json(result);
         } catch (err) {
             next(err);

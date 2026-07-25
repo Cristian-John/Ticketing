@@ -2,22 +2,6 @@ import { db } from '../config/db';
 import { User } from '../types';
 import bcrypt from 'bcryptjs';
 
-// Prepared statements for user service
-const stmts = {
-    getUserById: db.prepare(`SELECT id, username, fullName, email, role, active, createdAt, updatedAt FROM users WHERE id = ?`),
-    getUserByUsername: db.prepare(`SELECT id, username, fullName, email, password, role, active, createdAt, updatedAt FROM users WHERE username = ?`),
-    getUserByEmail: db.prepare(`SELECT id, username, fullName, email, password, role, active, createdAt, updatedAt FROM users WHERE email = ?`),
-    getAllUsers: db.prepare(`SELECT id, username, fullName, email, role, active, createdAt, updatedAt FROM users ORDER BY createdAt DESC`),
-    insertUser: db.prepare(`
-        INSERT INTO users (id, username, fullName, email, password, role, active, createdAt, updatedAt)
-        VALUES (@id, @username, @fullName, @email, @password, @role, @active, @createdAt, @updatedAt)
-    `),
-    deactivateUser: db.prepare(`UPDATE users SET active = 0, updatedAt = ? WHERE id = ?`),
-    activateUser: db.prepare(`UPDATE users SET active = 1, updatedAt = ? WHERE id = ?`),
-    updatePassword: db.prepare(`UPDATE users SET password = ?, updatedAt = ? WHERE id = ?`),
-    getUsersByRole: db.prepare(`SELECT id, username, fullName, email, role, active, createdAt, updatedAt FROM users WHERE role = ?`),
-};
-
 export class UserService {
     public static validatePasswordStrength(password: string): boolean {
         if (!password || password.length < 8) return false;
@@ -26,8 +10,14 @@ export class UserService {
         return hasLetter && hasNumber;
     }
 
-    public static getAll(filters: { search?: string } = {}): User[] {
-        let users = stmts.getAllUsers.all() as User[];
+    public static async getAll(filters: { search?: string } = {}): Promise<User[]> {
+        const res = await db.query(`
+            SELECT id, username, "fullName", email, role, active, "createdAt", "updatedAt"
+            FROM users
+            ORDER BY "createdAt" DESC
+        `);
+        let users = res.rows as User[];
+        
         if (filters.search) {
             const q = filters.search.toLowerCase();
             users = users.filter(u =>
@@ -40,33 +30,52 @@ export class UserService {
         return users;
     }
 
-    public static getActiveByRole(role: string): User[] {
-        const users = stmts.getUsersByRole.all(role) as User[];
-        // Filter active status (SQLite stores as 0 or 1)
+    public static async getActiveByRole(role: string): Promise<User[]> {
+        const res = await db.query(`
+            SELECT id, username, "fullName", email, role, active, "createdAt", "updatedAt"
+            FROM users
+            WHERE role = $1
+        `, [role]);
+        const users = res.rows as User[];
         return users.filter(u => Number(u.active) === 1);
     }
 
-    public static getById(id: string): User | null {
-        return stmts.getUserById.get(id) as User | null;
+    public static async getById(id: string): Promise<User | null> {
+        const res = await db.query(`
+            SELECT id, username, "fullName", email, role, active, "createdAt", "updatedAt"
+            FROM users
+            WHERE id = $1
+        `, [id]);
+        return (res.rows[0] as User) || null;
     }
 
-    public static getByUsername(username: string): (User & { password?: string }) | null {
-        return stmts.getUserByUsername.get(username) as (User & { password?: string }) | null;
+    public static async getByUsername(username: string): Promise<(User & { password?: string }) | null> {
+        const res = await db.query(`
+            SELECT id, username, "fullName", email, password, role, active, "createdAt", "updatedAt"
+            FROM users
+            WHERE username = $1
+        `, [username]);
+        return (res.rows[0] as (User & { password?: string })) || null;
     }
 
-    public static getByEmail(email: string): (User & { password?: string }) | null {
-        return stmts.getUserByEmail.get(email) as (User & { password?: string }) | null;
+    public static async getByEmail(email: string): Promise<(User & { password?: string }) | null> {
+        const res = await db.query(`
+            SELECT id, username, "fullName", email, password, role, active, "createdAt", "updatedAt"
+            FROM users
+            WHERE email = $1
+        `, [email]);
+        return (res.rows[0] as (User & { password?: string })) || null;
     }
 
-    public static create(userData: Omit<User, 'id' | 'active'> & { id?: string; passwordPlain: string }): User {
+    public static async create(userData: Omit<User, 'id' | 'active'> & { id?: string; passwordPlain: string }): Promise<User> {
         if (!this.validatePasswordStrength(userData.passwordPlain)) {
             throw new Error('Password must be at least 8 characters long and contain at least one letter and one number.');
         }
 
         // Check duplicates
-        const dupUser = this.getByUsername(userData.username);
+        const dupUser = await this.getByUsername(userData.username);
         if (dupUser) throw new Error('Username is already taken.');
-        const dupEmail = this.getByEmail(userData.email);
+        const dupEmail = await this.getByEmail(userData.email);
         if (dupEmail) throw new Error('Email is already registered.');
 
         const id = userData.id || `USR-${Date.now()}`;
@@ -86,7 +95,10 @@ export class UserService {
             updatedAt: now
         };
 
-        stmts.insertUser.run(userRecord);
+        await db.query(`
+            INSERT INTO users (id, username, "fullName", email, password, role, active, "createdAt", "updatedAt")
+            VALUES (@id, @username, @fullName, @email, @password, @role, @active, @createdAt, @updatedAt)
+        `, userRecord);
 
         return {
             id,
@@ -100,8 +112,8 @@ export class UserService {
         };
     }
 
-    public static update(id: string, updateData: Partial<User>): User | null {
-        const existing = this.getById(id);
+    public static async update(id: string, updateData: Partial<User>): Promise<User | null> {
+        const existing = await this.getById(id);
         if (!existing) return null;
 
         const allowed: (keyof User)[] = ['fullName', 'email', 'role', 'active'];
@@ -110,34 +122,35 @@ export class UserService {
 
         for (const key of allowed) {
             if (updateData[key] !== undefined) {
-                // Handle boolean conversion to number for SQLite
+                // Keep active as number for column compatibility
                 const val = key === 'active' ? (updateData[key] ? 1 : 0) : updateData[key];
-                setClauses.push(`${key} = @${key}`);
+                const colName = key === 'fullName' ? '"fullName"' : `"${String(key)}"`;
+                setClauses.push(`${colName} = @${String(key)}`);
                 values[key] = val;
             }
         }
 
         if (setClauses.length > 0) {
-            setClauses.push('updatedAt = @updatedAt');
+            setClauses.push('"updatedAt" = @updatedAt');
             values.updatedAt = new Date().toISOString();
             values.id = id;
 
             const sql = `UPDATE users SET ${setClauses.join(', ')} WHERE id = @id`;
-            db.prepare(sql).run(values);
+            await db.query(sql, values);
         }
 
         return this.getById(id);
     }
 
-    public static deactivate(id: string): boolean {
-        const existing = this.getById(id);
+    public static async deactivate(id: string): Promise<boolean> {
+        const existing = await this.getById(id);
         if (!existing) return false;
-        stmts.deactivateUser.run(new Date().toISOString(), id);
+        await db.query('UPDATE users SET active = 0, "updatedAt" = $1 WHERE id = $2', [new Date().toISOString(), id]);
         return true;
     }
 
-    public static resetPassword(id: string, passwordPlain: string): boolean {
-        const existing = this.getById(id);
+    public static async resetPassword(id: string, passwordPlain: string): Promise<boolean> {
+        const existing = await this.getById(id);
         if (!existing) return false;
 
         if (!this.validatePasswordStrength(passwordPlain)) {
@@ -146,7 +159,7 @@ export class UserService {
 
         const salt = bcrypt.genSaltSync(10);
         const hashedPassword = bcrypt.hashSync(passwordPlain, salt);
-        stmts.updatePassword.run(hashedPassword, new Date().toISOString(), id);
+        await db.query('UPDATE users SET password = $1, "updatedAt" = $2 WHERE id = $3', [hashedPassword, new Date().toISOString(), id]);
         return true;
     }
 }
