@@ -617,6 +617,22 @@
         </div>
     </div>
 
+    <!-- ==================== LOGOUT CONFIRM MODAL ==================== -->
+    <div class="modal-overlay" id="logout-confirm-modal">
+        <div class="modal glass-card" style="max-width: 360px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <h3 style="font-size: 1.25rem;">Log out?</h3>
+            </div>
+            <div style="padding: 16px 24px 24px;">
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">Are you sure you want to log out of your account?</p>
+                <div class="modal-actions" style="justify-content: center; gap: 12px; margin-top: 0;">
+                    <button type="button" class="btn btn-ghost" id="cancel-logout-btn">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-logout-btn" style="background-color: var(--severity-severe); border-color: var(--severity-severe);">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast notification -->
     <div class="toast-container" id="toast-container"></div>
 
