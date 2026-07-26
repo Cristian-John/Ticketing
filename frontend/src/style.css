@@ -674,8 +674,10 @@ polygon {
 input[type="text"],
 input[type="password"],
 input[type="email"],
+input[type="datetime-local"],
 select,
-textarea {
+textarea,
+.form-control {
     width: 100%;
     padding: 0.65rem 1rem;
     background: var(--bg-input);
@@ -689,10 +691,52 @@ textarea {
 }
 input:focus,
 select:focus,
-textarea:focus {
+textarea:focus,
+.form-control:focus {
     border-color: var(--border-focus);
     box-shadow: 0 0 0 3px var(--primary-light);
     background: var(--bg-input);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+.custom-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-3xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+.password-toggle-btn:hover {
+    color: var(--text-primary);
 }
 
 .input-wrapper input,
@@ -718,7 +762,7 @@ textarea {
 .btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-xs);
     padding: 0.6rem 1.2rem;
     border: none;
     border-radius: var(--radius-sm);
@@ -993,7 +1037,49 @@ textarea {
     color: #00838f;
 }
 
-/* ──── Ticket Table ──── */
+/* ──── Table Layouts ──── */
+.table-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin-bottom: var(--space-xl);
+}
+
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.glass-table th {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--table-head-bg);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+}
+
+.glass-table td {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.glass-table tbody tr.clickable-row:hover {
+    background: var(--row-hover);
+    cursor: pointer;
+}
+
+.glass-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ──── Flex Table (Legacy, keeping for fallback if needed) ──── */
 .table-wrap {
     background: var(--bg-surface);
     border: 1px solid var(--border);
@@ -1030,10 +1116,10 @@ textarea {
 .badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
+    gap: var(--space-2xs);
+    padding: var(--space-3xs) var(--space-xs);
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1322,20 +1408,28 @@ textarea {
 
 /* ──── Empty State ──── */
 .empty-state {
-    padding: var(--space-2xl) var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl) var(--space-lg);
     text-align: center;
     color: var(--text-muted);
-    font-size: 13px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
 }
 .empty-state-icon {
-    font-size: 52px;
-    margin-bottom: 16px;
+    font-size: 2.5rem;
+    margin-bottom: var(--space-md);
+    color: var(--text-secondary);
+    opacity: 0.5;
 }
 .empty-state-title {
-    font-size: 18px;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: var(--space-xs);
 }
 
 /* ──── Client Ticket Card ──── */
@@ -1420,6 +1514,21 @@ textarea {
 .modal-view {
     max-width: 680px;
 }
+
+.modal-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+    .modal-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
 .modal-rating {
     max-width: 440px;
 }
@@ -1439,9 +1548,10 @@ textarea {
 .modal-header h3 {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 16px;
+    gap: var(--space-xs);
+    font-size: 1.15rem;
     font-weight: 700;
+    margin: 0;
     color: var(--text-heading);
 }
 .modal-close {
@@ -1451,7 +1561,7 @@ textarea {
     justify-content: center;
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     color: var(--text-secondary);
     font-size: 1.3rem;
     cursor: pointer;
@@ -1463,7 +1573,6 @@ textarea {
     border-color: rgba(255, 82, 82, 0.3);
 }
 
-.modal form,
 .modal .modal-body {
     padding: var(--space-xl);
 }
@@ -1473,7 +1582,11 @@ textarea {
     align-items: center;
     justify-content: flex-end;
     gap: var(--space-sm);
-    margin-top: var(--space-sm);
+    padding: var(--space-md) var(--space-xl) var(--space-lg);
+    border-top: 1px solid var(--border);
+}
+.modal-actions.centered {
+    justify-content: center;
 }
 
 /* ──── Hidden Utility ──── */
