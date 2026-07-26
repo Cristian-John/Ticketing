@@ -78,3 +78,20 @@ export interface User {
     createdAt?: string;
     updatedAt?: string;
 }
+
+export interface CreateUserRequest {
+    username: string;
+    fullName: string;
+    email: string;
+    role: string;
+    password?: string;
+}
+
+export interface UpdateUserRequest {
+    username?: string;
+    fullName?: string;
+    email?: string;
+    role?: string;
+    active?: boolean;
+    password?: string;
+}

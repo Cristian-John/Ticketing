@@ -1,16 +1,11 @@
 import { Ticket } from '../types';
 
-export const DEPARTMENTS = [
-    'Executive', 'Marketing', 'I-Wallet', 'Admin', 'I-Tech',
-    'Joint Ventures', 'IT', 'Customer Care', 'Secretary',
-    'Real Estate', 'Corporate'
-];
-
-export const AGENTS = ['Sean Khayle', 'CJ', 'Jeremiah', 'Clarence'];
-
 export function getAssignees(ticket: Ticket): string[] {
     if (!ticket.assignee || ticket.assignee === 'Unassigned') return [];
-    return ticket.assignee.split(',').map(a => a.trim()).filter(Boolean);
+    return ticket.assignee
+        .split(',')
+        .map(a => a.trim())
+        .filter(Boolean);
 }
 
 export function formatAssignees(ticket: Ticket): string {
@@ -45,35 +40,53 @@ export function escapeHTML(str: string): string {
 
 export function getStatusBadgeClass(status: string): string {
     switch (status) {
-        case 'Open': return 'badge-open';
-        case 'In Progress': return 'badge-progress';
-        case 'Resolved': return 'badge-resolved';
-        case 'Closed': return 'badge-closed';
-        default: return 'badge-default';
+        case 'Open':
+            return 'badge-open';
+        case 'In Progress':
+            return 'badge-progress';
+        case 'Resolved':
+            return 'badge-resolved';
+        case 'Closed':
+            return 'badge-closed';
+        default:
+            return 'badge-default';
     }
 }
 
 export function getPriorityBadgeClass(priority: string): string {
     switch (priority) {
-        case 'Low': return 'badge-low';
-        case 'Medium': return 'badge-medium';
-        case 'High': return 'badge-high';
-        case 'Critical': return 'badge-critical';
-        default: return 'badge-default';
+        case 'Low':
+            return 'badge-low';
+        case 'Medium':
+            return 'badge-medium';
+        case 'High':
+            return 'badge-high';
+        case 'Critical':
+            return 'badge-critical';
+        default:
+            return 'badge-default';
     }
 }
 
 export function getSeverityBadgeClass(severity: string): string {
     switch (severity) {
-        case 'Low': return 'badge-severity-low';
-        case 'Moderate': return 'badge-severity-moderate';
-        case 'High': return 'badge-severity-high';
-        case 'Severe': return 'badge-severity-severe';
-        default: return 'badge-default';
+        case 'Low':
+            return 'badge-severity-low';
+        case 'Moderate':
+            return 'badge-severity-moderate';
+        case 'High':
+            return 'badge-severity-high';
+        case 'Severe':
+            return 'badge-severity-severe';
+        default:
+            return 'badge-default';
     }
 }
 
-export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number = 300): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: unknown[]) => void>(
+    fn: T,
+    delay: number = 300,
+): (...args: Parameters<T>) => void {
     let timer: ReturnType<typeof setTimeout>;
     return (...args: Parameters<T>) => {
         clearTimeout(timer);

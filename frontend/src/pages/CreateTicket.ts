@@ -1,7 +1,7 @@
+import { ModalsComponent } from '../components/Modals';
+import { showToast } from '../components/Toast';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
-import { showToast } from '../components/Toast';
-import { ModalsComponent } from '../components/Modals';
 import { TicketsPage } from './Tickets';
 
 export class CreateTicketPage {
@@ -10,7 +10,9 @@ export class CreateTicketPage {
         const openBtn = document.getElementById('client-new-ticket-btn');
         const departmentSelect = document.getElementById('ticket-department') as HTMLSelectElement;
         const customDeptGroup = document.getElementById('custom-dept-group');
-        const customDeptInput = document.getElementById('ticket-custom-department') as HTMLInputElement;
+        const customDeptInput = document.getElementById(
+            'ticket-custom-department',
+        ) as HTMLInputElement;
 
         openBtn?.addEventListener('click', () => {
             ModalsComponent.openModal('ticket-modal');
@@ -36,7 +38,7 @@ export class CreateTicketPage {
             }
         });
 
-        form?.addEventListener('submit', async (e) => {
+        form?.addEventListener('submit', async e => {
             e.preventDefault();
 
             const user = store.getState().currentUser;
@@ -56,7 +58,12 @@ export class CreateTicketPage {
                 }
             }
 
-            if (!titleInput?.value.trim() || !descInput?.value.trim() || !department || !severitySelect?.value) {
+            if (
+                !titleInput?.value.trim() ||
+                !descInput?.value.trim() ||
+                !department ||
+                !severitySelect?.value
+            ) {
                 showToast('Please fill out all required fields', 'error');
                 return;
             }
@@ -89,8 +96,8 @@ export class CreateTicketPage {
                 this.closeModal(form);
 
                 await TicketsPage.load('my-tickets');
-            } catch (err: any) {
-                showToast(err.message || 'Failed to create ticket', 'error');
+            } catch (err: unknown) {
+                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create ticket', 'error');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -110,7 +117,9 @@ export class CreateTicketPage {
         ModalsComponent.closeModal('ticket-modal');
         form?.reset();
         const customDeptGroup = document.getElementById('custom-dept-group');
-        const customDeptInput = document.getElementById('ticket-custom-department') as HTMLInputElement;
+        const customDeptInput = document.getElementById(
+            'ticket-custom-department',
+        ) as HTMLInputElement;
         if (customDeptGroup) customDeptGroup.style.display = 'none';
         if (customDeptInput) {
             customDeptInput.removeAttribute('required');

@@ -10,6 +10,9 @@ router.use(requireAuth());
 // GET / can be accessed by admin, or it-support (but it-support can only list it-support role)
 router.get('/', async (req: any, res: any, next: any) => {
     if (req.user.role === 'admin') {
+        if (req.query.role) {
+            return await UserController.getActiveByRole(req, res, next);
+        }
         return await UserController.getAll(req, res, next);
     }
     if (req.user.role === 'it-support') {

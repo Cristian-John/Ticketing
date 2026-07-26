@@ -1,0 +1,80 @@
+/* =========================================
+   Tables
+   Data tables, glass tables, and list layouts.
+   ========================================= */
+
+/* ──── Table Layouts ──── */
+.table-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin-bottom: var(--space-xl);
+}
+
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.glass-table th {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--table-head-bg);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+}
+
+.glass-table td {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.glass-table tbody tr.clickable-row:hover {
+    background: var(--row-hover);
+    cursor: pointer;
+}
+
+.glass-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ──── Flex Table (Legacy, keeping for fallback if needed) ──── */
+.table-wrap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.table-head {
+    display: flex;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--table-head-bg);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+}
+.table-row {
+    display: flex;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: var(--transition);
+}
+.table-row:hover {
+    background: var(--row-hover);
+}
+.table-row:last-child {
+    border-bottom: none;
+}
+

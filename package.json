@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/Cristian-John/Ticketing#readme",
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "concurrently": "^9.1.0"
   }
 }

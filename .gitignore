@@ -26,3 +26,12 @@ backend/uploads/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Testing & Logs
+playwright-report/
+test-results/
+*.log
+
+# Cache/Temp
+.vite-temp/
+.eslintcache
