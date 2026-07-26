@@ -1,0 +1,188 @@
+/* =========================================
+   Ticket Detail
+   ========================================= */
+
+/* ──── Ticket Detail ──── */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-md);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-lg);
+}
+.detail-id {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+.detail-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+.detail-badges {
+    display: flex;
+    gap: 7px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+.btn-back {
+    width: 100%;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #6a6e79, #00b8d4);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 16px;
+    font-family: var(--font);
+    transition: var(--transition);
+    box-shadow: 0 2px 12px var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-back:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2);
+}
+[data-theme='light'] .btn-back {
+    box-shadow: 0 2px 8px rgba(74, 78, 88, 0.15);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    gap: var(--space-md);
+}
+.detail-grid-client {
+    grid-template-columns: 1fr 260px;
+}
+.detail-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+.detail-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.detail-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+.detail-info-key {
+    color: var(--text-muted);
+}
+.detail-info-val {
+    color: var(--text-secondary);
+    text-align: right;
+    max-width: 130px;
+}
+
+/* ──── Prop Group (admin detail sidebar) ──── */
+.prop-group {
+    margin-bottom: 10px;
+}
+.prop-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.prop-group select {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 13px;
+}
+
+/* ──── Activity Log ──── */
+.note-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+.note-item:last-child {
+    border-bottom: none;
+}
+.note-author {
+    font-size: 11px;
+    color: var(--status-progress);
+    font-weight: 700;
+}
+.note-time {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 6px;
+}
+.note-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    line-height: 1.5;
+}
+.note-mine {
+    background: var(--status-progress-bg);
+    border-left: 3px solid var(--status-progress);
+    padding: 10px 12px;
+    border-radius: 0 8px 8px 0;
+    margin-left: 16px;
+}
+.note-mine .note-author {
+    color: var(--accent);
+}
+
+/* ──── Empty State ──── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl) var(--space-lg);
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+.empty-state-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-md);
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+.empty-state-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+/* ──── Rating Comment Card ──── */
+.rating-comment {
+    padding: 10px 14px;
+    background: var(--severity-moderate-bg);
+    border-radius: 7px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
+    border-left: 3px solid var(--severity-moderate);
+    margin-top: 8px;
+}
+

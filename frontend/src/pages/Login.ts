@@ -1,7 +1,7 @@
+import { showToast } from '../components/Toast';
+import { Router } from '../router/router';
 import { authAPI } from '../services/api';
 import { store } from '../state/store';
-import { Router } from '../router/router';
-import { showToast } from '../components/Toast';
 
 export class LoginPage {
     private static isRegisterMode = false;
@@ -12,7 +12,9 @@ export class LoginPage {
         const passwordInput = document.getElementById('login-password') as HTMLInputElement;
         const fullNameInput = document.getElementById('login-fullname') as HTMLInputElement;
         const emailInput = document.getElementById('login-email') as HTMLInputElement;
-        const confirmPasswordInput = document.getElementById('login-confirm-password') as HTMLInputElement;
+        const confirmPasswordInput = document.getElementById(
+            'login-confirm-password',
+        ) as HTMLInputElement;
         const rememberCheckbox = document.getElementById('login-remember') as HTMLInputElement;
 
         // Container wrappers
@@ -33,12 +35,15 @@ export class LoginPage {
             if (passwordInput) {
                 const type = passwordInput.type === 'password' ? 'text' : 'password';
                 passwordInput.type = type;
-                passwordToggle.innerHTML = type === 'password' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
+                passwordToggle.innerHTML =
+                    type === 'password'
+                        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>'
+                        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
             }
         });
 
         // Mode toggler
-        toggleAuthMode?.addEventListener('click', (e) => {
+        toggleAuthMode?.addEventListener('click', e => {
             e.preventDefault();
             this.isRegisterMode = !this.isRegisterMode;
 
@@ -86,7 +91,7 @@ export class LoginPage {
 
         // Forgot Password toggle
         const forgotLink = document.getElementById('forgot-password-link');
-        forgotLink?.addEventListener('click', (e) => {
+        forgotLink?.addEventListener('click', e => {
             e.preventDefault();
             const forgotMsg = document.getElementById('forgot-password-message');
             if (forgotMsg) {
@@ -94,7 +99,7 @@ export class LoginPage {
             }
         });
 
-        loginForm?.addEventListener('submit', async (e) => {
+        loginForm?.addEventListener('submit', async e => {
             e.preventDefault();
 
             const username = usernameInput.value.trim();
@@ -120,7 +125,10 @@ export class LoginPage {
                 const hasLetter = /[a-zA-Z]/.test(password);
                 const hasNumber = /[0-9]/.test(password);
                 if (password.length < 8 || !hasLetter || !hasNumber) {
-                    showToast('Password must be at least 8 characters long and contain both letters and numbers', 'error');
+                    showToast(
+                        'Password must be at least 8 characters long and contain both letters and numbers',
+                        'error',
+                    );
                     return;
                 }
 
@@ -135,8 +143,8 @@ export class LoginPage {
                         // Toggle back to login mode
                         toggleAuthMode?.click();
                     }
-                } catch (err: any) {
-                    showToast(err.message || 'Registration failed', 'error');
+                } catch (err: unknown) {
+                    showToast((err instanceof Error ? err.message : String(err)) || 'Registration failed', 'error');
                 }
             } else {
                 // Sign In mode
@@ -151,15 +159,15 @@ export class LoginPage {
                     if (res.success) {
                         store.setSession(res.user, rememberMe);
                         showToast(`Welcome back, ${res.user.fullName}!`, 'success');
-                        
+
                         if (res.user.role === 'admin' || res.user.role === 'it-support') {
                             Router.enterAdmin('dashboard');
                         } else {
                             Router.enterClient('my-tickets');
                         }
                     }
-                } catch (err: any) {
-                    showToast(err.message || 'Login failed', 'error');
+                } catch (err: unknown) {
+                    showToast((err instanceof Error ? err.message : String(err)) || 'Login failed', 'error');
                 }
             }
         });

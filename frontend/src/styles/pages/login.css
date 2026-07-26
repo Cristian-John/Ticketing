@@ -1,0 +1,77 @@
+/* =========================================
+   Login Screen
+   ========================================= */
+
+/* ============================
+   LOGIN SCREEN
+   ============================ */
+#login-screen {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+}
+#login-screen.active {
+    display: flex;
+}
+
+.login-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 1rem;
+}
+
+.login-card {
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.login-logo {
+    margin-bottom: 2rem;
+}
+.logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #6a6e79, #00b8d4);
+    color: #fff;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 229, 255, 0.2);
+}
+.login-logo h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--text-primary), #00e5ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.login-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 400;
+    margin-top: 0.15rem;
+}
+
+.login-form {
+    text-align: left;
+}
+
+.login-hint {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 1rem;
+}
+.login-hint strong {
+    color: var(--text-secondary);
+}
+
+

@@ -1,30 +1,30 @@
-import { Ticket } from '../types';
-import { store } from '../state/store';
-import { ticketsAPI } from '../services/api';
+
+import { TicketDetailModal } from '../components/TicketDetailModal';
 import { HtmlViewName } from '../router/router';
-import { clearPortalContent } from '../utils/portalContent';
+import { ticketsAPI } from '../services/api';
+import { store } from '../state/store';
+import { Ticket } from '../types';
 import {
-    escapeHTML,
-    formatDate,
-    formatAssignees,
-    getStatusBadgeClass,
-    getSeverityBadgeClass,
-    isResolved,
-    getSeverityColor,
     debounce,
+    escapeHTML,
+    formatAssignees,
+    formatDate,
+    getSeverityBadgeClass,
+    getSeverityColor,
+    getStatusBadgeClass,
+    isResolved,
 } from '../utils/formatters';
-import { ModalsComponent } from '../components/Modals';
+import { clearPortalContent } from '../utils/portalContent';
 
 export class TicketsPage {
     private static adminFiltersBound = false;
 
     public static async load(htmlView: HtmlViewName): Promise<void> {
-        const container = clearPortalContent();
+        const container = clearPortalContent(store.getState().currentUser!.role);
         if (!container) return;
 
         try {
             const tickets = await ticketsAPI.getAll();
-            store.setTickets(tickets);
 
             const user = store.getState().currentUser;
             if (!user) return;
@@ -40,7 +40,9 @@ export class TicketsPage {
                 }
             } else {
                 const mine = tickets.filter(
-                    t => t.userId === user.id || t.requester.toLowerCase() === user.username.toLowerCase()
+                    t =>
+                        t.userId === user.id ||
+                        t.requester.toLowerCase() === user.username.toLowerCase(),
                 );
                 this.updateClientSidebarStats(mine);
                 this.renderClientTickets(container, mine);
@@ -122,17 +124,23 @@ export class TicketsPage {
                 </div>
             `;
             card.addEventListener('click', () => {
-                ModalsComponent.showTicketDetail(ticket, () => this.load('my-tickets'));
+                new TicketDetailModal(ticket, () => this.load('my-tickets')).open();
             });
             container.appendChild(card);
         });
     }
 
     private static getAdminFilteredTickets(tickets: Ticket[]): Ticket[] {
-        const status = (document.getElementById('admin-filter-status') as HTMLSelectElement)?.value || 'all';
-        const severity = (document.getElementById('admin-filter-severity') as HTMLSelectElement)?.value || 'all';
-        const dept = (document.getElementById('admin-filter-dept') as HTMLSelectElement)?.value || 'all';
-        const search = (document.getElementById('admin-search') as HTMLInputElement)?.value.trim().toLowerCase() || '';
+        const status =
+            (document.getElementById('admin-filter-status') as HTMLSelectElement)?.value || 'all';
+        const severity =
+            (document.getElementById('admin-filter-severity') as HTMLSelectElement)?.value || 'all';
+        const dept =
+            (document.getElementById('admin-filter-dept') as HTMLSelectElement)?.value || 'all';
+        const search =
+            (document.getElementById('admin-search') as HTMLInputElement)?.value
+                .trim()
+                .toLowerCase() || '';
 
         return tickets
             .filter(t => status === 'all' || t.status === status)
@@ -187,7 +195,9 @@ export class TicketsPage {
                 </tr>
             `;
         } else {
-            body.innerHTML = tickets.map(t => `
+            body.innerHTML = tickets
+                .map(
+                    t => `
                 <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
                     <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
                     <td style="font-weight:600;color:var(--text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
@@ -198,14 +208,16 @@ export class TicketsPage {
                     <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : '—'}</td>
                     <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
                 </tr>
-            `).join('');
+            `,
+                )
+                .join('');
 
             body.querySelectorAll('.clickable-row').forEach(row => {
                 row.addEventListener('click', () => {
                     const id = row.getAttribute('data-id');
                     const ticket = tickets.find(t => t.id === id);
                     if (ticket) {
-                        ModalsComponent.showTicketDetail(ticket, () => this.load('all-tickets'));
+                        new TicketDetailModal(ticket, () => this.load('all-tickets')).open();
                     }
                 });
             });
@@ -285,7 +297,9 @@ export class TicketsPage {
             return;
         }
 
-        body.innerHTML = resolved.map(t => `
+        body.innerHTML = resolved
+            .map(
+                t => `
             <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
                 <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
                 <td style="font-weight:600;color:var(--text-heading)">${escapeHTML(t.title)}</td>
@@ -293,14 +307,16 @@ export class TicketsPage {
                 <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : 'Unrated'}</td>
                 <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
             </tr>
-        `).join('');
+        `,
+            )
+            .join('');
 
         body.querySelectorAll('.clickable-row').forEach(row => {
             row.addEventListener('click', () => {
                 const id = row.getAttribute('data-id');
                 const ticket = resolved.find(t => t.id === id);
                 if (ticket) {
-                    ModalsComponent.showTicketDetail(ticket, () => this.load('resolved'));
+                    new TicketDetailModal(ticket, () => this.load('resolved')).open();
                 }
             });
         });
