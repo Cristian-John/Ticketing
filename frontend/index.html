@@ -17,7 +17,9 @@
 
     <!-- Global Theme Toggle -->
     <button class="theme-toggle global-theme-toggle" id="global-theme-toggle">
-        <span class="theme-icon">🌙</span>
+        <span class="theme-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
         <span>Dark Mode</span>
     </button>
 
@@ -86,7 +88,9 @@
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
                             <input type="password" id="login-password" placeholder="Enter password" required>
-                            <button type="button" class="password-toggle" id="login-password-toggle" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:5px;">👁️</button>
+                            <button type="button" class="password-toggle-btn" id="login-password-toggle">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                         </div>
                     </div>
 
@@ -104,9 +108,9 @@
                     </div>
 
                     <!-- Remember Me (Sign In Only) -->
-                    <div class="form-group checkbox-group" id="remember-me-group" style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
-                        <input type="checkbox" id="login-remember" style="width:16px; height:16px; cursor:pointer;">
-                        <label for="login-remember" style="margin:0; cursor:pointer; font-size:14px; color:rgba(255,255,255,0.7)">Remember Me</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="login-remember" class="custom-checkbox">
+                        <label for="login-remember">Remember me</label>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-login" id="login-btn">
@@ -322,6 +326,13 @@
                             <option value="Corporate">Corporate</option>
                         </select>
                     </div>
+                    <div class="filter-row" id="admin-users-filters" style="display:none">
+                        <input type="text" id="users-search-input" class="search-box" placeholder="Search users by name, username, email..." style="width:250px">
+                        <button class="btn btn-primary btn-sm" id="create-user-btn" style="padding:6px 12px">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Create User
+                        </button>
+                    </div>
                 </header>
                 <div class="content-area" id="admin-content">
                     <!-- Dynamically rendered -->
@@ -344,62 +355,64 @@
                 <button class="modal-close" id="close-modal-btn">&times;</button>
             </div>
             <form id="ticket-form">
-                <div class="form-group">
-                    <label for="ticket-title">Title <span class="required">*</span></label>
-                    <input type="text" id="ticket-title" placeholder="Brief summary of the issue" required>
-                </div>
-                <div class="form-group">
-                    <label for="ticket-department">Department <span class="required">*</span></label>
-                    <select id="ticket-department" required>
-                        <option value="" disabled selected>Select your department</option>
-                        <option value="Executive">Executive</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="I-Wallet">I-Wallet</option>
-                        <option value="Admin">Admin</option>
-                        <option value="I-Tech">I-Tech</option>
-                        <option value="Joint Ventures">Joint Ventures</option>
-                        <option value="IT">IT</option>
-                        <option value="Customer Care">Customer Care</option>
-                        <option value="Secretary">Secretary</option>
-                        <option value="Real Estate">Real Estate</option>
-                        <option value="Corporate">Corporate</option>
-                        <option value="other">Other (specify below)</option>
-                    </select>
-                </div>
-                <div class="form-group" id="custom-dept-group" style="display:none">
-                    <label for="ticket-custom-department">Specify Department <span class="required">*</span></label>
-                    <input type="text" id="ticket-custom-department" placeholder="Enter your department name">
-                </div>
-                <div class="form-row">
+                <div class="modal-body">
                     <div class="form-group">
-                        <label for="ticket-severity">Severity <span class="required">*</span></label>
-                        <select id="ticket-severity" required>
-                            <option value="" disabled selected>Select severity</option>
-                            <option value="Low">Low — Minor issue</option>
-                            <option value="Moderate">Moderate — Needs attention</option>
-                            <option value="Severe">Severe — Critical, immediate</option>
-                        </select>
+                        <label for="ticket-title">Title <span class="required">*</span></label>
+                        <input type="text" id="ticket-title" class="form-control" placeholder="Brief summary of the issue" required>
                     </div>
                     <div class="form-group">
-                        <label for="ticket-category">Category</label>
-                        <select id="ticket-category">
-                            <option value="Software">Software</option>
-                            <option value="Hardware">Hardware</option>
-                            <option value="Network">Network</option>
-                            <option value="Access">Access</option>
-                            <option value="Email">Email</option>
-                            <option value="Other">Other</option>
+                        <label for="ticket-department">Department <span class="required">*</span></label>
+                        <select id="ticket-department" class="form-control" required>
+                            <option value="" disabled selected>Select your department</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="I-Wallet">I-Wallet</option>
+                            <option value="Admin">Admin</option>
+                            <option value="I-Tech">I-Tech</option>
+                            <option value="Joint Ventures">Joint Ventures</option>
+                            <option value="IT">IT</option>
+                            <option value="Customer Care">Customer Care</option>
+                            <option value="Secretary">Secretary</option>
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Corporate">Corporate</option>
+                            <option value="other">Other (specify below)</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="ticket-description">Description <span class="required">*</span></label>
-                    <textarea id="ticket-description" rows="5" placeholder="Describe your issue in detail..."
-                        required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="ticket-file">Attachment (Optional)</label>
-                    <input type="file" id="ticket-file" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#ccc;border:1px solid rgba(255,255,255,0.1)">
+                    <div class="form-group" id="custom-dept-group" style="display:none">
+                        <label for="ticket-custom-department">Specify Department <span class="required">*</span></label>
+                        <input type="text" id="ticket-custom-department" class="form-control" placeholder="Enter your department name">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ticket-severity">Severity <span class="required">*</span></label>
+                            <select id="ticket-severity" class="form-control" required>
+                                <option value="" disabled selected>Select severity</option>
+                                <option value="Low">Low — Minor issue</option>
+                                <option value="Moderate">Moderate — Needs attention</option>
+                                <option value="Severe">Severe — Critical, immediate</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ticket-category">Category</label>
+                            <select id="ticket-category" class="form-control">
+                                <option value="Software">Software</option>
+                                <option value="Hardware">Hardware</option>
+                                <option value="Network">Network</option>
+                                <option value="Access">Access</option>
+                                <option value="Email">Email</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ticket-description">Description <span class="required">*</span></label>
+                        <textarea id="ticket-description" class="form-control" rows="5" placeholder="Describe your issue in detail..."
+                            required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="ticket-file">Attachment (Optional)</label>
+                        <input type="file" id="ticket-file" class="form-control">
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-ghost" id="cancel-modal-btn">Cancel</button>
@@ -429,7 +442,7 @@
                 </h3>
                 <button class="modal-close" id="close-view-modal-btn">&times;</button>
             </div>
-            <div id="view-modal-body">
+            <div id="view-modal-body" class="modal-body">
                 <!-- Populated by JS -->
             </div>
         </div>
@@ -439,47 +452,52 @@
     <div class="modal-overlay" id="edit-ticket-modal">
         <div class="modal glass-card">
             <div class="modal-header">
-                <h3>✏️ Edit Ticket</h3>
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Ticket
+                </h3>
                 <button class="modal-close" id="close-edit-modal-btn">&times;</button>
             </div>
             <form id="edit-ticket-form">
-                <div class="form-group">
-                    <label for="edit-ticket-status">Status</label>
-                    <select id="edit-ticket-status">
-                        <option value="Open">Open</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                    </select>
-                </div>
-                <div class="form-row">
+                <div class="modal-body">
                     <div class="form-group">
-                        <label for="edit-ticket-severity">Severity</label>
-                        <select id="edit-ticket-severity">
-                            <option value="Low">Low</option>
-                            <option value="Moderate">Moderate</option>
-                            <option value="Severe">Severe</option>
+                        <label for="edit-ticket-status">Status</label>
+                        <select id="edit-ticket-status" class="form-control">
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-ticket-severity">Severity</label>
+                            <select id="edit-ticket-severity" class="form-control">
+                                <option value="Low">Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-ticket-priority">Priority</label>
+                            <select id="edit-ticket-priority" class="form-control">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-ticket-assignee">Assignee</label>
+                        <select id="edit-ticket-assignee" class="form-control">
+                            <!-- Loaded dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="edit-ticket-priority">Priority</label>
-                        <select id="edit-ticket-priority">
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                            <option value="Critical">Critical</option>
-                        </select>
+                        <label for="edit-ticket-due">Due Date & Time</label>
+                        <input type="datetime-local" id="edit-ticket-due" class="form-control">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="edit-ticket-assignee">Assignee</label>
-                    <select id="edit-ticket-assignee">
-                        <!-- Loaded dynamically -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit-ticket-due">Due Date & Time</label>
-                    <input type="datetime-local" id="edit-ticket-due" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-ghost" id="cancel-edit-modal-btn">Cancel</button>
@@ -493,45 +511,52 @@
     <div class="modal-overlay" id="user-modal">
         <div class="modal glass-card">
             <div class="modal-header">
-                <h3 id="user-modal-title">Create User</h3>
+                <h3 id="user-modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Create User
+                </h3>
                 <button class="modal-close" id="close-user-modal-btn">&times;</button>
             </div>
             <form id="user-form">
                 <input type="hidden" id="user-id-field">
-                <div class="form-group">
-                    <label for="user-fullname">Full Name</label>
-                    <input type="text" id="user-fullname" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
-                </div>
-                <div class="form-group">
-                    <label for="user-username">Username</label>
-                    <input type="text" id="user-username" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
-                </div>
-                <div class="form-group">
-                    <label for="user-email">Email Address</label>
-                    <input type="email" id="user-email" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
-                </div>
-                <div class="form-group" id="user-password-group">
-                    <label for="user-password">Password</label>
-                    <div class="input-wrapper" style="position:relative">
-                        <input type="password" id="user-password" style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
-                        <button type="button" class="password-toggle" id="user-password-toggle" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:5px;">👁️</button>
-                    </div>
-                </div>
-                <div class="form-row">
+                <div class="modal-body">
                     <div class="form-group">
-                        <label for="user-role">Role</label>
-                        <select id="user-role" style="width:100%;padding:10px;background:rgba(0,0,0,0.2);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
-                            <option value="it-support">IT Support</option>
-                            <option value="admin">Admin</option>
-                            <option value="client">Client</option>
-                        </select>
+                        <label for="user-fullname">Full Name</label>
+                        <input type="text" id="user-fullname" class="form-control" required>
                     </div>
-                    <div class="form-group checkbox-group" id="user-active-group" style="display:flex; align-items:center; gap:8px; margin-top:28px;">
-                        <input type="checkbox" id="user-active" checked style="width:16px; height:16px; cursor:pointer;">
-                        <label for="user-active" style="margin:0; cursor:pointer; font-size:14px; color:rgba(255,255,255,0.7)">Active</label>
+                    <div class="form-group">
+                        <label for="user-username">Username</label>
+                        <input type="text" id="user-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-email">Email Address</label>
+                        <input type="email" id="user-email" class="form-control" required>
+                    </div>
+                    <div class="form-group" id="user-password-group">
+                        <label for="user-password">Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="user-password" class="form-control" required style="padding-left:1rem;">
+                            <button type="button" class="password-toggle-btn" id="user-password-toggle">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="user-role">Role</label>
+                            <select id="user-role" class="form-control" required>
+                                <option value="it-support">IT Support</option>
+                                <option value="admin">Admin</option>
+                                <option value="client">Client</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="user-active" class="custom-checkbox" checked>
+                            <label for="user-active">Active Account</label>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-actions" style="margin-top:20px">
+                <div class="modal-actions">
                     <button type="button" class="btn btn-ghost" id="cancel-user-modal-btn">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save User</button>
                 </div>
@@ -543,20 +568,25 @@
     <div class="modal-overlay" id="reset-password-modal">
         <div class="modal glass-card">
             <div class="modal-header">
-                <h3>Reset Password</h3>
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                    Reset Password
+                </h3>
                 <button class="modal-close" id="close-reset-modal-btn">&times;</button>
             </div>
             <form id="reset-password-form">
                 <input type="hidden" id="reset-user-id-field">
-                <div class="form-group">
-                    <label for="reset-password-val">New Password</label>
-                    <input type="password" id="reset-password-val" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="reset-password-val">New Password</label>
+                        <input type="password" id="reset-password-val" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reset-password-confirm">Confirm Password</label>
+                        <input type="password" id="reset-password-confirm" class="form-control" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="reset-password-confirm">Confirm Password</label>
-                    <input type="password" id="reset-password-confirm" required style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;color:#fff;border:1px solid rgba(255,255,255,0.1)">
-                </div>
-                <div class="modal-actions" style="margin-top:20px">
+                <div class="modal-actions">
                     <button type="button" class="btn btn-ghost" id="cancel-reset-modal-btn">Cancel</button>
                     <button type="submit" class="btn btn-primary">Reset Password</button>
                 </div>
@@ -568,10 +598,13 @@
     <div class="modal-overlay" id="rating-modal">
         <div class="modal glass-card modal-rating">
             <div class="modal-header">
-                <h3>⭐ Rate Support Service</h3>
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    Rate Support Service
+                </h3>
                 <button class="modal-close" id="close-rating-modal-btn">&times;</button>
             </div>
-            <div id="rating-modal-body" style="padding:20px">
+            <div id="rating-modal-body" class="modal-body">
                 <p style="color:var(--text-secondary);font-size:14px;margin:0 0 16px">How would you rate the support you received?</p>
                 <div id="rating-stars" style="display:flex;gap:4px;justify-content:center;margin-bottom:16px">
                     <!-- Stars populated by JS -->
@@ -597,17 +630,19 @@
             </div>
             <form id="article-form">
                 <input type="hidden" id="article-id">
-                <div class="form-group">
-                    <label for="article-title">Title <span class="required">*</span></label>
-                    <input type="text" id="article-title" placeholder="Article Title" required>
-                </div>
-                <div class="form-group">
-                    <label for="article-category">Category</label>
-                    <input type="text" id="article-category" placeholder="e.g. FAQ, Windows, Network" required>
-                </div>
-                <div class="form-group">
-                    <label for="article-content">Content <span class="required">*</span></label>
-                    <textarea id="article-content" rows="8" placeholder="Article text content..." required></textarea>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="article-title">Title <span class="required">*</span></label>
+                        <input type="text" id="article-title" class="form-control" placeholder="Article Title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="article-category">Category</label>
+                        <input type="text" id="article-category" class="form-control" placeholder="e.g. FAQ, Windows, Network" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="article-content">Content <span class="required">*</span></label>
+                        <textarea id="article-content" class="form-control" rows="8" placeholder="Article text content..." required></textarea>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-ghost" id="cancel-article-modal-btn">Cancel</button>
@@ -620,12 +655,15 @@
     <!-- ==================== LOGOUT CONFIRM MODAL ==================== -->
     <div class="modal-overlay" id="logout-confirm-modal">
         <div class="modal glass-card" style="max-width: 360px; text-align: center;">
-            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
-                <h3 style="font-size: 1.25rem;">Log out?</h3>
+            <div class="modal-header">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    Log out?
+                </h3>
             </div>
-            <div style="padding: 16px 24px 24px;">
+            <div class="modal-body text-center">
                 <p style="color: var(--text-secondary); margin-bottom: 24px;">Are you sure you want to log out of your account?</p>
-                <div class="modal-actions" style="justify-content: center; gap: 12px; margin-top: 0;">
+                <div class="modal-actions centered">
                     <button type="button" class="btn btn-ghost" id="cancel-logout-btn">Cancel</button>
                     <button type="button" class="btn btn-primary" id="confirm-logout-btn" style="background-color: var(--severity-severe); border-color: var(--severity-severe);">Log Out</button>
                 </div>

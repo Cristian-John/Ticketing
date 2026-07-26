@@ -49,7 +49,9 @@ export class TicketsPage {
             console.error('Failed to load tickets:', err);
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">⚠️</div>
+                    <div class="empty-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
                     <p>Failed to load tickets. Please try again.</p>
                 </div>
             `;
@@ -87,8 +89,11 @@ export class TicketsPage {
         if (tickets.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">🎫</div>
-                    <p>No tickets yet. Submit your first IT support request.</p>
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="empty-state-title">No tickets yet</div>
+                    <p>Submit your first IT support request.</p>
                 </div>
             `;
             return;
@@ -146,18 +151,22 @@ export class TicketsPage {
         const tickets = this.getAdminFilteredTickets(allTickets);
 
         container.innerHTML = `
-            <div class="table-wrap">
-                <div class="table-head">
-                    <span style="flex:0 0 88px">ID</span>
-                    <span style="flex:1">Title</span>
-                    <span style="flex:0 0 110px">Department</span>
-                    <span style="flex:0 0 86px">Severity</span>
-                    <span style="flex:0 0 108px">Status</span>
-                    <span style="flex:0 0 100px">Requester</span>
-                    <span style="flex:0 0 56px">Rating</span>
-                    <span style="flex:0 0 86px">Updated</span>
-                </div>
-                <div id="ticket-table-body"></div>
+            <div class="table-container">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 88px">ID</th>
+                            <th>Title</th>
+                            <th style="width: 110px">Department</th>
+                            <th style="width: 86px">Severity</th>
+                            <th style="width: 108px">Status</th>
+                            <th style="width: 100px">Requester</th>
+                            <th style="width: 56px">Rating</th>
+                            <th style="width: 86px">Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticket-table-body"></tbody>
+                </table>
             </div>
         `;
 
@@ -165,22 +174,33 @@ export class TicketsPage {
         if (!body) return;
 
         if (tickets.length === 0) {
-            body.innerHTML = '<div class="empty-state" style="padding:30px">No tickets found.</div>';
+            body.innerHTML = `
+                <tr>
+                    <td colspan="8" style="padding: var(--space-2xl);">
+                        <div class="empty-state" style="border: none; background: transparent; padding: 0;">
+                            <div class="empty-state-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>
+                            </div>
+                            <div class="empty-state-title">No tickets found</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
         } else {
             body.innerHTML = tickets.map(t => `
-                <div class="table-row" data-id="${escapeHTML(t.id)}">
-                    <span style="flex:0 0 88px;font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</span>
-                    <span style="flex:1;font-weight:600;color:var(--text-heading);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</span>
-                    <span style="flex:0 0 110px"><span class="badge-dept">${escapeHTML(t.department)}</span></span>
-                    <span style="flex:0 0 86px"><span class="badge ${getSeverityBadgeClass(t.severity)}">${escapeHTML(t.severity)}</span></span>
-                    <span style="flex:0 0 108px"><span class="badge ${getStatusBadgeClass(t.status)}">${escapeHTML(t.status)}</span></span>
-                    <span style="flex:0 0 100px;color:var(--text-muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.requester)}</span>
-                    <span style="flex:0 0 56px;color:var(--severity-moderate);font-size:12px">${t.rating != null ? t.rating + '★' : '—'}</span>
-                    <span style="flex:0 0 86px;color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</span>
-                </div>
+                <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
+                    <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
+                    <td style="font-weight:600;color:var(--text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
+                    <td><span class="badge-dept">${escapeHTML(t.department)}</span></td>
+                    <td><span class="badge ${getSeverityBadgeClass(t.severity)}">${escapeHTML(t.severity)}</span></td>
+                    <td><span class="badge ${getStatusBadgeClass(t.status)}">${escapeHTML(t.status)}</span></td>
+                    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.requester)}</td>
+                    <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : '—'}</td>
+                    <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
+                </tr>
             `).join('');
 
-            body.querySelectorAll('.table-row').forEach(row => {
+            body.querySelectorAll('.clickable-row').forEach(row => {
                 row.addEventListener('click', () => {
                     const id = row.getAttribute('data-id');
                     const ticket = tickets.find(t => t.id === id);
@@ -230,15 +250,19 @@ export class TicketsPage {
                     <div class="stat-label">Avg Rating</div>
                 </div>
             </div>
-            <div class="table-wrap">
-                <div class="table-head">
-                    <span style="flex:0 0 88px">ID</span>
-                    <span style="flex:1">Ticket</span>
-                    <span style="flex:0 0 100px">Requester</span>
-                    <span style="flex:0 0 100px">Rating</span>
-                    <span style="flex:0 0 86px">Resolved</span>
-                </div>
-                <div id="resolved-table-body"></div>
+            <div class="table-container">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 88px">ID</th>
+                            <th>Ticket</th>
+                            <th style="width: 100px">Requester</th>
+                            <th style="width: 100px">Rating</th>
+                            <th style="width: 86px">Resolved</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resolved-table-body"></tbody>
+                </table>
             </div>
         `;
 
@@ -246,21 +270,32 @@ export class TicketsPage {
         if (!body) return;
 
         if (resolved.length === 0) {
-            body.innerHTML = '<div class="empty-state" style="padding:30px">No resolved tickets yet.</div>';
+            body.innerHTML = `
+                <tr>
+                    <td colspan="5" style="padding: var(--space-2xl);">
+                        <div class="empty-state" style="border: none; background: transparent; padding: 0;">
+                            <div class="empty-state-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                            <div class="empty-state-title">No resolved tickets yet</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
         body.innerHTML = resolved.map(t => `
-            <div class="table-row" data-id="${escapeHTML(t.id)}">
-                <span style="flex:0 0 88px;font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</span>
-                <span style="flex:1;font-weight:600;color:var(--text-heading);font-size:13px">${escapeHTML(t.title)}</span>
-                <span style="flex:0 0 100px;color:var(--text-secondary);font-size:12px">${escapeHTML(t.requester)}</span>
-                <span style="flex:0 0 100px;color:var(--severity-moderate);font-size:12px">${t.rating != null ? t.rating + '★' : 'Unrated'}</span>
-                <span style="flex:0 0 86px;color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</span>
-            </div>
+            <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
+                <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
+                <td style="font-weight:600;color:var(--text-heading)">${escapeHTML(t.title)}</td>
+                <td>${escapeHTML(t.requester)}</td>
+                <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : 'Unrated'}</td>
+                <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
+            </tr>
         `).join('');
 
-        body.querySelectorAll('.table-row').forEach(row => {
+        body.querySelectorAll('.clickable-row').forEach(row => {
             row.addEventListener('click', () => {
                 const id = row.getAttribute('data-id');
                 const ticket = resolved.find(t => t.id === id);
