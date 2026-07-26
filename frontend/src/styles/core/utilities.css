@@ -35,3 +35,29 @@
     z-index: -1;
     pointer-events: none;
 }
+
+/* ──── Hidden Utility ──── */
+.hidden {
+    display: none !important;
+}
+
+/* .notif-pulse */
+.notif-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.3);
+    }
+}
+

@@ -21,6 +21,8 @@
 @import './styles/components/toast.css';
 @import './styles/components/tables.css';
 @import './styles/components/badges.css';
+@import './styles/components/modals.css';
+@import './styles/components/widgets.css';
 
 /* =========================================
    PAGES & WIDGETS
@@ -111,115 +113,6 @@
     grid-template-columns: 1fr 1fr;
     gap: var(--space-md);
     margin-bottom: var(--space-md);
-}
-
-/* ──── Department Bar Chart ──── */
-.dept-bar-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 0;
-    border-bottom: 1px solid var(--border);
-}
-.dept-bar-label {
-    color: var(--text-secondary);
-    font-size: 12px;
-    width: 140px;
-    flex-shrink: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.dept-bar-track {
-    flex: 1;
-    height: 5px;
-    background: var(--bg-body);
-    border-radius: 3px;
-    overflow: hidden;
-}
-.dept-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #00e5ff, #00b8d4);
-    border-radius: 3px;
-    transition: width 0.5s ease;
-}
-.dept-bar-count {
-    color: #00e5ff;
-    font-weight: 700;
-    font-size: 12px;
-    min-width: 14px;
-    text-align: right;
-}
-[data-theme='light'] .dept-bar-fill {
-    background: linear-gradient(90deg, #00838f, #00acc1);
-}
-[data-theme='light'] .dept-bar-count {
-    color: #00838f;
-}
-
-/* ──── Assignee Checklist ──── */
-.assignee-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.assignee-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 12px;
-    color: var(--text-secondary);
-    user-select: none;
-}
-.assignee-check:hover {
-    background: var(--row-hover);
-    color: var(--text-primary);
-}
-.assignee-check input[type='checkbox'] {
-    width: 15px;
-    height: 15px;
-    accent-color: var(--accent);
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-/* ──── Stars ──── */
-.stars {
-    display: flex;
-    gap: 1px;
-}
-.stars .star {
-    font-size: 18px;
-    transition: var(--transition);
-}
-.stars .star.off {
-    filter: grayscale(1) opacity(0.2);
-}
-.stars.stars-sm .star {
-    font-size: 12px;
-}
-
-/* ──── Rating Stars (modal) ──── */
-.rating-star {
-    font-size: 36px;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 2px;
-    filter: grayscale(1) opacity(0.3);
-    transition:
-        transform 0.15s ease,
-        filter 0.15s ease;
-}
-.rating-star:hover {
-    transform: scale(1.15);
-}
-.rating-star.active {
-    filter: none;
 }
 
 /* ──── Ticket Detail ──── */
@@ -449,120 +342,6 @@
     color: var(--text-primary);
 }
 
-/* ──── Modal ──── */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: var(--bg-modal-overlay);
-    backdrop-filter: blur(6px);
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-}
-.modal-overlay.show {
-    display: flex;
-}
-
-.modal {
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 0;
-    animation: modalSlide 0.3s ease;
-}
-.modal-view {
-    max-width: 680px;
-}
-
-.modal-detail-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-md);
-    margin-bottom: var(--space-xl);
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--border);
-}
-
-@media (max-width: 600px) {
-    .modal-detail-grid {
-        grid-template-columns: 1fr;
-    }
-}
-.modal-rating {
-    max-width: 440px;
-}
-
-@keyframes modalSlide {
-    from {
-        opacity: 0;
-        transform: translateY(24px) scale(0.97);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-lg) var(--space-xl);
-    border-bottom: 1px solid var(--border);
-}
-.modal-header h3 {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-heading);
-}
-.modal-close {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.modal-close:hover {
-    background: var(--severity-severe-bg);
-    color: var(--severity-severe);
-    border-color: rgba(255, 82, 82, 0.3);
-}
-
-.modal .modal-body {
-    padding: var(--space-xl);
-}
-
-.modal-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-sm);
-    padding: var(--space-md) var(--space-xl) var(--space-lg);
-    border-top: 1px solid var(--border);
-}
-.modal-actions.centered {
-    justify-content: center;
-}
-
-/* ──── Hidden Utility ──── */
-.hidden {
-    display: none !important;
-}
-
 /* ──── Toast ──── */
 .toast-container {
     position: fixed;
@@ -636,26 +415,6 @@
     to {
         opacity: 0;
         transform: translateX(40px);
-    }
-}
-
-/* .notif-pulse */
-.notif-pulse {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-    animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.5;
-        transform: scale(1.3);
     }
 }
 
