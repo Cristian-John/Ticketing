@@ -1,0 +1,127 @@
+/* =========================================
+   Forms & Inputs
+   Global form controls, textareas, and wrappers.
+   ========================================= */
+
+.form-group {
+    margin-bottom: var(--space-md);
+}
+.form-group label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+.required {
+    color: var(--severity-severe);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+}
+
+.input-wrapper {
+    position: relative;
+}
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 1;
+}
+
+input[type='text'],
+input[type='password'],
+input[type='email'],
+input[type='datetime-local'],
+select,
+textarea,
+.form-control {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 0.92rem;
+    transition: var(--transition);
+    outline: none;
+}
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--primary-light);
+    background: var(--bg-input);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+.custom-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-3xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+.password-toggle-btn:hover {
+    color: var(--text-primary);
+}
+
+.input-wrapper input,
+.input-wrapper select {
+    padding-left: 52px;
+}
+
+select {
+    cursor: pointer;
+    appearance: auto;
+}
+select option {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}

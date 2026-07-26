@@ -1,0 +1,51 @@
+/* =========================================
+   Toast & Notifications
+   Notification banners and alert messages.
+   ========================================= */
+
+/* ──── Notification Banner ──── */
+.notif-banner {
+    position: absolute;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    animation: slideDown 0.3s ease;
+}
+.notif-banner.notif-new {
+    background: var(--status-progress-bg);
+    border-bottom: 2px solid var(--status-progress);
+    color: var(--status-progress);
+}
+.notif-banner.notif-critical {
+    background: var(--severity-severe-bg);
+    border-bottom: 2px solid var(--severity-severe);
+    color: var(--severity-severe);
+}
+.notif-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.7;
+    padding: 0 4px;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
