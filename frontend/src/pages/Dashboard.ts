@@ -1,4 +1,5 @@
-import { ModalsComponent } from '../components/Modals';
+
+import { TicketDetailModal } from '../components/TicketDetailModal';
 import { statsAPI,ticketsAPI } from '../services/api';
 import { store } from '../state/store';
 import { Stats,Ticket } from '../types';
@@ -133,7 +134,7 @@ export class DashboardPage {
                 </div>
             `;
             card.addEventListener('click', () => {
-                ModalsComponent.showTicketDetail(ticket, () => DashboardPage.load());
+                new TicketDetailModal(ticket, () => DashboardPage.load()).open();
             });
             list.appendChild(card);
         });

@@ -1,50 +1,62 @@
 import { ticketsAPI, usersAPI } from '../services/api';
 import { store } from '../state/store';
 import { Ticket } from '../types';
+import { createElement } from '../utils/dom';
 import { ModalsComponent } from './Modals';
 import { showToast } from './Toast';
 
 export class EditTicketModal {
-    private static submitBound = false;
-    private static currentTicketId = '';
-    private static onSaveCallback: () => void = () => {};
+    private ticket: Ticket;
+    private onSaveCallback: () => void;
+    private boundSubmitHandler?: (e: Event) => void;
+    private boundCancelHandler?: () => void;
+    private container: HTMLElement;
 
-    public static async open(ticket: Ticket, onSave: () => void): Promise<void> {
-        this.currentTicketId = ticket.id;
+    constructor(ticket: Ticket, onSave: () => void) {
+        this.ticket = ticket;
         this.onSaveCallback = onSave;
+        const modal = document.getElementById('edit-ticket-modal');
+        if (!modal) throw new Error('Edit modal not found');
+        this.container = modal;
+    }
 
+    public async open(): Promise<void> {
+        this.destroy(); // Cleanup previous listeners if any
+        await this.create();
+        this.render();
+        this.attachEvents();
+        ModalsComponent.openModal('edit-ticket-modal');
+    }
+
+    private async create(): Promise<void> {
         const statusSelect = document.getElementById('edit-ticket-status') as HTMLSelectElement;
         const severitySelect = document.getElementById('edit-ticket-severity') as HTMLSelectElement;
         const prioritySelect = document.getElementById('edit-ticket-priority') as HTMLSelectElement;
         const assigneeSelect = document.getElementById('edit-ticket-assignee') as HTMLSelectElement;
         const dueInput = document.getElementById('edit-ticket-due') as HTMLInputElement;
 
-        if (statusSelect) statusSelect.value = ticket.status;
-        if (severitySelect) severitySelect.value = ticket.severity;
-        if (prioritySelect) prioritySelect.value = ticket.priority;
+        if (statusSelect) statusSelect.value = this.ticket.status;
+        if (severitySelect) severitySelect.value = this.ticket.severity;
+        if (prioritySelect) prioritySelect.value = this.ticket.priority;
 
-        // Fetch IT Support users dynamically
         if (assigneeSelect) {
-            assigneeSelect.innerHTML = '<option value="Unassigned">Unassigned</option>';
+            assigneeSelect.innerHTML = '';
+            assigneeSelect.appendChild(createElement('option', { attributes: { value: 'Unassigned' }, textContent: 'Unassigned' }));
             try {
                 const agents = await usersAPI.getByRole('it-support');
                 agents.forEach(agent => {
-                    const opt = document.createElement('option');
-                    opt.value = agent.fullName;
-                    opt.textContent = agent.fullName;
-                    assigneeSelect.appendChild(opt);
+                    assigneeSelect.appendChild(createElement('option', { attributes: { value: agent.fullName }, textContent: agent.fullName }));
                 });
-                assigneeSelect.value = ticket.assignee || 'Unassigned';
+                assigneeSelect.value = this.ticket.assignee || 'Unassigned';
             } catch (err) {
                 console.error('Failed to load agents for assignment:', err);
             }
         }
 
-        // Format date/time local for input value (YYYY-MM-DDTHH:MM)
         if (dueInput) {
-            if (ticket.dueAt) {
+            if (this.ticket.dueAt) {
                 try {
-                    const date = new Date(ticket.dueAt);
+                    const date = new Date(this.ticket.dueAt);
                     const tzOffset = date.getTimezoneOffset() * 60000;
                     const localISOTime = new Date(date.getTime() - tzOffset)
                         .toISOString()
@@ -57,61 +69,71 @@ export class EditTicketModal {
                 dueInput.value = '';
             }
         }
-
-        this.initFormSubmit();
-        ModalsComponent.openModal('edit-ticket-modal');
     }
 
-    private static initFormSubmit(): void {
-        if (this.submitBound) return;
-        this.submitBound = true;
+    private render(): void {
+        // Values were updated in-place on existing HTML elements.
+    }
 
+    private attachEvents(): void {
         const form = document.getElementById('edit-ticket-form') as HTMLFormElement;
         const cancelBtn = document.getElementById('cancel-edit-modal-btn');
 
-        cancelBtn?.addEventListener('click', () => {
-            ModalsComponent.closeModal('edit-ticket-modal');
-        });
-
-        form?.addEventListener('submit', async e => {
-            e.preventDefault();
-
-            const statusSelect = document.getElementById('edit-ticket-status') as HTMLSelectElement;
-            const severitySelect = document.getElementById(
-                'edit-ticket-severity',
-            ) as HTMLSelectElement;
-            const prioritySelect = document.getElementById(
-                'edit-ticket-priority',
-            ) as HTMLSelectElement;
-            const assigneeSelect = document.getElementById(
-                'edit-ticket-assignee',
-            ) as HTMLSelectElement;
-            const dueInput = document.getElementById('edit-ticket-due') as HTMLInputElement;
-
-            const user = store.getState().currentUser;
-            const changedBy = user ? user.username : 'Admin';
-
-            let dueAt: string | undefined = undefined;
-            if (dueInput && dueInput.value) {
-                dueAt = new Date(dueInput.value).toISOString();
-            }
-
-            try {
-                await ticketsAPI.update(this.currentTicketId, {
-                    status: statusSelect.value,
-                    severity: severitySelect.value,
-                    priority: prioritySelect.value,
-                    assignee: assigneeSelect.value,
-                    dueAt: dueAt || '',
-                    changedBy,
-                });
-
-                showToast('Ticket updated successfully', 'success');
+        if (cancelBtn) {
+            this.boundCancelHandler = () => {
                 ModalsComponent.closeModal('edit-ticket-modal');
-                this.onSaveCallback();
-            } catch (err: any) {
-                showToast(err.message || 'Failed to update ticket', 'error');
-            }
-        });
+            };
+            cancelBtn.addEventListener('click', this.boundCancelHandler);
+        }
+
+        if (form) {
+            this.boundSubmitHandler = async (e: Event) => {
+                e.preventDefault();
+
+                const statusSelect = document.getElementById('edit-ticket-status') as HTMLSelectElement;
+                const severitySelect = document.getElementById('edit-ticket-severity') as HTMLSelectElement;
+                const prioritySelect = document.getElementById('edit-ticket-priority') as HTMLSelectElement;
+                const assigneeSelect = document.getElementById('edit-ticket-assignee') as HTMLSelectElement;
+                const dueInput = document.getElementById('edit-ticket-due') as HTMLInputElement;
+
+                const user = store.getState().currentUser;
+                const changedBy = user ? user.username : 'Admin';
+
+                let dueAt: string | undefined = undefined;
+                if (dueInput && dueInput.value) {
+                    dueAt = new Date(dueInput.value).toISOString();
+                }
+
+                try {
+                    await ticketsAPI.update(this.ticket.id, {
+                        status: statusSelect.value,
+                        severity: severitySelect.value,
+                        priority: prioritySelect.value,
+                        assignee: assigneeSelect.value,
+                        dueAt: dueAt || '',
+                        changedBy,
+                    });
+
+                    showToast('Ticket updated successfully', 'success');
+                    ModalsComponent.closeModal('edit-ticket-modal');
+                    this.onSaveCallback();
+                } catch (err: any) {
+                    showToast(err.message || 'Failed to update ticket', 'error');
+                }
+            };
+            form.addEventListener('submit', this.boundSubmitHandler);
+        }
+    }
+
+    public destroy(): void {
+        const form = document.getElementById('edit-ticket-form') as HTMLFormElement;
+        const cancelBtn = document.getElementById('cancel-edit-modal-btn');
+
+        if (cancelBtn && this.boundCancelHandler) {
+            cancelBtn.removeEventListener('click', this.boundCancelHandler);
+        }
+        if (form && this.boundSubmitHandler) {
+            form.removeEventListener('submit', this.boundSubmitHandler);
+        }
     }
 }

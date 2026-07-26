@@ -1,4 +1,5 @@
-import { ModalsComponent } from '../components/Modals';
+
+import { TicketDetailModal } from '../components/TicketDetailModal';
 import { HtmlViewName } from '../router/router';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
@@ -124,7 +125,7 @@ export class TicketsPage {
                 </div>
             `;
             card.addEventListener('click', () => {
-                ModalsComponent.showTicketDetail(ticket, () => this.load('my-tickets'));
+                new TicketDetailModal(ticket, () => this.load('my-tickets')).open();
             });
             container.appendChild(card);
         });
@@ -217,7 +218,7 @@ export class TicketsPage {
                     const id = row.getAttribute('data-id');
                     const ticket = tickets.find(t => t.id === id);
                     if (ticket) {
-                        ModalsComponent.showTicketDetail(ticket, () => this.load('all-tickets'));
+                        new TicketDetailModal(ticket, () => this.load('all-tickets')).open();
                     }
                 });
             });
@@ -316,7 +317,7 @@ export class TicketsPage {
                 const id = row.getAttribute('data-id');
                 const ticket = resolved.find(t => t.id === id);
                 if (ticket) {
-                    ModalsComponent.showTicketDetail(ticket, () => this.load('resolved'));
+                    new TicketDetailModal(ticket, () => this.load('resolved')).open();
                 }
             });
         });

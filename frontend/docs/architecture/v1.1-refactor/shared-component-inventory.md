@@ -3,7 +3,9 @@
 This is a lightweight inventory of reusable UI elements available throughout the application.
 
 ## Badges (src/styles/components/badges.css)
-- Status: .badge-open, .badge-in-progress, .badge-resolved, .badge-closed`n- Severity: .badge-severe, .badge-high, .badge-moderate, .badge-low`n- Metadata: .badge-dept, .badge-cat, .badge-sla`n
+- Status: .badge-open, .badge-in-progress, .badge-resolved, .badge-closed
+- Severity: .badge-severe, .badge-high, .badge-moderate, .badge-low
+- Metadata: .badge-dept, .badge-cat, .badge-sla
 ## Buttons (src/styles/components/buttons.css)
 - .btn: Base button
 - .btn-primary: Primary action gradient

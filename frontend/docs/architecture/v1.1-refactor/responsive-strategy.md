@@ -3,7 +3,7 @@
 This document outlines the responsive strategy for the Version 1.1 frontend architecture, detailing breakpoint definitions, philosophy, and layout adaptation guidelines.
 
 ## Philosophy
-The application follows a **Mobile-First** (or Desktop-First depending on legacy roots, but standardizes toward structured breakpoints) responsive design approach. 
+The application follows a **Mobile-First** responsive design approach. 
 Because `style.css` has been decoupled from specific component implementation details, its primary CSS responsibility is orchestrating `@media` query breakpoints that apply global layout shifts (like sidebar collapsing or main container expanding).
 
 ## Breakpoint Definitions
