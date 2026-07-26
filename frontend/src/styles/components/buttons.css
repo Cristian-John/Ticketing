@@ -82,3 +82,24 @@
     font-size: 0.8rem;
 }
 
+
+/* ──── Attachment Links ──── */
+.attachment-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-decoration: none;
+    transition: var(--transition);
+}
+.attachment-link:hover {
+    background: var(--row-hover);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+

@@ -20,3 +20,18 @@ Component styles **must remain independent** of page-specific styles. The depend
 4. **Pages** (Login, Dashboard)
 
 Do not tightly couple a component to a page (e.g., avoid .dashboard-page .btn). Components should govern themselves or rely on container structural queries where strictly necessary.
+
+## Responsibility Boundaries: Shared vs. Page-Specific
+
+To prevent duplicated styling and preserve our dependency direction, adhere to these strict boundaries:
+
+**Shared Components (src/styles/components/)**:
+- Must be reusable across multiple different screens (e.g., buttons, modals, input fields).
+- Must **never** include margins or absolute positioning that dictates page layout (components should be structurally agnostic).
+- Must not reference parent page classes (e.g., .login-page .btn-primary is forbidden).
+
+**Page-Specific Styles (src/styles/pages/)**:
+- Must contain styles unique to a single screen (e.g., a specific Dashboard grid, the Login form container structure).
+- Are allowed to dictate margins, paddings, and layout wrappers for the components rendered within them.
+- Should **not** redefine colors, typography, or states for a shared component. Use utility classes or modify the component globally if needed.
+
