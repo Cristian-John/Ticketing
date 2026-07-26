@@ -1,3 +1,9 @@
+/* =========================================
+   Global Resets & Base Styles
+   Standardizes browser defaults, body rules,
+   and scrollbar styles.
+   ========================================= */
+
 /* ──── Reset & Base ──── */
 *,
 *::before,
