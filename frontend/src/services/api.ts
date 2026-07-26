@@ -1,21 +1,70 @@
-import { Ticket, Article, Stats, Note, Attachment } from '../types';
+import { store } from '../state/store';
+import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest, User, UserSession } from '../types';
+import { CONFIG } from '../utils/config';
+import { ErrorCode } from '../utils/enums';
 
-const API_BASE = '/api/v1';
+const API_BASE = CONFIG.API_BASE;
+
+export class APIError extends Error {
+    public code: string;
+    public status: number;
+    public data: unknown;
+
+    constructor(message: string, status: number = 500, data: unknown = null, code: string = ErrorCode.UNKNOWN) {
+        super(message);
+        this.name = 'APIError';
+        this.status = status;
+        this.data = data;
+        this.code = code;
+    }
+}
 
 async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
-        headers: { 'Content-Type': 'application/json' },
-        ...opts,
-    });
+    const user = store.getState().currentUser;
+    const token = user ? user.token : null;
+
+    const headers = new Headers(opts.headers || {});
+
+    if (!(opts.body instanceof FormData) && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+    }
+
+    if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    let res: Response;
+    try {
+        res = await fetch(`${API_BASE}${path}`, {
+            ...opts,
+            headers,
+        });
+    } catch (networkErr: unknown) {
+        throw new APIError(`Network error: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`, 0);
+    }
+
     if (!res.ok) {
-        let errorMsg = 'An error occurred';
+        let errorMsg = `HTTP Error ${res.status}`;
+        let errorData = null;
         try {
             const err = await res.json();
+            errorData = err;
             errorMsg = err.error || err.message || errorMsg;
-        } catch { }
-        throw new Error(errorMsg);
+        } catch {
+            // Fallback for non-JSON errors
+        }
+        throw new APIError(errorMsg, res.status, errorData);
     }
-    return res.json();
+
+    if (res.status === 204) {
+        return {} as T;
+    }
+
+    try {
+        return await res.json();
+    } catch {
+        return {} as T;
+    }
 }
 
 export const ticketsAPI = {
@@ -26,21 +75,22 @@ export const ticketsAPI = {
     getById: (id: string): Promise<Ticket> => api<Ticket>(`/tickets/${id}`),
     create: (ticket: Partial<Ticket>): Promise<Ticket> =>
         api<Ticket>('/tickets', { method: 'POST', body: JSON.stringify(ticket) }),
-    update: (id: string, updates: Partial<Ticket>): Promise<Ticket> =>
+    update: (id: string, updates: Partial<Ticket> & { changedBy?: string }): Promise<Ticket> =>
         api<Ticket>(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
     delete: (id: string): Promise<{ success: boolean; id: string }> =>
         api<{ success: boolean; id: string }>(`/tickets/${id}`, { method: 'DELETE' }),
     addNote: (id: string, text: string, author: string): Promise<Note> =>
-        api<Note>(`/tickets/${id}/notes`, { method: 'POST', body: JSON.stringify({ text, author }) }),
-    uploadAttachment: async (id: string, file: File): Promise<Attachment> => {
+        api<Note>(`/tickets/${id}/notes`, {
+            method: 'POST',
+            body: JSON.stringify({ text, author }),
+        }),
+    uploadAttachment: (id: string, file: File): Promise<Attachment> => {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetch(`${API_BASE}/tickets/${id}/attachments`, {
+        return api<Attachment>(`/tickets/${id}/attachments`, {
             method: 'POST',
             body: formData,
         });
-        if (!res.ok) throw new Error('Upload failed');
-        return res.json();
     },
 };
 
@@ -57,17 +107,72 @@ export const articlesAPI = {
     delete: (id: string): Promise<{ success: boolean; id: string }> =>
         api<{ success: boolean; id: string }>(`/articles/${id}`, { method: 'DELETE' }),
     reorder: (order: string[]): Promise<{ success: boolean }> =>
-        api<{ success: boolean }>('/articles/reorder', { method: 'PUT', body: JSON.stringify({ order }) }),
+        api<{ success: boolean }>('/articles/reorder', {
+            method: 'PUT',
+            body: JSON.stringify({ order }),
+        }),
 };
 
 export const statsAPI = {
     get: (): Promise<Stats> => api<Stats>('/stats'),
 };
 
+export const usersAPI = {
+    getAll: (search?: string): Promise<User[]> => {
+        const query = search ? `?search=${encodeURIComponent(search)}` : '';
+        return api<User[]>(`/users${query}`);
+    },
+    getByRole: (role: string): Promise<User[]> =>
+        api<User[]>(`/users?role=${encodeURIComponent(role)}`),
+    create: (userData: CreateUserRequest): Promise<User> =>
+        api<User>('/users', { method: 'POST', body: JSON.stringify(userData) }),
+    update: (id: string, updates: UpdateUserRequest): Promise<User> =>
+        api<User>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
+    deactivate: (id: string): Promise<{ success: boolean }> =>
+        api<{ success: boolean }>(`/users/${id}/deactivate`, { method: 'PUT' }),
+    resetPassword: (id: string, passwordPlain: string): Promise<{ success: boolean }> =>
+        api<{ success: boolean }>(`/users/${id}/reset-password`, {
+            method: 'PUT',
+            body: JSON.stringify({ password: passwordPlain }),
+        }),
+    changePassword: (
+        currentPassword: string,
+        newPassword: string,
+        confirmPassword: string,
+    ): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>('/users/me/change-password', {
+            method: 'PUT',
+            body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+        }),
+};
+
 export const authAPI = {
-    login: (role: string, password?: string): Promise<{ success: boolean; message: string }> =>
-        api<{ success: boolean; message: string }>('/auth/login', {
+    login: (
+        username: string,
+        password?: string,
+    ): Promise<{ success: boolean; user: UserSession }> =>
+        api<{ success: boolean; user: UserSession }>('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ role, password }),
+            body: JSON.stringify({ username, password }),
+        }),
+    register: (
+        fullName: string,
+        username: string,
+        email: string,
+        password?: string,
+    ): Promise<{ success: boolean; user: UserSession }> =>
+        api<{ success: boolean; user: UserSession }>('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ fullName, username, email, password }),
+        }),
+    validate: (token: string): Promise<{ success: boolean; user: UserSession }> =>
+        api<{ success: boolean; user: UserSession }>('/auth/validate', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        }),
+    logout: (token: string): Promise<{ success: boolean }> =>
+        api<{ success: boolean }>('/auth/logout', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
         }),
 };

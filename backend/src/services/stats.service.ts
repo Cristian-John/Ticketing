@@ -1,40 +1,40 @@
 import { db } from '../config/db';
 import { Stats } from '../types';
 
-const stmtGetStats = db.prepare(`
-    SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) as open,
-        SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as inProgress,
-        SUM(CASE WHEN status IN ('Resolved', 'Closed') THEN 1 ELSE 0 END) as resolved,
-        SUM(CASE WHEN severity = 'Severe' AND status NOT IN ('Resolved', 'Closed') THEN 1 ELSE 0 END) as severe,
-        SUM(CASE WHEN priority = 'Critical' AND status NOT IN ('Resolved', 'Closed') THEN 1 ELSE 0 END) as critical,
-        AVG(CASE WHEN rating IS NOT NULL THEN rating ELSE NULL END) as rawAvgRating,
-        SUM(CASE WHEN rating IS NOT NULL THEN 1 ELSE 0 END) as rated
-    FROM tickets
-`);
-
 export class StatsService {
-    public static getStats(): Stats {
-        const row = stmtGetStats.get() as {
+    public static async getStats(): Promise<Stats> {
+        const res = await db.query(`
+            SELECT
+                COUNT(*)::integer as total,
+                SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END)::integer as open,
+                SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END)::integer as in_progress,
+                SUM(CASE WHEN status IN ('Resolved', 'Closed') THEN 1 ELSE 0 END)::integer as resolved,
+                SUM(CASE WHEN severity = 'Severe' AND status NOT IN ('Resolved', 'Closed') THEN 1 ELSE 0 END)::integer as severe,
+                SUM(CASE WHEN priority = 'Critical' AND status NOT IN ('Resolved', 'Closed') THEN 1 ELSE 0 END)::integer as critical,
+                AVG(CASE WHEN rating IS NOT NULL THEN rating ELSE NULL END) as raw_avg_rating,
+                SUM(CASE WHEN rating IS NOT NULL THEN 1 ELSE 0 END)::integer as rated
+            FROM tickets
+        `);
+        
+        const row = res.rows[0] as {
             total: number;
             open: number;
-            inProgress: number;
+            in_progress: number;
             resolved: number;
             severe: number;
             critical: number;
-            rawAvgRating: number | null;
+            raw_avg_rating: number | string | null;
             rated: number;
         };
 
-        const avgRating = row.rawAvgRating !== null && row.rawAvgRating !== undefined
-            ? Number(row.rawAvgRating).toFixed(1)
+        const avgRating = row.raw_avg_rating !== null && row.raw_avg_rating !== undefined
+            ? Number(row.raw_avg_rating).toFixed(1)
             : null;
 
         return {
             total: row.total || 0,
             open: row.open || 0,
-            inProgress: row.inProgress || 0,
+            inProgress: row.in_progress || 0,
             resolved: row.resolved || 0,
             severe: row.severe || 0,
             critical: row.critical || 0,

@@ -2,18 +2,15 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { TicketController } from '../controllers/ticket.controller';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
 // Setup Multer for attachments
-const storage = multer.diskStorage({
-    destination: path.join(__dirname, '../../uploads'),
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + '-' + file.originalname);
-    }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+router.use(requireAuth());
 
 // Ticket routes
 router.get('/', TicketController.getAll);
