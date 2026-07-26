@@ -1,6 +1,7 @@
 import { ModalsComponent } from '../components/Modals';
 import { showToast } from '../components/Toast';
 import { usersAPI } from '../services/api';
+import { store } from '../state/store';
 import { escapeHTML } from '../utils/formatters';
 import { clearPortalContent } from '../utils/portalContent';
 
@@ -8,7 +9,7 @@ export class UsersPage {
     private static listenersBound = false;
 
     public static async load(): Promise<void> {
-        const container = clearPortalContent();
+        const container = clearPortalContent(store.getState().currentUser!.role);
         if (!container) return;
 
         container.innerHTML = `

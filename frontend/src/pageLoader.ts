@@ -29,6 +29,6 @@ export function loadPageForHtmlView(htmlView: string): void {
             ProfilePage.load();
             break;
         default:
-            renderPlaceholder('This section is coming soon.');
+            renderPlaceholder(store.getState().currentUser!.role, 'This section is coming soon.');
     }
 }

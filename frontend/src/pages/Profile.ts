@@ -8,7 +8,7 @@ export class ProfilePage {
         const user = store.getState().currentUser;
         if (!user) return;
 
-        const container = getPortalContentContainer();
+        const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
 
         const roleLabel =

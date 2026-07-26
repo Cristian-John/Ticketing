@@ -19,7 +19,7 @@ export class TicketsPage {
     private static adminFiltersBound = false;
 
     public static async load(htmlView: HtmlViewName): Promise<void> {
-        const container = clearPortalContent();
+        const container = clearPortalContent(store.getState().currentUser!.role);
         if (!container) return;
 
         try {

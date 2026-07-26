@@ -27,11 +27,11 @@ export class ArticlesPage {
     }
 
     private static getContentContainer(): HTMLElement | null {
-        return getPortalContentContainer();
+        return getPortalContentContainer(store.getState().currentUser!.role);
     }
 
     private static renderArticles(articles: Article[]): void {
-        const container = clearPortalContent();
+        const container = clearPortalContent(store.getState().currentUser!.role);
         if (!container) return;
 
         const user = store.getState().currentUser;

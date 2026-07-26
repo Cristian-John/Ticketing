@@ -13,7 +13,7 @@ import { clearPortalContent } from '../utils/portalContent';
 
 export class DashboardPage {
     public static async load(): Promise<void> {
-        const container = clearPortalContent();
+        const container = clearPortalContent(store.getState().currentUser!.role);
         if (!container) return;
 
         try {
