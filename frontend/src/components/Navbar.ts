@@ -39,7 +39,9 @@ export class NavbarComponent {
             this.applyTheme(current === 'dark' ? 'light' : 'dark');
         };
 
-        document.getElementById('global-theme-toggle')?.addEventListener('click', toggleTheme);
+        document.querySelectorAll('.theme-toggle').forEach(btn => {
+            btn.addEventListener('click', toggleTheme);
+        });
     }
 
     public static initUserBadge(): void {
