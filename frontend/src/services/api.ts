@@ -1,22 +1,16 @@
 import { store } from '../state/store';
-import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest,User, UserSession } from '../types';
+import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest, User, UserSession } from '../types';
+import { CONFIG } from '../utils/config';
+import { ErrorCode } from '../utils/enums';
 
-const API_BASE = '/api/v1';
-
-export enum ErrorCode {
-    UNAUTHORIZED = 'UNAUTHORIZED',
-    VALIDATION = 'VALIDATION',
-    NETWORK = 'NETWORK',
-    TIMEOUT = 'TIMEOUT',
-    UNKNOWN = 'UNKNOWN'
-}
+const API_BASE = CONFIG.API_BASE;
 
 export class APIError extends Error {
     public code: string;
     public status: number;
-    public data: any;
+    public data: unknown;
 
-    constructor(message: string, status: number = 500, data: any = null, code: string = ErrorCode.UNKNOWN) {
+    constructor(message: string, status: number = 500, data: unknown = null, code: string = ErrorCode.UNKNOWN) {
         super(message);
         this.name = 'APIError';
         this.status = status;
@@ -45,8 +39,8 @@ async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
             ...opts,
             headers,
         });
-    } catch (networkErr: any) {
-        throw new APIError(`Network error: ${networkErr.message}`, 0);
+    } catch (networkErr: unknown) {
+        throw new APIError(`Network error: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`, 0);
     }
 
     if (!res.ok) {

@@ -1,5 +1,5 @@
 import { Router } from '../router/router';
-import { DEPARTMENTS } from '../utils/formatters';
+import { DEPARTMENTS } from '../utils/constants';
 
 export class SidebarComponent {
     public static init(): void {

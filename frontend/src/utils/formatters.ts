@@ -1,21 +1,5 @@
 import { Ticket } from '../types';
 
-export const DEPARTMENTS = [
-    'Executive',
-    'Marketing',
-    'I-Wallet',
-    'Admin',
-    'I-Tech',
-    'Joint Ventures',
-    'IT',
-    'Customer Care',
-    'Secretary',
-    'Real Estate',
-    'Corporate',
-];
-
-export const AGENTS = ['Sean Khayle', 'CJ', 'Jeremiah', 'Clarence'];
-
 export function getAssignees(ticket: Ticket): string[] {
     if (!ticket.assignee || ticket.assignee === 'Unassigned') return [];
     return ticket.assignee
@@ -99,7 +83,7 @@ export function getSeverityBadgeClass(severity: string): string {
     }
 }
 
-export function debounce<T extends (...args: any[]) => void>(
+export function debounce<T extends (...args: unknown[]) => void>(
     fn: T,
     delay: number = 300,
 ): (...args: Parameters<T>) => void {
