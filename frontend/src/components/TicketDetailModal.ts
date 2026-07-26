@@ -182,8 +182,8 @@ export class TicketDetailModal {
                     this.ticket = updated;
                     this.open();
                     this.onRefresh();
-                } catch (err: any) {
-                    showToast(err.message || 'Failed to add note', 'error');
+                } catch (err: unknown) {
+                    showToast((err instanceof Error ? err.message : String(err)) || 'Failed to add note', 'error');
                 }
             };
             noteForm.addEventListener('submit', this.boundSubmitHandler);

@@ -10,14 +10,11 @@ export class EditTicketModal {
     private onSaveCallback: () => void;
     private boundSubmitHandler?: (e: Event) => void;
     private boundCancelHandler?: () => void;
-    private container: HTMLElement;
-
     constructor(ticket: Ticket, onSave: () => void) {
         this.ticket = ticket;
         this.onSaveCallback = onSave;
         const modal = document.getElementById('edit-ticket-modal');
         if (!modal) throw new Error('Edit modal not found');
-        this.container = modal;
     }
 
     public async open(): Promise<void> {
@@ -117,8 +114,8 @@ export class EditTicketModal {
                     showToast('Ticket updated successfully', 'success');
                     ModalsComponent.closeModal('edit-ticket-modal');
                     this.onSaveCallback();
-                } catch (err: any) {
-                    showToast(err.message || 'Failed to update ticket', 'error');
+                } catch (err: unknown) {
+                    showToast((err instanceof Error ? err.message : String(err)) || 'Failed to update ticket', 'error');
                 }
             };
             form.addEventListener('submit', this.boundSubmitHandler);

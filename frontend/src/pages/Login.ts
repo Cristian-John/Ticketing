@@ -143,8 +143,8 @@ export class LoginPage {
                         // Toggle back to login mode
                         toggleAuthMode?.click();
                     }
-                } catch (err: any) {
-                    showToast(err.message || 'Registration failed', 'error');
+                } catch (err: unknown) {
+                    showToast((err instanceof Error ? err.message : String(err)) || 'Registration failed', 'error');
                 }
             } else {
                 // Sign In mode
@@ -166,8 +166,8 @@ export class LoginPage {
                             Router.enterClient('my-tickets');
                         }
                     }
-                } catch (err: any) {
-                    showToast(err.message || 'Login failed', 'error');
+                } catch (err: unknown) {
+                    showToast((err instanceof Error ? err.message : String(err)) || 'Login failed', 'error');
                 }
             }
         });

@@ -4,7 +4,7 @@ import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
 import { Article } from '../types';
 import { debounce,escapeHTML, formatDate } from '../utils/formatters';
-import { clearPortalContent, getPortalContentContainer } from '../utils/portalContent';
+import { clearPortalContent } from '../utils/portalContent';
 
 export class ArticlesPage {
     private static clientSearchQuery = '';
@@ -25,9 +25,7 @@ export class ArticlesPage {
         }
     }
 
-    private static getContentContainer(): HTMLElement | null {
-        return getPortalContentContainer(store.getState().currentUser!.role);
-    }
+
 
     private static renderArticles(articles: Article[]): void {
         const container = clearPortalContent(store.getState().currentUser!.role);
@@ -207,8 +205,8 @@ export class ArticlesPage {
                 form.reset();
                 ModalsComponent.closeModal('article-modal');
                 await this.load();
-            } catch (err: any) {
-                showToast(err.message || 'Failed to create article', 'error');
+            } catch (err: unknown) {
+                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create article', 'error');
             }
         });
     }

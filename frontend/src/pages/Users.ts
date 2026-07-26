@@ -2,6 +2,7 @@ import { ModalsComponent } from '../components/Modals';
 import { showToast } from '../components/Toast';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
+import { User } from '../types';
 import { escapeHTML } from '../utils/formatters';
 import { clearPortalContent } from '../utils/portalContent';
 
@@ -124,14 +125,14 @@ export class UsersPage {
                             await usersAPI.deactivate(id);
                             showToast('User deactivated', 'success');
                             this.refreshUsersList();
-                        } catch (err: any) {
-                            showToast(err.message || 'Deactivation failed', 'error');
+                        } catch (err: unknown) {
+                            showToast((err instanceof Error ? err.message : String(err)) || 'Deactivation failed', 'error');
                         }
                     }
                 });
             });
-        } catch (err: any) {
-            tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML(err.message)}</td></tr>`;
+        } catch (err: unknown) {
+            tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML((err instanceof Error ? err.message : String(err)))}</td></tr>`;
         }
     }
 
@@ -141,11 +142,11 @@ export class UsersPage {
 
         // Search listener
         const searchInput = document.getElementById('users-search-input');
-        let searchTimeout: any = null;
+        let searchTimeout: number | null = null;
         searchInput?.addEventListener('input', e => {
             const val = (e.target as HTMLInputElement).value;
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
+            if (searchTimeout !== null) clearTimeout(searchTimeout);
+            searchTimeout = window.setTimeout(() => {
                 this.refreshUsersList(val);
             }, 300);
         });
@@ -218,8 +219,8 @@ export class UsersPage {
 
                 ModalsComponent.closeModal('user-modal');
                 this.refreshUsersList();
-            } catch (err: any) {
-                showToast(err.message || 'Action failed', 'error');
+            } catch (err: unknown) {
+                showToast((err instanceof Error ? err.message : String(err)) || 'Action failed', 'error');
             }
         });
 
@@ -253,8 +254,8 @@ export class UsersPage {
                 await usersAPI.resetPassword(idField.value, password);
                 showToast('Password reset successfully', 'success');
                 ModalsComponent.closeModal('reset-password-modal');
-            } catch (err: any) {
-                showToast(err.message || 'Reset failed', 'error');
+            } catch (err: unknown) {
+                showToast((err instanceof Error ? err.message : String(err)) || 'Reset failed', 'error');
             }
         });
 
@@ -267,7 +268,7 @@ export class UsersPage {
         });
     }
 
-    private static openUserModal(user?: any): void {
+    private static openUserModal(user?: User): void {
         const title = document.getElementById('user-modal-title');
         const idField = document.getElementById('user-id-field') as HTMLInputElement;
         const fullnameInput = document.getElementById('user-fullname') as HTMLInputElement;

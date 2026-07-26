@@ -191,8 +191,8 @@ export class ProfilePage {
                     'success',
                 );
                 form.reset();
-            } catch (err: any) {
-                showToast(err.message || 'Failed to change password.', 'error');
+            } catch (err: unknown) {
+                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to change password.', 'error');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;

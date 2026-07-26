@@ -96,8 +96,8 @@ export class CreateTicketPage {
                 this.closeModal(form);
 
                 await TicketsPage.load('my-tickets');
-            } catch (err: any) {
-                showToast(err.message || 'Failed to create ticket', 'error');
+            } catch (err: unknown) {
+                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create ticket', 'error');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
