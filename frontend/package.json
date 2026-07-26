@@ -10,7 +10,8 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{ts,css,html}\"",
-    "test": "playwright test"
+    "test": "playwright test",
+    "validate": "npm run lint && npx tsc --noEmit && npm run build && npm run test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
