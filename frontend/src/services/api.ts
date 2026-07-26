@@ -1,17 +1,27 @@
 import { store } from '../state/store';
-import { Article, Attachment, Note, Stats, Ticket, User, UserSession } from '../types';
+import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest,User, UserSession } from '../types';
 
 const API_BASE = '/api/v1';
 
+export enum ErrorCode {
+    UNAUTHORIZED = 'UNAUTHORIZED',
+    VALIDATION = 'VALIDATION',
+    NETWORK = 'NETWORK',
+    TIMEOUT = 'TIMEOUT',
+    UNKNOWN = 'UNKNOWN'
+}
+
 export class APIError extends Error {
+    public code: string;
     public status: number;
     public data: any;
 
-    constructor(message: string, status: number = 500, data: any = null) {
+    constructor(message: string, status: number = 500, data: any = null, code: string = ErrorCode.UNKNOWN) {
         super(message);
         this.name = 'APIError';
         this.status = status;
         this.data = data;
+        this.code = code;
     }
 }
 
@@ -120,9 +130,9 @@ export const usersAPI = {
     },
     getByRole: (role: string): Promise<User[]> =>
         api<User[]>(`/users?role=${encodeURIComponent(role)}`),
-    create: (userData: Partial<User> & { password?: string }): Promise<User> =>
+    create: (userData: CreateUserRequest): Promise<User> =>
         api<User>('/users', { method: 'POST', body: JSON.stringify(userData) }),
-    update: (id: string, updates: Partial<User> & { password?: string }): Promise<User> =>
+    update: (id: string, updates: UpdateUserRequest): Promise<User> =>
         api<User>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
     deactivate: (id: string): Promise<{ success: boolean }> =>
         api<{ success: boolean }>(`/users/${id}/deactivate`, { method: 'PUT' }),

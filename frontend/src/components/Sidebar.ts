@@ -1,5 +1,4 @@
 import { Router } from '../router/router';
-import { store } from '../state/store';
 import { DEPARTMENTS } from '../utils/formatters';
 
 export class SidebarComponent {
@@ -74,12 +73,10 @@ export class SidebarComponent {
         container.addEventListener('click', e => {
             const target = e.target as HTMLElement;
             if (target.classList.contains('dept-badge')) {
-                const dept = target.getAttribute('data-dept') || 'all';
                 container
                     .querySelectorAll('.dept-badge')
                     .forEach(b => b.classList.remove('active'));
                 target.classList.add('active');
-                store.setDepartment(dept);
             }
         });
     }

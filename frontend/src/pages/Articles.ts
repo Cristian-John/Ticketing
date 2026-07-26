@@ -19,7 +19,6 @@ export class ArticlesPage {
             const user = store.getState().currentUser;
             const isAdmin = user?.role === 'admin';
             const articles = await articlesAPI.getAll(isAdmin ? undefined : this.clientSearchQuery);
-            store.setArticles(articles);
             this.renderArticles(articles);
         } catch (err) {
             console.error('Failed to load KB articles:', err);
@@ -144,7 +143,6 @@ export class ArticlesPage {
         const performSearch = debounce(async () => {
             this.clientSearchQuery = searchInput?.value.trim() || '';
             const filtered = await articlesAPI.getAll(this.clientSearchQuery);
-            store.setArticles(filtered);
             const list = document.getElementById('kb-client-list');
             if (!list) return;
 

@@ -20,8 +20,6 @@ export class DashboardPage {
         try {
             const [tickets, stats] = await Promise.all([ticketsAPI.getAll(), statsAPI.get()]);
 
-            store.setTickets(tickets);
-            store.setStats(stats);
 
             this.updateAdminSidebarStats(tickets);
             this.renderDashboard(container, tickets, stats);

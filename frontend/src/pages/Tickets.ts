@@ -25,7 +25,6 @@ export class TicketsPage {
 
         try {
             const tickets = await ticketsAPI.getAll();
-            store.setTickets(tickets);
 
             const user = store.getState().currentUser;
             if (!user) return;
