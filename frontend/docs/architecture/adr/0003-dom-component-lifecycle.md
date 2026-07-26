@@ -14,6 +14,21 @@ We establish a standardized lifecycle convention for all complex, stateful DOM c
 3. **`attachEvents()`**: Binds event listeners to the component's elements. References to handler functions should be retained if they need to be removed later.
 4. **`destroy()`**: Removes the component from the DOM, unbinds all event listeners, and cleans up any subscriptions (e.g., store listeners, timeouts).
 
+## Expected Component Interface
+Even if not strictly enforced by a TypeScript `interface` implementation on every single component, all complex DOM components should conceptually adhere to the following interface:
+
+```typescript
+interface IDOMComponent {
+    create(): void | Promise<void>;
+    render(container?: HTMLElement): void;
+    attachEvents(): void;
+    destroy(): void;
+}
+```
+
+## Architectural Guidelines
+- **Resource Ownership**: Components own the lifecycle of the resources they create. If a component registers an event listener, subscribes to a store, or initiates a timeout during its lifecycle, it is strictly responsible for unregistering/cleaning up that resource during its `destroy()` phase. Localizing resource ownership reduces coupling and simplifies maintenance, acting as our primary defense against memory leaks.
+
 ## Consequences
 - **Positive**: Consistent, predictable structure for component initialization and teardown. Prevents memory leaks by explicitly separating event binding and unbinding. Eases debugging and testing.
 - **Negative**: Requires slightly more boilerplate compared to ad-hoc, inline function closures.

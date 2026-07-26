@@ -1,38 +1,66 @@
 import { store } from '../state/store';
-import { Article, Attachment, Note, Stats, Ticket, UserSession } from '../types';
+import { Article, Attachment, Note, Stats, Ticket, User, UserSession } from '../types';
 
 const API_BASE = '/api/v1';
+
+export class APIError extends Error {
+    public status: number;
+    public data: any;
+
+    constructor(message: string, status: number = 500, data: any = null) {
+        super(message);
+        this.name = 'APIError';
+        this.status = status;
+        this.data = data;
+    }
+}
 
 async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const user = store.getState().currentUser;
     const token = user ? user.token : null;
 
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    };
+    const headers = new Headers(opts.headers || {});
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    if (!(opts.body instanceof FormData) && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
-        ...opts,
-        headers: {
-            ...headers,
-            ...opts.headers,
-        },
-    });
+    if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    let res: Response;
+    try {
+        res = await fetch(`${API_BASE}${path}`, {
+            ...opts,
+            headers,
+        });
+    } catch (networkErr: any) {
+        throw new APIError(`Network error: ${networkErr.message}`, 0);
+    }
+
     if (!res.ok) {
-        let errorMsg = 'An error occurred';
+        let errorMsg = `HTTP Error ${res.status}`;
+        let errorData = null;
         try {
             const err = await res.json();
+            errorData = err;
             errorMsg = err.error || err.message || errorMsg;
         } catch {
-            // ignore non-JSON responses
+            // Fallback for non-JSON errors
         }
-        throw new Error(errorMsg);
+        throw new APIError(errorMsg, res.status, errorData);
     }
-    return res.json();
+
+    if (res.status === 204) {
+        return {} as T;
+    }
+
+    try {
+        return await res.json();
+    } catch {
+        return {} as T;
+    }
 }
 
 export const ticketsAPI = {
@@ -52,24 +80,13 @@ export const ticketsAPI = {
             method: 'POST',
             body: JSON.stringify({ text, author }),
         }),
-    uploadAttachment: async (id: string, file: File): Promise<Attachment> => {
+    uploadAttachment: (id: string, file: File): Promise<Attachment> => {
         const formData = new FormData();
         formData.append('file', file);
-        const user = store.getState().currentUser;
-        const token = user ? user.token : null;
-
-        const headers: Record<string, string> = {};
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const res = await fetch(`${API_BASE}/tickets/${id}/attachments`, {
+        return api<Attachment>(`/tickets/${id}/attachments`, {
             method: 'POST',
             body: formData,
-            headers,
         });
-        if (!res.ok) throw new Error('Upload failed');
-        return res.json();
     },
 };
 
@@ -97,16 +114,16 @@ export const statsAPI = {
 };
 
 export const usersAPI = {
-    getAll: (search?: string): Promise<any[]> => {
+    getAll: (search?: string): Promise<User[]> => {
         const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        return api<any[]>(`/users${query}`);
+        return api<User[]>(`/users${query}`);
     },
-    getByRole: (role: string): Promise<any[]> =>
-        api<any[]>(`/users?role=${encodeURIComponent(role)}`),
-    create: (userData: any): Promise<any> =>
-        api<any>('/users', { method: 'POST', body: JSON.stringify(userData) }),
-    update: (id: string, updates: any): Promise<any> =>
-        api<any>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
+    getByRole: (role: string): Promise<User[]> =>
+        api<User[]>(`/users?role=${encodeURIComponent(role)}`),
+    create: (userData: Partial<User> & { password?: string }): Promise<User> =>
+        api<User>('/users', { method: 'POST', body: JSON.stringify(userData) }),
+    update: (id: string, updates: Partial<User> & { password?: string }): Promise<User> =>
+        api<User>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
     deactivate: (id: string): Promise<{ success: boolean }> =>
         api<{ success: boolean }>(`/users/${id}/deactivate`, { method: 'PUT' }),
     resetPassword: (id: string, passwordPlain: string): Promise<{ success: boolean }> =>
