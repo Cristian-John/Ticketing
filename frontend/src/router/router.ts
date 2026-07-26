@@ -111,6 +111,10 @@ export class Router {
             if (filters) {
                 filters.style.display = htmlViewName === 'all-tickets' ? '' : 'none';
             }
+            const userFilters = document.getElementById('admin-users-filters');
+            if (userFilters) {
+                userFilters.style.display = htmlViewName === 'users' ? '' : 'none';
+            }
         }
 
         const storeView =

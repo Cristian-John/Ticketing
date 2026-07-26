@@ -54,13 +54,13 @@ export class ModalsComponent {
                     </div>
                     ${user && (user.role === 'admin' || user.role === 'it-support') ? `
                         <button class="btn btn-secondary btn-sm" id="detail-edit-btn" style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                            ✏️ Edit Ticket
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Ticket
                         </button>
                     ` : ''}
                 </div>
             </div>
 
-            <div class="detail-grid">
+            <div class="modal-detail-grid">
                 <div class="detail-item"><strong>Requester:</strong> ${escapeHTML(ticket.requester)}</div>
                 <div class="detail-item"><strong>Department:</strong> ${escapeHTML(ticket.department)}</div>
                 <div class="detail-item"><strong>Category:</strong> ${escapeHTML(ticket.category)}</div>
@@ -81,7 +81,8 @@ export class ModalsComponent {
                         ${ticket.attachments.map(a => `
                             <li>
                                 <a href="/uploads/${a.filename}" target="_blank" class="attachment-link">
-                                    📎 ${escapeHTML(a.originalname)} (${Math.round(a.size / 1024)} KB)
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                    ${escapeHTML(a.originalname)} (${Math.round(a.size / 1024)} KB)
                                 </a>
                             </li>
                         `).join('')}
@@ -103,9 +104,9 @@ export class ModalsComponent {
                     `).join('') : '<p class="text-muted">No notes recorded.</p>'}
                 </div>
 
-                <form id="add-note-form" class="add-note-form" style="margin-top:15px">
-                    <textarea id="note-text" placeholder="Add a note or update..." rows="3" required></textarea>
-                    <button type="submit" class="btn btn-secondary btn-sm" style="margin-top:8px">Post Note</button>
+                <form id="add-note-form" class="add-note-form" style="margin-top: var(--space-md);">
+                    <textarea id="note-text" class="form-control" placeholder="Add a note or update..." rows="3" required></textarea>
+                    <button type="submit" class="btn btn-secondary btn-sm" style="margin-top: var(--space-sm);">Post Note</button>
                 </form>
             </div>
         `;

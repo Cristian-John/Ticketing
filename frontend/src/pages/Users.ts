@@ -12,32 +12,16 @@ export class UsersPage {
         if (!container) return;
 
         container.innerHTML = `
-            <div class="view-header">
-                <h2>User Management</h2>
-                <button class="btn btn-primary" id="create-user-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Create User
-                </button>
-            </div>
-
-            <div class="toolbar glass-card" style="margin-bottom:20px; padding:15px; display:flex; gap:15px; align-items:center">
-                <div class="search-box" style="flex:1">
-                    <input type="text" id="users-search-input" placeholder="Search users by name, username, email..." style="width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff">
-                </div>
-            </div>
-
-            <div class="table-container glass-card" style="padding:15px">
-                <table class="tickets-table" style="width:100%; border-collapse:collapse">
+            <div class="table-container">
+                <table class="glass-table">
                     <thead>
-                        <tr style="text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px">
-                            <th style="padding:10px">Full Name</th>
-                            <th style="padding:10px">Username</th>
-                            <th style="padding:10px">Email</th>
-                            <th style="padding:10px">Role</th>
-                            <th style="padding:10px">Status</th>
-                            <th style="padding:10px; text-align:right">Actions</th>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th style="text-align:right">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="users-table-body">
@@ -60,8 +44,13 @@ export class UsersPage {
             if (users.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="padding:30px; text-align:center; color:rgba(255,255,255,0.5)">
-                            No users found.
+                        <td colspan="6" style="padding: var(--space-2xl);">
+                            <div class="empty-state" style="border: none; background: transparent; padding: 0;">
+                                <div class="empty-state-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                </div>
+                                <div class="empty-state-title">No users found</div>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -69,26 +58,26 @@ export class UsersPage {
             }
 
             tbody.innerHTML = users.map(u => `
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
-                    <td style="padding:12px 10px; font-weight:600">${escapeHTML(u.fullName)}</td>
-                    <td style="padding:12px 10px">${escapeHTML(u.username)}</td>
-                    <td style="padding:12px 10px; color:rgba(255,255,255,0.6)">${escapeHTML(u.email)}</td>
-                    <td style="padding:12px 10px">
+                <tr>
+                    <td style="font-weight:600">${escapeHTML(u.fullName)}</td>
+                    <td>${escapeHTML(u.username)}</td>
+                    <td style="color:var(--text-muted)">${escapeHTML(u.email)}</td>
+                    <td>
                         <span class="badge" style="background:rgba(255,255,255,0.05); color:#fff; font-size:11px; padding:3px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.1)">
-                            ${u.role === 'admin' ? '🔑 Admin' : u.role === 'it-support' ? '🛠️ IT Support' : '👤 Client'}
+                            ${u.role === 'admin' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg> Admin' : u.role === 'it-support' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> IT Support' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Client'}
                         </span>
                     </td>
-                    <td style="padding:12px 10px">
+                    <td>
                         <span class="badge" style="background:${Number(u.active) === 1 ? 'rgba(46, 213, 115, 0.15)' : 'rgba(255, 71, 87, 0.15)'}; color:${Number(u.active) === 1 ? '#2ed573' : '#ff4757'}; font-size:11px; padding:3px 8px; border-radius:12px; border:1px solid ${Number(u.active) === 1 ? 'rgba(46,213,115,0.2)' : 'rgba(255,71,87,0.2)'}">
                             ${Number(u.active) === 1 ? 'Active' : 'Inactive'}
                         </span>
                     </td>
-                    <td style="padding:12px 10px; text-align:right">
+                    <td style="text-align:right">
                         <div style="display:inline-flex; gap:6px">
-                            <button class="btn btn-secondary btn-sm edit-user-action" data-id="${u.id}" style="padding:4px 8px; font-size:11px">Edit</button>
-                            <button class="btn btn-secondary btn-sm reset-user-action" data-id="${u.id}" style="padding:4px 8px; font-size:11px">Reset Password</button>
+                            <button class="btn btn-secondary btn-sm edit-user-action" data-id="${u.id}">Edit</button>
+                            <button class="btn btn-secondary btn-sm reset-user-action" data-id="${u.id}">Reset</button>
                             ${Number(u.active) === 1 ? `
-                                <button class="btn btn-ghost btn-sm deactivate-user-action" data-id="${u.id}" style="padding:4px 8px; font-size:11px; color:#ff4757">Deactivate</button>
+                                <button class="btn btn-ghost btn-sm deactivate-user-action" data-id="${u.id}" style="color:var(--severity-severe)">Deactivate</button>
                             ` : ''}
                         </div>
                     </td>
@@ -161,7 +150,7 @@ export class UsersPage {
             if (passwordInput) {
                 const type = passwordInput.type === 'password' ? 'text' : 'password';
                 passwordInput.type = type;
-                passwordToggle.textContent = type === 'password' ? '👁️' : '🔒';
+                passwordToggle.innerHTML = type === 'password' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
             }
         });
 
@@ -270,7 +259,7 @@ export class UsersPage {
 
         if (user) {
             // Edit mode
-            title.textContent = '✏️ Edit User';
+            title.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit User';
             idField.value = user.id;
             fullnameInput.value = user.fullName;
             usernameInput.value = user.username;
@@ -286,7 +275,7 @@ export class UsersPage {
             if (activeGroup) activeGroup.style.display = 'flex';
         } else {
             // Create mode
-            title.textContent = '👤 Create User';
+            title.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Create User';
             idField.value = '';
             fullnameInput.value = '';
             usernameInput.value = '';
