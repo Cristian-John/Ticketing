@@ -1,6 +1,6 @@
-import { store } from '../state/store';
-import { usersAPI } from '../services/api';
 import { showToast } from '../components/Toast';
+import { usersAPI } from '../services/api';
+import { store } from '../state/store';
 import { getPortalContentContainer } from '../utils/portalContent';
 
 export class ProfilePage {
@@ -11,7 +11,10 @@ export class ProfilePage {
         const container = getPortalContentContainer();
         if (!container) return;
 
-        const roleLabel = user.role === 'it-support' ? 'IT Support' : user.role.charAt(0).toUpperCase() + user.role.slice(1);
+        const roleLabel =
+            user.role === 'it-support'
+                ? 'IT Support'
+                : user.role.charAt(0).toUpperCase() + user.role.slice(1);
 
         container.innerHTML = `
             <div class="profile-page">
@@ -122,7 +125,9 @@ export class ProfilePage {
             btn.addEventListener('click', () => {
                 const isPassword = input.type === 'password';
                 input.type = isPassword ? 'text' : 'password';
-                btn.innerHTML = isPassword ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+                btn.innerHTML = isPassword
+                    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>'
+                    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
             });
         }
     }
@@ -131,12 +136,18 @@ export class ProfilePage {
         const form = document.getElementById('change-password-form') as HTMLFormElement;
         if (!form) return;
 
-        form.addEventListener('submit', async (e) => {
+        form.addEventListener('submit', async e => {
             e.preventDefault();
 
-            const currentPassword = (document.getElementById('profile-current-password') as HTMLInputElement).value;
-            const newPassword = (document.getElementById('profile-new-password') as HTMLInputElement).value;
-            const confirmPassword = (document.getElementById('profile-confirm-password') as HTMLInputElement).value;
+            const currentPassword = (
+                document.getElementById('profile-current-password') as HTMLInputElement
+            ).value;
+            const newPassword = (
+                document.getElementById('profile-new-password') as HTMLInputElement
+            ).value;
+            const confirmPassword = (
+                document.getElementById('profile-confirm-password') as HTMLInputElement
+            ).value;
             const submitBtn = document.getElementById('change-password-btn') as HTMLButtonElement;
 
             // Client-side validation
@@ -150,8 +161,15 @@ export class ProfilePage {
                 return;
             }
 
-            if (newPassword.length < 8 || !/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
-                showToast('Password must be at least 8 characters with at least one letter and one number.', 'error');
+            if (
+                newPassword.length < 8 ||
+                !/[a-zA-Z]/.test(newPassword) ||
+                !/[0-9]/.test(newPassword)
+            ) {
+                showToast(
+                    'Password must be at least 8 characters with at least one letter and one number.',
+                    'error',
+                );
                 return;
             }
 
@@ -168,7 +186,10 @@ export class ProfilePage {
 
                 await usersAPI.changePassword(currentPassword, newPassword, confirmPassword);
 
-                showToast('Password changed successfully! All other sessions have been invalidated.', 'success');
+                showToast(
+                    'Password changed successfully! All other sessions have been invalidated.',
+                    'success',
+                );
                 form.reset();
             } catch (err: any) {
                 showToast(err.message || 'Failed to change password.', 'error');

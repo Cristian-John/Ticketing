@@ -1,4 +1,4 @@
-import { Ticket, Article, Stats, UserSession } from '../types';
+import { Article, Stats, Ticket, UserSession } from '../types';
 
 const SESSION_KEY = 'itsupport_session';
 

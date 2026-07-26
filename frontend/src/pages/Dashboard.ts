@@ -1,16 +1,15 @@
-import { Ticket, Stats } from '../types';
-import { ticketsAPI, statsAPI } from '../services/api';
+import { ModalsComponent } from '../components/Modals';
+import { statsAPI,ticketsAPI } from '../services/api';
 import { store } from '../state/store';
-import { clearPortalContent } from '../utils/portalContent';
+import { Stats,Ticket } from '../types';
 import {
     escapeHTML,
-    formatDate,
-    getStatusBadgeClass,
     getSeverityBadgeClass,
-    isResolved,
     getSeverityColor,
+    getStatusBadgeClass,
+    isResolved,
 } from '../utils/formatters';
-import { ModalsComponent } from '../components/Modals';
+import { clearPortalContent } from '../utils/portalContent';
 
 export class DashboardPage {
     public static async load(): Promise<void> {
@@ -18,10 +17,7 @@ export class DashboardPage {
         if (!container) return;
 
         try {
-            const [tickets, stats] = await Promise.all([
-                ticketsAPI.getAll(),
-                statsAPI.get(),
-            ]);
+            const [tickets, stats] = await Promise.all([ticketsAPI.getAll(), statsAPI.get()]);
 
             store.setTickets(tickets);
             store.setStats(stats);
@@ -115,7 +111,8 @@ export class DashboardPage {
         if (!list) return;
 
         if (recent.length === 0) {
-            list.innerHTML = '<div class="empty-state" style="padding:20px">No recent tickets.</div>';
+            list.innerHTML =
+                '<div class="empty-state" style="padding:20px">No recent tickets.</div>';
             return;
         }
 

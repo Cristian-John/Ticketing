@@ -1,8 +1,8 @@
-import { usersAPI } from '../services/api';
-import { clearPortalContent } from '../utils/portalContent';
-import { escapeHTML } from '../utils/formatters';
-import { showToast } from '../components/Toast';
 import { ModalsComponent } from '../components/Modals';
+import { showToast } from '../components/Toast';
+import { usersAPI } from '../services/api';
+import { escapeHTML } from '../utils/formatters';
+import { clearPortalContent } from '../utils/portalContent';
 
 export class UsersPage {
     private static listenersBound = false;
@@ -57,7 +57,9 @@ export class UsersPage {
                 return;
             }
 
-            tbody.innerHTML = users.map(u => `
+            tbody.innerHTML = users
+                .map(
+                    u => `
                 <tr>
                     <td style="font-weight:600">${escapeHTML(u.fullName)}</td>
                     <td>${escapeHTML(u.username)}</td>
@@ -76,13 +78,19 @@ export class UsersPage {
                         <div style="display:inline-flex; gap:6px">
                             <button class="btn btn-secondary btn-sm edit-user-action" data-id="${u.id}">Edit</button>
                             <button class="btn btn-secondary btn-sm reset-user-action" data-id="${u.id}">Reset</button>
-                            ${Number(u.active) === 1 ? `
+                            ${
+                                Number(u.active) === 1
+                                    ? `
                                 <button class="btn btn-ghost btn-sm deactivate-user-action" data-id="${u.id}" style="color:var(--severity-severe)">Deactivate</button>
-                            ` : ''}
+                            `
+                                    : ''
+                            }
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `,
+                )
+                .join('');
 
             // Bind action clicks
             tbody.querySelectorAll('.edit-user-action').forEach(btn => {
@@ -105,7 +113,12 @@ export class UsersPage {
             tbody.querySelectorAll('.deactivate-user-action').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
-                    if (id && confirm('Are you sure you want to deactivate this user? They will no longer be able to log in.')) {
+                    if (
+                        id &&
+                        confirm(
+                            'Are you sure you want to deactivate this user? They will no longer be able to log in.',
+                        )
+                    ) {
                         try {
                             await usersAPI.deactivate(id);
                             showToast('User deactivated', 'success');
@@ -116,7 +129,6 @@ export class UsersPage {
                     }
                 });
             });
-
         } catch (err: any) {
             tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML(err.message)}</td></tr>`;
         }
@@ -129,7 +141,7 @@ export class UsersPage {
         // Search listener
         const searchInput = document.getElementById('users-search-input');
         let searchTimeout: any = null;
-        searchInput?.addEventListener('input', (e) => {
+        searchInput?.addEventListener('input', e => {
             const val = (e.target as HTMLInputElement).value;
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
@@ -150,13 +162,16 @@ export class UsersPage {
             if (passwordInput) {
                 const type = passwordInput.type === 'password' ? 'text' : 'password';
                 passwordInput.type = type;
-                passwordToggle.innerHTML = type === 'password' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
+                passwordToggle.innerHTML =
+                    type === 'password'
+                        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>'
+                        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>';
             }
         });
 
         // User form submit
         const form = document.getElementById('user-form') as HTMLFormElement;
-        form?.addEventListener('submit', async (e) => {
+        form?.addEventListener('submit', async e => {
             e.preventDefault();
 
             const idField = document.getElementById('user-id-field') as HTMLInputElement;
@@ -175,7 +190,7 @@ export class UsersPage {
                         fullName: fullnameInput.value.trim(),
                         email: emailInput.value.trim(),
                         role: roleSelect.value,
-                        active: activeCheckbox.checked
+                        active: activeCheckbox.checked,
                     });
                     showToast('User updated successfully', 'success');
                 } else {
@@ -183,7 +198,10 @@ export class UsersPage {
                     const hasLetter = /[a-zA-Z]/.test(password);
                     const hasNumber = /[0-9]/.test(password);
                     if (password.length < 8 || !hasLetter || !hasNumber) {
-                        showToast('Password must be at least 8 characters long and contain both letters and numbers', 'error');
+                        showToast(
+                            'Password must be at least 8 characters long and contain both letters and numbers',
+                            'error',
+                        );
                         return;
                     }
 
@@ -192,7 +210,7 @@ export class UsersPage {
                         username: usernameInput.value.trim(),
                         email: emailInput.value.trim(),
                         password,
-                        role: roleSelect.value
+                        role: roleSelect.value,
                     });
                     showToast('User created successfully', 'success');
                 }
@@ -206,11 +224,13 @@ export class UsersPage {
 
         // Reset password form submit
         const resetForm = document.getElementById('reset-password-form') as HTMLFormElement;
-        resetForm?.addEventListener('submit', async (e) => {
+        resetForm?.addEventListener('submit', async e => {
             e.preventDefault();
             const idField = document.getElementById('reset-user-id-field') as HTMLInputElement;
             const passwordInput = document.getElementById('reset-password-val') as HTMLInputElement;
-            const confirmInput = document.getElementById('reset-password-confirm') as HTMLInputElement;
+            const confirmInput = document.getElementById(
+                'reset-password-confirm',
+            ) as HTMLInputElement;
 
             const password = passwordInput.value;
             if (password !== confirmInput.value) {
@@ -221,7 +241,10 @@ export class UsersPage {
             const hasLetter = /[a-zA-Z]/.test(password);
             const hasNumber = /[0-9]/.test(password);
             if (password.length < 8 || !hasLetter || !hasNumber) {
-                showToast('Password must be at least 8 characters long and contain both letters and numbers', 'error');
+                showToast(
+                    'Password must be at least 8 characters long and contain both letters and numbers',
+                    'error',
+                );
                 return;
             }
 
@@ -255,17 +278,28 @@ export class UsersPage {
         const activeCheckbox = document.getElementById('user-active') as HTMLInputElement;
         const activeGroup = document.getElementById('user-active-group');
 
-        if (!title || !idField || !fullnameInput || !usernameInput || !emailInput || !passwordInput || !roleSelect || !activeCheckbox) return;
+        if (
+            !title ||
+            !idField ||
+            !fullnameInput ||
+            !usernameInput ||
+            !emailInput ||
+            !passwordInput ||
+            !roleSelect ||
+            !activeCheckbox
+        )
+            return;
 
         if (user) {
             // Edit mode
-            title.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit User';
+            title.innerHTML =
+                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit User';
             idField.value = user.id;
             fullnameInput.value = user.fullName;
             usernameInput.value = user.username;
             usernameInput.disabled = true; // Username is immutable
             emailInput.value = user.email;
-            
+
             if (passwordGroup) passwordGroup.style.display = 'none';
             passwordInput.required = false;
             passwordInput.value = '';
@@ -275,13 +309,14 @@ export class UsersPage {
             if (activeGroup) activeGroup.style.display = 'flex';
         } else {
             // Create mode
-            title.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Create User';
+            title.innerHTML =
+                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Create User';
             idField.value = '';
             fullnameInput.value = '';
             usernameInput.value = '';
             usernameInput.disabled = false;
             emailInput.value = '';
-            
+
             if (passwordGroup) passwordGroup.style.display = 'block';
             passwordInput.required = true;
             passwordInput.value = '';

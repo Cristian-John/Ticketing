@@ -1,19 +1,19 @@
-import { Ticket } from '../types';
-import { store } from '../state/store';
-import { ticketsAPI } from '../services/api';
-import { HtmlViewName } from '../router/router';
-import { clearPortalContent } from '../utils/portalContent';
-import {
-    escapeHTML,
-    formatDate,
-    formatAssignees,
-    getStatusBadgeClass,
-    getSeverityBadgeClass,
-    isResolved,
-    getSeverityColor,
-    debounce,
-} from '../utils/formatters';
 import { ModalsComponent } from '../components/Modals';
+import { HtmlViewName } from '../router/router';
+import { ticketsAPI } from '../services/api';
+import { store } from '../state/store';
+import { Ticket } from '../types';
+import {
+    debounce,
+    escapeHTML,
+    formatAssignees,
+    formatDate,
+    getSeverityBadgeClass,
+    getSeverityColor,
+    getStatusBadgeClass,
+    isResolved,
+} from '../utils/formatters';
+import { clearPortalContent } from '../utils/portalContent';
 
 export class TicketsPage {
     private static adminFiltersBound = false;
@@ -40,7 +40,9 @@ export class TicketsPage {
                 }
             } else {
                 const mine = tickets.filter(
-                    t => t.userId === user.id || t.requester.toLowerCase() === user.username.toLowerCase()
+                    t =>
+                        t.userId === user.id ||
+                        t.requester.toLowerCase() === user.username.toLowerCase(),
                 );
                 this.updateClientSidebarStats(mine);
                 this.renderClientTickets(container, mine);
@@ -129,10 +131,16 @@ export class TicketsPage {
     }
 
     private static getAdminFilteredTickets(tickets: Ticket[]): Ticket[] {
-        const status = (document.getElementById('admin-filter-status') as HTMLSelectElement)?.value || 'all';
-        const severity = (document.getElementById('admin-filter-severity') as HTMLSelectElement)?.value || 'all';
-        const dept = (document.getElementById('admin-filter-dept') as HTMLSelectElement)?.value || 'all';
-        const search = (document.getElementById('admin-search') as HTMLInputElement)?.value.trim().toLowerCase() || '';
+        const status =
+            (document.getElementById('admin-filter-status') as HTMLSelectElement)?.value || 'all';
+        const severity =
+            (document.getElementById('admin-filter-severity') as HTMLSelectElement)?.value || 'all';
+        const dept =
+            (document.getElementById('admin-filter-dept') as HTMLSelectElement)?.value || 'all';
+        const search =
+            (document.getElementById('admin-search') as HTMLInputElement)?.value
+                .trim()
+                .toLowerCase() || '';
 
         return tickets
             .filter(t => status === 'all' || t.status === status)
@@ -187,7 +195,9 @@ export class TicketsPage {
                 </tr>
             `;
         } else {
-            body.innerHTML = tickets.map(t => `
+            body.innerHTML = tickets
+                .map(
+                    t => `
                 <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
                     <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
                     <td style="font-weight:600;color:var(--text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
@@ -198,7 +208,9 @@ export class TicketsPage {
                     <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : '—'}</td>
                     <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
                 </tr>
-            `).join('');
+            `,
+                )
+                .join('');
 
             body.querySelectorAll('.clickable-row').forEach(row => {
                 row.addEventListener('click', () => {
@@ -285,7 +297,9 @@ export class TicketsPage {
             return;
         }
 
-        body.innerHTML = resolved.map(t => `
+        body.innerHTML = resolved
+            .map(
+                t => `
             <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
                 <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
                 <td style="font-weight:600;color:var(--text-heading)">${escapeHTML(t.title)}</td>
@@ -293,7 +307,9 @@ export class TicketsPage {
                 <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : 'Unrated'}</td>
                 <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
             </tr>
-        `).join('');
+        `,
+            )
+            .join('');
 
         body.querySelectorAll('.clickable-row').forEach(row => {
             row.addEventListener('click', () => {

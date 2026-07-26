@@ -1,8 +1,8 @@
-import { Ticket } from '../types';
 import { ticketsAPI, usersAPI } from '../services/api';
 import { store } from '../state/store';
-import { showToast } from './Toast';
+import { Ticket } from '../types';
 import { ModalsComponent } from './Modals';
+import { showToast } from './Toast';
 
 export class EditTicketModal {
     private static submitBound = false;
@@ -46,7 +46,9 @@ export class EditTicketModal {
                 try {
                     const date = new Date(ticket.dueAt);
                     const tzOffset = date.getTimezoneOffset() * 60000;
-                    const localISOTime = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16);
+                    const localISOTime = new Date(date.getTime() - tzOffset)
+                        .toISOString()
+                        .slice(0, 16);
                     dueInput.value = localISOTime;
                 } catch {
                     dueInput.value = '';
@@ -71,13 +73,19 @@ export class EditTicketModal {
             ModalsComponent.closeModal('edit-ticket-modal');
         });
 
-        form?.addEventListener('submit', async (e) => {
+        form?.addEventListener('submit', async e => {
             e.preventDefault();
 
             const statusSelect = document.getElementById('edit-ticket-status') as HTMLSelectElement;
-            const severitySelect = document.getElementById('edit-ticket-severity') as HTMLSelectElement;
-            const prioritySelect = document.getElementById('edit-ticket-priority') as HTMLSelectElement;
-            const assigneeSelect = document.getElementById('edit-ticket-assignee') as HTMLSelectElement;
+            const severitySelect = document.getElementById(
+                'edit-ticket-severity',
+            ) as HTMLSelectElement;
+            const prioritySelect = document.getElementById(
+                'edit-ticket-priority',
+            ) as HTMLSelectElement;
+            const assigneeSelect = document.getElementById(
+                'edit-ticket-assignee',
+            ) as HTMLSelectElement;
             const dueInput = document.getElementById('edit-ticket-due') as HTMLInputElement;
 
             const user = store.getState().currentUser;
@@ -95,7 +103,7 @@ export class EditTicketModal {
                     priority: prioritySelect.value,
                     assignee: assigneeSelect.value,
                     dueAt: dueAt || '',
-                    changedBy
+                    changedBy,
                 });
 
                 showToast('Ticket updated successfully', 'success');

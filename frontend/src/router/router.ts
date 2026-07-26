@@ -1,6 +1,6 @@
-import { store } from '../state/store';
 import { loadPageForHtmlView } from '../pageLoader';
 import { authAPI } from '../services/api';
+import { store } from '../state/store';
 
 export type ScreenId = 'login-screen' | 'client-screen' | 'admin-screen';
 export type Portal = 'client' | 'admin';
@@ -89,7 +89,7 @@ export class Router {
     public static switchView(htmlViewName: string, portal?: Portal): void {
         const user = store.getState().currentUser;
         const resolvedPortal: Portal =
-            portal ?? ((user?.role === 'admin' || user?.role === 'it-support') ? 'admin' : 'client');
+            portal ?? (user?.role === 'admin' || user?.role === 'it-support' ? 'admin' : 'client');
 
         const sidebarId = resolvedPortal === 'admin' ? 'admin-sidebar' : 'client-sidebar';
         const sidebar = document.getElementById(sidebarId);
@@ -102,8 +102,7 @@ export class Router {
         const titleEl = document.getElementById(titleId);
         if (titleEl) {
             const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
-            titleEl.textContent =
-                titles?.[resolvedPortal] ?? htmlViewName.replace(/-/g, ' ');
+            titleEl.textContent = titles?.[resolvedPortal] ?? htmlViewName.replace(/-/g, ' ');
         }
 
         if (resolvedPortal === 'admin') {
@@ -117,8 +116,7 @@ export class Router {
             }
         }
 
-        const storeView =
-            HTML_TO_STORE_VIEW[htmlViewName as HtmlViewName] ?? htmlViewName;
+        const storeView = HTML_TO_STORE_VIEW[htmlViewName as HtmlViewName] ?? htmlViewName;
         store.setView(storeView, { force: true });
         loadPageForHtmlView(htmlViewName);
     }

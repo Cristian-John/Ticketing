@@ -1,9 +1,9 @@
-import { Article } from '../types';
+import { ModalsComponent } from '../components/Modals';
+import { showToast } from '../components/Toast';
 import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
-import { escapeHTML, formatDate, debounce } from '../utils/formatters';
-import { showToast } from '../components/Toast';
-import { ModalsComponent } from '../components/Modals';
+import { Article } from '../types';
+import { debounce,escapeHTML, formatDate } from '../utils/formatters';
 import { clearPortalContent, getPortalContentContainer } from '../utils/portalContent';
 
 export class ArticlesPage {
@@ -65,7 +65,9 @@ export class ArticlesPage {
                 </div>
             `;
         } else {
-            list.innerHTML = articles.map(a => `
+            list.innerHTML = articles
+                .map(
+                    a => `
                 <div class="kb-article-card">
                     <div class="kb-article-header">
                         <div class="kb-article-meta">
@@ -76,7 +78,9 @@ export class ArticlesPage {
                     <h3 class="kb-article-title">${escapeHTML(a.title)}</h3>
                     <div class="kb-article-content">${escapeHTML(a.content)}</div>
                 </div>
-            `).join('');
+            `,
+                )
+                .join('');
         }
 
         this.bindClientSearch();
@@ -109,7 +113,9 @@ export class ArticlesPage {
                 </div>
             `;
         } else {
-            list.innerHTML = articles.map(a => `
+            list.innerHTML = articles
+                .map(
+                    a => `
                 <div class="kb-article-card">
                     <div class="kb-article-header">
                         <div class="kb-article-meta">
@@ -121,7 +127,9 @@ export class ArticlesPage {
                     <div class="kb-article-content">${escapeHTML(a.content.substring(0, 300))}${a.content.length > 300 ? '...' : ''}</div>
                     <div style="margin-top:12px;color:var(--text-muted);font-size:12px">Author: ${escapeHTML(a.author)}</div>
                 </div>
-            `).join('');
+            `,
+                )
+                .join('');
         }
 
         document.getElementById('btn-new-article')?.addEventListener('click', () => {
@@ -150,7 +158,9 @@ export class ArticlesPage {
                 return;
             }
 
-            list.innerHTML = filtered.map(a => `
+            list.innerHTML = filtered
+                .map(
+                    a => `
                 <div class="kb-article-card">
                     <div class="kb-article-header">
                         <div class="kb-article-meta">
@@ -161,7 +171,9 @@ export class ArticlesPage {
                     <h3 class="kb-article-title">${escapeHTML(a.title)}</h3>
                     <div class="kb-article-content">${escapeHTML(a.content)}</div>
                 </div>
-            `).join('');
+            `,
+                )
+                .join('');
         }, 300);
 
         searchInput?.addEventListener('input', performSearch);
@@ -173,7 +185,7 @@ export class ArticlesPage {
         this.articleFormInitialized = true;
 
         const form = document.getElementById('article-form') as HTMLFormElement;
-        form?.addEventListener('submit', async (e) => {
+        form?.addEventListener('submit', async e => {
             e.preventDefault();
             const user = store.getState().currentUser;
             const titleInput = document.getElementById('article-title') as HTMLInputElement;

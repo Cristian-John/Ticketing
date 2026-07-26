@@ -32,14 +32,18 @@ export class SidebarComponent {
     }
 
     private static initSidebarToggles(): void {
-        this.setupSidebarToggle('client-sidebar-toggle', 'client-sidebar', 'client-sidebar-overlay');
+        this.setupSidebarToggle(
+            'client-sidebar-toggle',
+            'client-sidebar',
+            'client-sidebar-overlay',
+        );
         this.setupSidebarToggle('admin-sidebar-toggle', 'admin-sidebar', 'admin-sidebar-overlay');
     }
 
     private static setupSidebarToggle(
         toggleId: string,
         sidebarId: string,
-        overlayId: string
+        overlayId: string,
     ): void {
         const toggle = document.getElementById(toggleId);
         const sidebar = document.getElementById(sidebarId);
@@ -67,11 +71,13 @@ export class SidebarComponent {
             ${DEPARTMENTS.map(d => `<button class="dept-badge" data-dept="${d}">${d}</button>`).join('')}
         `;
 
-        container.addEventListener('click', (e) => {
+        container.addEventListener('click', e => {
             const target = e.target as HTMLElement;
             if (target.classList.contains('dept-badge')) {
                 const dept = target.getAttribute('data-dept') || 'all';
-                container.querySelectorAll('.dept-badge').forEach(b => b.classList.remove('active'));
+                container
+                    .querySelectorAll('.dept-badge')
+                    .forEach(b => b.classList.remove('active'));
                 target.classList.add('active');
                 store.setDepartment(dept);
             }
