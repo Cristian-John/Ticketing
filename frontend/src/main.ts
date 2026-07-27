@@ -8,10 +8,14 @@ import { CreateTicketPage } from './pages/CreateTicket';
 import { LoginPage } from './pages/Login';
 import { Router } from './router/router';
 import { store } from './state/store';
+import { LoadingManager } from './utils/loadingManager';
 
 class App {
     public static init(): void {
         document.addEventListener('DOMContentLoaded', () => {
+            // Ensure splash is visible
+            LoadingManager.showSplash();
+
             NavbarComponent.init();
             SidebarComponent.init();
             ModalsComponent.initModalCloseListeners();
@@ -26,6 +30,7 @@ class App {
                     authAPI
                         .validate(session.token)
                         .then(res => {
+                            LoadingManager.hideSplash();
                             if (res.success) {
                                 store.setSession(res.user, true);
                                 Router.enterPortal();
@@ -35,11 +40,13 @@ class App {
                             }
                         })
                         .catch(() => {
+                            LoadingManager.hideSplash();
                             store.setSession(null);
                             Router.showScreen('login-screen');
                         });
                 });
             } else {
+                LoadingManager.hideSplash();
                 Router.showScreen('login-screen');
             }
         });

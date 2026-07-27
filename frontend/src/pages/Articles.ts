@@ -4,7 +4,9 @@ import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
 import { Article } from '../types';
 import { debounce,escapeHTML, formatDate } from '../utils/formatters';
-import { clearPortalContent } from '../utils/portalContent';
+import { LoadingManager } from '../utils/loadingManager';
+import { getPortalContentContainer } from '../utils/portalContent';
+import { TransitionManager } from '../utils/transitionManager';
 
 export class ArticlesPage {
     private static clientSearchQuery = '';
@@ -15,11 +17,37 @@ export class ArticlesPage {
     }
 
     public static async load(): Promise<void> {
+        const user = store.getState().currentUser;
+        if (!user) return;
+        const container = getPortalContentContainer(user.role);
+        if (!container) return;
+
+        LoadingManager.registerSkeleton('articles', () => `
+            <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;justify-content:space-between;">
+                <div class="skeleton skeleton-btn" style="flex:1;max-width:400px;height:40px;border-radius:8px;"></div>
+                <div class="skeleton skeleton-btn" style="width:100px;height:40px;border-radius:8px;"></div>
+            </div>
+            <div style="display:grid;gap:15px;grid-template-columns:1fr;align-items:start;">
+                ${Array.from({ length: 3 }).map(() => `
+                    <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); padding: 24px;">
+                        <div class="skeleton skeleton-text" style="width: 80px; height: 24px; margin-bottom: 12px; border-radius: 12px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 28px; margin-bottom: 16px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 100%; margin-bottom: 8px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%; margin-bottom: 0;"></div>
+                    </div>
+                `).join('')}
+            </div>
+        `);
+
         try {
-            const user = store.getState().currentUser;
-            const isAdmin = user?.role === 'admin';
+            LoadingManager.showSkeleton(container, 'articles');
+            const isAdmin = user.role === 'admin';
             const articles = await articlesAPI.getAll(isAdmin ? undefined : this.clientSearchQuery);
-            this.renderArticles(articles);
+            await LoadingManager.hideSkeleton(container);
+
+            await TransitionManager.crossFadeContent(container, () => {
+                this.renderArticles(articles);
+            });
         } catch (err) {
             console.error('Failed to load KB articles:', err);
         }
@@ -28,7 +56,7 @@ export class ArticlesPage {
 
 
     private static renderArticles(articles: Article[]): void {
-        const container = clearPortalContent(store.getState().currentUser!.role);
+        const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
 
         const user = store.getState().currentUser;
@@ -128,6 +156,11 @@ export class ArticlesPage {
                 )
                 .join('');
         }
+
+        // Prepare container for future administrative actions via event delegation
+        list.addEventListener('click', () => {
+            // e.g. const editBtn = (e.target as HTMLElement).closest('.btn-edit-article');
+        });
 
         document.getElementById('btn-new-article')?.addEventListener('click', () => {
             ModalsComponent.openModal('article-modal');

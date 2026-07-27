@@ -35,3 +35,33 @@ test-results/
 # Cache/Temp
 .vite-temp/
 .eslintcache
+
+# ==================================================
+# AI Workspace Configuration
+# ==================================================
+.agents/
+.agent/
+.cursor/
+.cursorrules
+.clinerules
+.gemini/
+
+# ==================================================
+# IDE Configuration
+# ==================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==================================================
+# Temporary & QA Artifacts
+# ==================================================
+scratch/
+scratch.*
+tmp/
+temp/
+coverage/
+/*.png
+/*.jpg
+/*.mp4
