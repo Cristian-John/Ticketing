@@ -2,6 +2,7 @@ import { showToast } from '../components/Toast';
 import { Router } from '../router/router';
 import { authAPI } from '../services/api';
 import { store } from '../state/store';
+import { LoadingManager } from '../utils/loadingManager';
 
 export class LoginPage {
     private static isRegisterMode = false;
@@ -132,6 +133,9 @@ export class LoginPage {
                     return;
                 }
 
+                const submitBtn = loginForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+                LoadingManager.setButtonLoading(submitBtn, true);
+
                 try {
                     const res = await authAPI.register(fullName, username, email, password);
                     if (res.success) {
@@ -145,6 +149,8 @@ export class LoginPage {
                     }
                 } catch (err: unknown) {
                     showToast((err instanceof Error ? err.message : String(err)) || 'Registration failed', 'error');
+                } finally {
+                    LoadingManager.setButtonLoading(submitBtn, false);
                 }
             } else {
                 // Sign In mode
@@ -152,6 +158,9 @@ export class LoginPage {
                     showToast('Please enter both username and password', 'error');
                     return;
                 }
+
+                const submitBtn = loginForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+                LoadingManager.setButtonLoading(submitBtn, true);
 
                 try {
                     const rememberMe = rememberCheckbox ? rememberCheckbox.checked : false;
@@ -168,6 +177,8 @@ export class LoginPage {
                     }
                 } catch (err: unknown) {
                     showToast((err instanceof Error ? err.message : String(err)) || 'Login failed', 'error');
+                } finally {
+                    LoadingManager.setButtonLoading(submitBtn, false);
                 }
             }
         });
