@@ -157,6 +157,11 @@ export class ArticlesPage {
                 .join('');
         }
 
+        // Prepare container for future administrative actions via event delegation
+        list.addEventListener('click', () => {
+            // e.g. const editBtn = (e.target as HTMLElement).closest('.btn-edit-article');
+        });
+
         document.getElementById('btn-new-article')?.addEventListener('click', () => {
             ModalsComponent.openModal('article-modal');
         });

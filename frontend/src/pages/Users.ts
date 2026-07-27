@@ -128,47 +128,43 @@ export class UsersPage {
                 )
                 .join('');
 
-            // Bind action clicks
-            tbody.querySelectorAll('.edit-user-action').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-id');
+            // Bind action clicks via Event Delegation
+            tbody.addEventListener('click', async (e) => {
+                const target = e.target as HTMLElement;
+                
+                // Edit User
+                const editBtn = target.closest('.btn-edit-user');
+                if (editBtn) {
+                    const id = editBtn.getAttribute('data-id');
                     if (id) {
                         const user = users.find(x => x.id === id);
                         if (user) this.openUserModal(user);
                     }
-                });
-            });
+                    return;
+                }
 
-            tbody.querySelectorAll('.reset-user-action').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-id');
-                    if (id) this.openResetPasswordModal(id);
-                });
-            });
-
-            tbody.querySelectorAll('.deactivate-user-action').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const id = btn.getAttribute('data-id');
-                    const user = users.find(x => x.id === id);
-                    if (!user) return;
-                    const action = Number(user.active) === 1 ? 'deactivate' : 'activate';
-                    if (
-                        id &&
-                        confirm(
-                            `Are you sure you want to ${action} user ${user.username}?`,
-                        )
-                    ) {
-                        try {
-                            await usersAPI.update(user.id, { active: Number(user.active) !== 1 });
-                            showToast(`User ${action}d successfully`, 'success');
-                            this.refreshUsersList();
-                        } catch (err: unknown) {
-                            showToast((err instanceof Error ? err.message : String(err)) || 'Deactivation failed', 'error');
+                // Deactivate/Activate User
+                const deactivateBtn = target.closest('.btn-deactivate-user');
+                if (deactivateBtn) {
+                    const id = deactivateBtn.getAttribute('data-id');
+                    if (id) {
+                        const user = users.find(x => x.id === id);
+                        if (!user) return;
+                        const action = Number(user.active) === 1 ? 'deactivate' : 'activate';
+                        if (confirm(`Are you sure you want to ${action} user ${user.username}?`)) {
+                            try {
+                                await usersAPI.update(user.id, { active: Number(user.active) !== 1 });
+                                showToast(`User ${action}d successfully`, 'success');
+                                this.refreshUsersList();
+                            } catch (err: unknown) {
+                                showToast((err instanceof Error ? err.message : String(err)) || 'Deactivation failed', 'error');
+                            }
                         }
                     }
-                });
-                });
+                    return;
+                }
             });
+        });
         } catch (err: unknown) {
             const tbody = document.getElementById('users-table-body');
             if (tbody) {
@@ -372,15 +368,19 @@ export class UsersPage {
         ModalsComponent.openModal('user-modal');
     }
 
-    private static openResetPasswordModal(userId: string): void {
+    // Temporarily unused since Event Delegation replaced individual row actions, 
+    // will be integrated into the delegated handler.
+    /*
+    private static openResetPasswordModal(user: User): void {
         const idField = document.getElementById('reset-user-id-field') as HTMLInputElement;
         const passwordInput = document.getElementById('reset-password-val') as HTMLInputElement;
         const confirmInput = document.getElementById('reset-password-confirm') as HTMLInputElement;
 
-        if (idField) idField.value = userId;
+        if (idField) idField.value = user.id;
         if (passwordInput) passwordInput.value = '';
         if (confirmInput) confirmInput.value = '';
 
         ModalsComponent.openModal('reset-password-modal');
     }
+    */
 }

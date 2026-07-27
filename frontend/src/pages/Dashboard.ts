@@ -145,12 +145,8 @@ export class DashboardPage {
             return;
         }
 
-        list.innerHTML = '';
-        recent.forEach(ticket => {
-            const card = document.createElement('div');
-            card.className = 'mini-card';
-            card.style.borderLeft = `3px solid ${getSeverityColor(ticket.severity)}`;
-            card.innerHTML = `
+        list.innerHTML = recent.map(ticket => `
+            <div class="mini-card" data-id="${escapeHTML(ticket.id)}" style="border-left: 3px solid ${getSeverityColor(ticket.severity)}">
                 <div class="mini-card-top">
                     <span class="mini-card-id">${escapeHTML(ticket.id)}</span>
                     <span class="badge ${getStatusBadgeClass(ticket.status)}">${escapeHTML(ticket.status)}</span>
@@ -160,11 +156,18 @@ export class DashboardPage {
                     <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${escapeHTML(ticket.severity)}</span>
                     <span class="badge-dept">${escapeHTML(ticket.department)}</span>
                 </div>
-            `;
-            card.addEventListener('click', () => {
-                new TicketDetailModal(ticket, () => DashboardPage.load()).open();
-            });
-            list.appendChild(card);
+            </div>
+        `).join('');
+        
+        list.addEventListener('click', (e) => {
+            const card = (e.target as HTMLElement).closest('.mini-card');
+            if (card) {
+                const id = card.getAttribute('data-id');
+                const ticket = recent.find(t => t.id === id);
+                if (ticket) {
+                    new TicketDetailModal(ticket, () => DashboardPage.load()).open();
+                }
+            }
         });
     }
 }

@@ -129,33 +129,45 @@ export class TicketsPage {
             return;
         }
 
-        container.innerHTML = '';
-        tickets.forEach(ticket => {
-            const notes = ticket.notes || [];
-            const lastNote = notes.length > 0 ? notes[notes.length - 1] : null;
-            const card = document.createElement('div');
-            card.className = 'client-card';
-            card.style.borderLeft = `3px solid ${getSeverityColor(ticket.severity)}`;
-            card.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-                    <div style="flex:1;min-width:0">
-                        <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-                            <span style="font-family:monospace;font-size:10px;color:var(--text-muted)">${escapeHTML(ticket.id)}</span>
-                            <span class="badge ${getStatusBadgeClass(ticket.status)}">${escapeHTML(ticket.status)}</span>
-                            <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${escapeHTML(ticket.severity)}</span>
-                            <span class="badge-dept">${escapeHTML(ticket.department)}</span>
+        container.innerHTML = `
+            <div id="client-tickets-grid" style="display: flex; flex-direction: column; gap: var(--space-md);">
+                ${tickets.map(ticket => {
+                    const notes = ticket.notes || [];
+                    const lastNote = notes.length > 0 ? notes[notes.length - 1] : null;
+                    return `
+                        <div class="client-card" data-id="${escapeHTML(ticket.id)}" style="border-left: 3px solid ${getSeverityColor(ticket.severity)}">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                                <div style="flex:1;min-width:0">
+                                    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+                                        <span style="font-family:monospace;font-size:10px;color:var(--text-muted)">${escapeHTML(ticket.id)}</span>
+                                        <span class="badge ${getStatusBadgeClass(ticket.status)}">${escapeHTML(ticket.status)}</span>
+                                        <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${escapeHTML(ticket.severity)}</span>
+                                        <span class="badge-dept">${escapeHTML(ticket.department)}</span>
+                                    </div>
+                                    <div style="font-weight:600;font-size:15px;color:var(--text-heading);margin-bottom:4px">${escapeHTML(ticket.title)}</div>
+                                    <div style="font-size:12px;color:var(--text-muted)">${escapeHTML(ticket.category)} · ${escapeHTML(formatAssignees(ticket))} · ${formatDate(ticket.updatedAt)}</div>
+                                    ${lastNote ? `<div class="latest-note">💬 ${escapeHTML(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
+                                </div>
+                            </div>
                         </div>
-                        <div style="font-weight:600;font-size:15px;color:var(--text-heading);margin-bottom:4px">${escapeHTML(ticket.title)}</div>
-                        <div style="font-size:12px;color:var(--text-muted)">${escapeHTML(ticket.category)} · ${escapeHTML(formatAssignees(ticket))} · ${formatDate(ticket.updatedAt)}</div>
-                        ${lastNote ? `<div class="latest-note">💬 ${escapeHTML(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
-                    </div>
-                </div>
-            `;
-            card.addEventListener('click', () => {
-                new TicketDetailModal(ticket, () => this.load('my-tickets')).open();
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        const grid = document.getElementById('client-tickets-grid');
+        if (grid) {
+            grid.addEventListener('click', (e) => {
+                const card = (e.target as HTMLElement).closest('.client-card');
+                if (card) {
+                    const id = card.getAttribute('data-id');
+                    const ticket = tickets.find(t => t.id === id);
+                    if (ticket) {
+                        new TicketDetailModal(ticket, () => this.load('my-tickets')).open();
+                    }
+                }
             });
-            container.appendChild(card);
-        });
+        }
     }
 
     private static getAdminFilteredTickets(tickets: Ticket[]): Ticket[] {
@@ -240,14 +252,15 @@ export class TicketsPage {
                 )
                 .join('');
 
-            body.querySelectorAll('.clickable-row').forEach(row => {
-                row.addEventListener('click', () => {
+            body.addEventListener('click', (e) => {
+                const row = (e.target as HTMLElement).closest('.clickable-row');
+                if (row) {
                     const id = row.getAttribute('data-id');
                     const ticket = tickets.find(t => t.id === id);
                     if (ticket) {
                         new TicketDetailModal(ticket, () => this.load('all-tickets')).open();
                     }
-                });
+                }
             });
         }
 
@@ -339,14 +352,15 @@ export class TicketsPage {
             )
             .join('');
 
-        body.querySelectorAll('.clickable-row').forEach(row => {
-            row.addEventListener('click', () => {
+        body.addEventListener('click', (e) => {
+            const row = (e.target as HTMLElement).closest('.clickable-row');
+            if (row) {
                 const id = row.getAttribute('data-id');
                 const ticket = resolved.find(t => t.id === id);
                 if (ticket) {
                     new TicketDetailModal(ticket, () => this.load('resolved')).open();
                 }
-            });
+            }
         });
     }
 }
