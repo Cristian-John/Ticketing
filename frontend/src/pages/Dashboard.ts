@@ -10,19 +10,49 @@ import {
     getStatusBadgeClass,
     isResolved,
 } from '../utils/formatters';
-import { clearPortalContent } from '../utils/portalContent';
+import { LoadingManager } from '../utils/loadingManager';
+import { getPortalContentContainer } from '../utils/portalContent';
+import { TransitionManager } from '../utils/transitionManager';
 
 export class DashboardPage {
     public static async load(): Promise<void> {
-        const container = clearPortalContent(store.getState().currentUser!.role);
+        const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
 
+        LoadingManager.registerSkeleton('dashboard', () => `
+            <div class="stats-grid" style="margin-bottom: 24px;">
+                ${Array.from({ length: 5 }).map(() => `
+                    <div style="background: var(--bg-card); border-radius: 8px; padding: 20px; border: 1px solid var(--border); height: 110px;">
+                        <div class="skeleton skeleton-text" style="width: 32px; height: 32px; border-radius: 8px; margin-bottom: 12px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 40%; height: 24px; margin-bottom: 8px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 60%; margin-bottom: 0;"></div>
+                    </div>
+                `).join('')}
+            </div>
+            <div>
+                <h3 style="color:var(--text-heading);margin:0 0 12px 0;font-size:16px">Recent Activity</h3>
+                ${Array.from({ length: 3 }).map(() => `
+                    <div style="background: var(--bg-card); border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border);">
+                        <div class="skeleton skeleton-text" style="width: 30%; margin-bottom: 8px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 70%; margin-bottom: 12px;"></div>
+                        <div style="display: flex; gap: 8px;">
+                            <div class="skeleton skeleton-btn" style="width: 60px; height: 24px; border-radius: 12px;"></div>
+                            <div class="skeleton skeleton-btn" style="width: 60px; height: 24px; border-radius: 12px;"></div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `);
+
         try {
+            LoadingManager.showSkeleton(container, 'dashboard');
             const [tickets, stats] = await Promise.all([ticketsAPI.getAll(), statsAPI.get()]);
+            await LoadingManager.hideSkeleton(container);
 
-
-            this.updateAdminSidebarStats(tickets);
-            this.renderDashboard(container, tickets, stats);
+            await TransitionManager.crossFadeContent(container, () => {
+                this.updateAdminSidebarStats(tickets);
+                this.renderDashboard(container, tickets, stats);
+            });
         } catch (err) {
             console.error('Failed to load dashboard data:', err);
             container.innerHTML = `
@@ -115,12 +145,8 @@ export class DashboardPage {
             return;
         }
 
-        list.innerHTML = '';
-        recent.forEach(ticket => {
-            const card = document.createElement('div');
-            card.className = 'mini-card';
-            card.style.borderLeft = `3px solid ${getSeverityColor(ticket.severity)}`;
-            card.innerHTML = `
+        list.innerHTML = recent.map(ticket => `
+            <div class="mini-card" data-id="${escapeHTML(ticket.id)}" style="border-left: 3px solid ${getSeverityColor(ticket.severity)}">
                 <div class="mini-card-top">
                     <span class="mini-card-id">${escapeHTML(ticket.id)}</span>
                     <span class="badge ${getStatusBadgeClass(ticket.status)}">${escapeHTML(ticket.status)}</span>
@@ -130,11 +156,18 @@ export class DashboardPage {
                     <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${escapeHTML(ticket.severity)}</span>
                     <span class="badge-dept">${escapeHTML(ticket.department)}</span>
                 </div>
-            `;
-            card.addEventListener('click', () => {
-                new TicketDetailModal(ticket, () => DashboardPage.load()).open();
-            });
-            list.appendChild(card);
+            </div>
+        `).join('');
+        
+        list.addEventListener('click', (e) => {
+            const card = (e.target as HTMLElement).closest('.mini-card');
+            if (card) {
+                const id = card.getAttribute('data-id');
+                const ticket = recent.find(t => t.id === id);
+                if (ticket) {
+                    new TicketDetailModal(ticket, () => DashboardPage.load()).open();
+                }
+            }
         });
     }
 }

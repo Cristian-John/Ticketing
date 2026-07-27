@@ -1,10 +1,12 @@
 import { showToast } from '../components/Toast';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
+import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
+import { TransitionManager } from '../utils/transitionManager';
 
 export class ProfilePage {
-    public static load(): void {
+    public static async load(): Promise<void> {
         const user = store.getState().currentUser;
         if (!user) return;
 
@@ -16,9 +18,35 @@ export class ProfilePage {
                 ? 'IT Support'
                 : user.role.charAt(0).toUpperCase() + user.role.slice(1);
 
-        container.innerHTML = `
+        LoadingManager.registerSkeleton('profile', () => `
             <div class="profile-page">
                 <div class="profile-section glass-card">
+                    <div class="profile-header">
+                        <div class="skeleton skeleton-text" style="width: 80px; height: 80px; border-radius: 50%;"></div>
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-text" style="width: 200px; height: 32px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 100px; height: 24px;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-info-grid">
+                        ${Array.from({ length: 5 }).map(() => `
+                            <div class="profile-info-item">
+                                <div class="skeleton skeleton-text" style="width: 80px; height: 16px; margin-bottom: 8px;"></div>
+                                <div class="skeleton skeleton-text" style="width: 150px; height: 20px;"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `);
+
+        LoadingManager.showSkeleton(container, 'profile');
+        await LoadingManager.hideSkeleton(container);
+
+        await TransitionManager.crossFadeContent(container, () => {
+            container.innerHTML = `
+                <div class="profile-page">
+                    <div class="profile-section glass-card">
                     <div class="profile-header">
                         <div class="profile-avatar">${(user.fullName || user.username).charAt(0).toUpperCase()}</div>
                         <div>
@@ -108,6 +136,7 @@ export class ProfilePage {
 
         this.initPasswordToggles();
         this.initForm();
+        });
     }
 
     private static initPasswordToggles(): void {
