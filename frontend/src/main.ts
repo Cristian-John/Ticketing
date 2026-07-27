@@ -10,8 +10,23 @@ import { Router } from './router/router';
 import { store } from './state/store';
 
 class App {
+    private static showSplash(): void {
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.classList.add('active');
+        const login = document.getElementById('login-screen');
+        if (login) login.classList.remove('active');
+    }
+
+    private static hideSplash(): void {
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.classList.remove('active');
+    }
+
     public static init(): void {
         document.addEventListener('DOMContentLoaded', () => {
+            // Ensure splash is visible
+            this.showSplash();
+
             NavbarComponent.init();
             SidebarComponent.init();
             ModalsComponent.initModalCloseListeners();
@@ -26,6 +41,7 @@ class App {
                     authAPI
                         .validate(session.token)
                         .then(res => {
+                            this.hideSplash();
                             if (res.success) {
                                 store.setSession(res.user, true);
                                 Router.enterPortal();
@@ -35,11 +51,13 @@ class App {
                             }
                         })
                         .catch(() => {
+                            this.hideSplash();
                             store.setSession(null);
                             Router.showScreen('login-screen');
                         });
                 });
             } else {
+                this.hideSplash();
                 Router.showScreen('login-screen');
             }
         });
