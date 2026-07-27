@@ -11,7 +11,7 @@ export class LoadingManager {
         longLoadThreshold: 500
     };
 
-    private static skeletonTimers = new Map<HTMLElement, NodeJS.Timeout>();
+    private static skeletonTimers = new Map<HTMLElement, number>();
     private static skeletonDisplayTimes = new Map<HTMLElement, number>();
     private static registry = new Map<string, () => string>();
 
@@ -77,7 +77,7 @@ export class LoadingManager {
             clearTimeout(this.skeletonTimers.get(container));
         }
 
-        const timer = setTimeout(() => {
+        const timer = window.setTimeout(() => {
             const html = this.registry.has(type) ? this.registry.get(type)!() : '<div class="skeleton" style="height: 200px; width: 100%;"></div>';
             container.innerHTML = html;
             this.skeletonDisplayTimes.set(container, Date.now());
