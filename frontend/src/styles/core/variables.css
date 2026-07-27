@@ -71,6 +71,22 @@
     --space-xl: 2rem; /* 32px */
     --space-2xl: 2.5rem; /* 40px */
 
+    /* ──── Motion & Interaction Tokens ──── */
+    --duration-instant: 50ms;
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 350ms;
+
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --scale-hover: 1.02;
+    --scale-pressed: 0.98;
+    --translate-hover: translateY(-2px);
+    --opacity-disabled: 0.6;
+
     /* ──── Theme Transition Rules ──── */
     --theme-transition-fast:
         background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
@@ -140,4 +156,15 @@
 
     --row-hover: rgba(0, 0, 0, 0.02);
     --table-head-bg: #e8e9ec;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --duration-fast: 0.01ms;
+        --duration-normal: 0.01ms;
+        --duration-slow: 0.01ms;
+        --scale-hover: 1;
+        --scale-pressed: 1;
+        --translate-hover: translateY(0);
+    }
 }

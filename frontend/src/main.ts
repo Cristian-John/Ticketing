@@ -8,26 +8,13 @@ import { CreateTicketPage } from './pages/CreateTicket';
 import { LoginPage } from './pages/Login';
 import { Router } from './router/router';
 import { store } from './state/store';
+import { LoadingManager } from './utils/loadingManager';
 
 class App {
-    private static showSplash(): void {
-        document.body.style.overflow = 'hidden';
-        const splash = document.getElementById('splash-screen');
-        if (splash) splash.classList.add('active');
-        const login = document.getElementById('login-screen');
-        if (login) login.classList.remove('active');
-    }
-
-    private static hideSplash(): void {
-        document.body.style.overflow = '';
-        const splash = document.getElementById('splash-screen');
-        if (splash) splash.classList.remove('active');
-    }
-
     public static init(): void {
         document.addEventListener('DOMContentLoaded', () => {
             // Ensure splash is visible
-            this.showSplash();
+            LoadingManager.showSplash();
 
             NavbarComponent.init();
             SidebarComponent.init();
@@ -43,7 +30,7 @@ class App {
                     authAPI
                         .validate(session.token)
                         .then(res => {
-                            this.hideSplash();
+                            LoadingManager.hideSplash();
                             if (res.success) {
                                 store.setSession(res.user, true);
                                 Router.enterPortal();
@@ -53,13 +40,13 @@ class App {
                             }
                         })
                         .catch(() => {
-                            this.hideSplash();
+                            LoadingManager.hideSplash();
                             store.setSession(null);
                             Router.showScreen('login-screen');
                         });
                 });
             } else {
-                this.hideSplash();
+                LoadingManager.hideSplash();
                 Router.showScreen('login-screen');
             }
         });

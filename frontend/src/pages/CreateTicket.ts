@@ -2,6 +2,7 @@ import { ModalsComponent } from '../components/Modals';
 import { showToast } from '../components/Toast';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
+import { LoadingManager } from '../utils/loadingManager';
 import { TicketsPage } from './Tickets';
 
 export class CreateTicketPage {
@@ -70,8 +71,7 @@ export class CreateTicketPage {
 
             try {
                 if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Submitting...';
+                    LoadingManager.setButtonLoading(submitBtn, true);
                 }
 
                 const newTicket = await ticketsAPI.create({
@@ -100,14 +100,7 @@ export class CreateTicketPage {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create ticket', 'error');
             } finally {
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = `
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 2L11 13" />
-                            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                        </svg>
-                        <span>Submit Ticket</span>
-                    `;
+                    LoadingManager.setButtonLoading(submitBtn, false);
                 }
             }
         });

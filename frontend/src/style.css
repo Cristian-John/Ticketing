@@ -23,6 +23,7 @@
 @import './styles/components/badges.css';
 @import './styles/components/modals.css';
 @import './styles/components/widgets.css';
+@import './styles/components/loaders.css';
 
 /* =========================================
    PAGES

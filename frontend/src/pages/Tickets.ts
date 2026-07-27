@@ -14,39 +14,67 @@ import {
     getStatusBadgeClass,
     isResolved,
 } from '../utils/formatters';
-import { clearPortalContent } from '../utils/portalContent';
+import { LoadingManager } from '../utils/loadingManager';
+import { getPortalContentContainer } from '../utils/portalContent';
+import { TransitionManager } from '../utils/transitionManager';
 
 export class TicketsPage {
     private static adminFiltersBound = false;
 
     public static async load(htmlView: HtmlViewName): Promise<void> {
-        const container = clearPortalContent(store.getState().currentUser!.role);
+        const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
 
+        LoadingManager.registerSkeleton('tickets-table', () => `
+            <div class="controls-row" style="margin-bottom: 20px; display: flex; justify-content: space-between;">
+                <div class="skeleton skeleton-btn"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton skeleton-btn"></div>
+                    <div class="skeleton skeleton-btn" style="width: 200px;"></div>
+                </div>
+            </div>
+            <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+                ${Array.from({ length: 5 }).map(() => `
+                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--border); align-items: center;">
+                        <div class="skeleton skeleton-text" style="width: 40px; margin-bottom: 0; margin-right: 16px;"></div>
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-text" style="width: 40%; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 20%; margin-bottom: 0;"></div>
+                        </div>
+                        <div class="skeleton skeleton-btn" style="width: 80px; height: 24px; border-radius: 12px;"></div>
+                    </div>
+                `).join('')}
+            </div>
+        `);
+
         try {
+            LoadingManager.showSkeleton(container, 'tickets-table');
             const tickets = await ticketsAPI.getAll();
+            await LoadingManager.hideSkeleton(container);
 
             const user = store.getState().currentUser;
             if (!user) return;
 
-            if (user.role === 'admin' || user.role === 'it-support') {
-                this.updateAdminSidebarStats(tickets);
-                if (htmlView === 'all-tickets') {
-                    this.renderAdminAllTickets(container, tickets);
-                } else if (htmlView === 'resolved') {
-                    this.renderResolvedView(container, tickets);
+            await TransitionManager.crossFadeContent(container, () => {
+                if (user.role === 'admin' || user.role === 'it-support') {
+                    this.updateAdminSidebarStats(tickets);
+                    if (htmlView === 'all-tickets') {
+                        this.renderAdminAllTickets(container, tickets);
+                    } else if (htmlView === 'resolved') {
+                        this.renderResolvedView(container, tickets);
+                    } else {
+                        this.renderAdminAllTickets(container, tickets);
+                    }
                 } else {
-                    this.renderAdminAllTickets(container, tickets);
+                    const mine = tickets.filter(
+                        t =>
+                            t.userId === user.id ||
+                            t.requester.toLowerCase() === user.username.toLowerCase(),
+                    );
+                    this.updateClientSidebarStats(mine);
+                    this.renderClientTickets(container, mine);
                 }
-            } else {
-                const mine = tickets.filter(
-                    t =>
-                        t.userId === user.id ||
-                        t.requester.toLowerCase() === user.username.toLowerCase(),
-                );
-                this.updateClientSidebarStats(mine);
-                this.renderClientTickets(container, mine);
-            }
+            });
         } catch (err) {
             console.error('Failed to load tickets:', err);
             container.innerHTML = `

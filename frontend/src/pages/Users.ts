@@ -4,93 +4,127 @@ import { usersAPI } from '../services/api';
 import { store } from '../state/store';
 import { User } from '../types';
 import { escapeHTML } from '../utils/formatters';
-import { clearPortalContent } from '../utils/portalContent';
+import { LoadingManager } from '../utils/loadingManager';
+import { getPortalContentContainer } from '../utils/portalContent';
+import { TransitionManager } from '../utils/transitionManager';
 
 export class UsersPage {
     private static listenersBound = false;
 
     public static async load(): Promise<void> {
-        const container = clearPortalContent(store.getState().currentUser!.role);
+        const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
 
-        container.innerHTML = `
-            <div class="table-container">
-                <table class="glass-table">
-                    <thead>
-                        <tr>
-                            <th>Full Name</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-table-body">
-                        <tr><td colspan="6" style="padding:20px; text-align:center; color:rgba(255,255,255,0.5)">Loading users...</td></tr>
-                    </tbody>
-                </table>
+        LoadingManager.registerSkeleton('users-table', () => `
+            <div class="controls-row" style="margin-bottom: 20px; display: flex; justify-content: space-between;">
+                <div class="skeleton skeleton-btn"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton skeleton-btn"></div>
+                    <div class="skeleton skeleton-btn" style="width: 200px;"></div>
+                </div>
             </div>
-        `;
+            <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+                ${Array.from({ length: 5 }).map(() => `
+                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--border); align-items: center;">
+                        <div class="skeleton skeleton-text" style="width: 40px; margin-bottom: 0; margin-right: 16px;"></div>
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-text" style="width: 40%; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 20%; margin-bottom: 0;"></div>
+                        </div>
+                        <div class="skeleton skeleton-btn" style="width: 80px; height: 24px; border-radius: 12px;"></div>
+                    </div>
+                `).join('')}
+            </div>
+        `);
 
+        LoadingManager.showSkeleton(container, 'users-table');
         this.initListeners();
         await this.refreshUsersList();
     }
 
     private static async refreshUsersList(search?: string): Promise<void> {
-        const tbody = document.getElementById('users-table-body');
-        if (!tbody) return;
+        const container = getPortalContentContainer(store.getState().currentUser!.role);
+        if (!container) return;
 
         try {
             const users = await usersAPI.getAll(search);
-            if (users.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="padding: var(--space-2xl);">
-                            <div class="empty-state" style="border: none; background: transparent; padding: 0;">
-                                <div class="empty-state-icon">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            await LoadingManager.hideSkeleton(container);
+            
+            await TransitionManager.crossFadeContent(container, () => {
+                // Only rebuild the table if it's not already in the DOM
+                let tbody = document.getElementById('users-table-body');
+                if (!tbody) {
+                    container.innerHTML = `
+                        <div class="table-container">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Full Name</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th style="text-align:right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body"></tbody>
+                            </table>
+                        </div>
+                    `;
+                    tbody = document.getElementById('users-table-body');
+                }
+                if (!tbody) return;
+                
+                if (users.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="padding: var(--space-2xl);">
+                                <div class="empty-state" style="border: none; background: transparent; padding: 0;">
+                                    <div class="empty-state-icon">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                    </div>
+                                    <p>No users found matching your criteria.</p>
                                 </div>
-                                <div class="empty-state-title">No users found</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = users
+                    .map(
+                        u => `
+                    <tr>
+                        <td>
+                            <div class="user-info-cell">
+                                <div class="user-avatar">${escapeHTML(u.fullName.charAt(0).toUpperCase())}</div>
+                                <div class="user-details">
+                                    <span class="user-name">${escapeHTML(u.fullName)}</span>
+                                </div>
                             </div>
                         </td>
+                        <td><span class="text-secondary">@${escapeHTML(u.username)}</span></td>
+                        <td>${escapeHTML(u.email)}</td>
+                        <td>
+                            <span class="badge ${u.role === 'admin' ? 'badge-severity-high' : u.role === 'it-support' ? 'badge-severity-moderate' : 'badge-severity-low'}">
+                                ${escapeHTML(u.role)}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${Number(u.active) === 1 ? 'badge-status-resolved' : 'badge-status-closed'}">
+                                ${Number(u.active) === 1 ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td style="text-align:right">
+                            <button class="btn btn-icon btn-edit-user" data-id="${escapeHTML(u.id)}" title="Edit User">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                            </button>
+                            <button class="btn btn-icon btn-danger btn-deactivate-user" data-id="${escapeHTML(u.id)}" title="${Number(u.active) === 1 ? 'Deactivate User' : 'Activate User'}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                            </button>
+                        </td>
                     </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = users
-                .map(
-                    u => `
-                <tr>
-                    <td style="font-weight:600">${escapeHTML(u.fullName)}</td>
-                    <td>${escapeHTML(u.username)}</td>
-                    <td style="color:var(--text-muted)">${escapeHTML(u.email)}</td>
-                    <td>
-                        <span class="badge" style="background:rgba(255,255,255,0.05); color:#fff; font-size:11px; padding:3px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.1)">
-                            ${u.role === 'admin' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg> Admin' : u.role === 'it-support' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> IT Support' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Client'}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge" style="background:${Number(u.active) === 1 ? 'rgba(46, 213, 115, 0.15)' : 'rgba(255, 71, 87, 0.15)'}; color:${Number(u.active) === 1 ? '#2ed573' : '#ff4757'}; font-size:11px; padding:3px 8px; border-radius:12px; border:1px solid ${Number(u.active) === 1 ? 'rgba(46,213,115,0.2)' : 'rgba(255,71,87,0.2)'}">
-                            ${Number(u.active) === 1 ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td style="text-align:right">
-                        <div style="display:inline-flex; gap:6px">
-                            <button class="btn btn-secondary btn-sm edit-user-action" data-id="${u.id}">Edit</button>
-                            <button class="btn btn-secondary btn-sm reset-user-action" data-id="${u.id}">Reset</button>
-                            ${
-                                Number(u.active) === 1
-                                    ? `
-                                <button class="btn btn-ghost btn-sm deactivate-user-action" data-id="${u.id}" style="color:var(--severity-severe)">Deactivate</button>
-                            `
-                                    : ''
-                            }
-                        </div>
-                    </td>
-                </tr>
-            `,
+                `,
                 )
                 .join('');
 
@@ -115,24 +149,31 @@ export class UsersPage {
             tbody.querySelectorAll('.deactivate-user-action').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
+                    const user = users.find(x => x.id === id);
+                    if (!user) return;
+                    const action = Number(user.active) === 1 ? 'deactivate' : 'activate';
                     if (
                         id &&
                         confirm(
-                            'Are you sure you want to deactivate this user? They will no longer be able to log in.',
+                            `Are you sure you want to ${action} user ${user.username}?`,
                         )
                     ) {
                         try {
-                            await usersAPI.deactivate(id);
-                            showToast('User deactivated', 'success');
+                            await usersAPI.update(user.id, { active: Number(user.active) !== 1 });
+                            showToast(`User ${action}d successfully`, 'success');
                             this.refreshUsersList();
                         } catch (err: unknown) {
                             showToast((err instanceof Error ? err.message : String(err)) || 'Deactivation failed', 'error');
                         }
                     }
                 });
+                });
             });
         } catch (err: unknown) {
-            tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML((err instanceof Error ? err.message : String(err)))}</td></tr>`;
+            const tbody = document.getElementById('users-table-body');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML((err instanceof Error ? err.message : String(err)))}</td></tr>`;
+            }
         }
     }
 
