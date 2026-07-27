@@ -480,10 +480,21 @@
 
 /* ==================== SPLASH SCREEN ==================== */
 #splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg-body);
     display: flex;
     justify-content: center;
     align-items: center;
-    background: transparent;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+#splash-screen.active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .splash-container {

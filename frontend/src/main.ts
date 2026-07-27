@@ -11,6 +11,7 @@ import { store } from './state/store';
 
 class App {
     private static showSplash(): void {
+        document.body.style.overflow = 'hidden';
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.add('active');
         const login = document.getElementById('login-screen');
@@ -18,6 +19,7 @@ class App {
     }
 
     private static hideSplash(): void {
+        document.body.style.overflow = '';
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.remove('active');
     }
