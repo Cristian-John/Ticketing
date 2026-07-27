@@ -119,6 +119,9 @@ export class UsersPage {
                             <button class="btn btn-icon btn-edit-user" data-id="${escapeHTML(u.id)}" title="Edit User">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                             </button>
+                            <button class="btn btn-icon btn-reset-user" data-id="${escapeHTML(u.id)}" title="Reset Password">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </button>
                             <button class="btn btn-icon btn-danger btn-deactivate-user" data-id="${escapeHTML(u.id)}" title="${Number(u.active) === 1 ? 'Deactivate User' : 'Activate User'}">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
                             </button>
@@ -139,6 +142,17 @@ export class UsersPage {
                     if (id) {
                         const user = users.find(x => x.id === id);
                         if (user) this.openUserModal(user);
+                    }
+                    return;
+                }
+
+                // Reset Password
+                const resetBtn = target.closest('.btn-reset-user');
+                if (resetBtn) {
+                    const id = resetBtn.getAttribute('data-id');
+                    if (id) {
+                        const user = users.find(x => x.id === id);
+                        if (user) this.openResetPasswordModal(user);
                     }
                     return;
                 }
@@ -287,12 +301,17 @@ export class UsersPage {
                 return;
             }
 
+            const submitBtn = resetForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+            LoadingManager.setButtonLoading(submitBtn, true);
+
             try {
                 await usersAPI.resetPassword(idField.value, password);
                 showToast('Password reset successfully', 'success');
                 ModalsComponent.closeModal('reset-password-modal');
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Reset failed', 'error');
+            } finally {
+                LoadingManager.setButtonLoading(submitBtn, false);
             }
         });
 
@@ -368,9 +387,6 @@ export class UsersPage {
         ModalsComponent.openModal('user-modal');
     }
 
-    // Temporarily unused since Event Delegation replaced individual row actions, 
-    // will be integrated into the delegated handler.
-    /*
     private static openResetPasswordModal(user: User): void {
         const idField = document.getElementById('reset-user-id-field') as HTMLInputElement;
         const passwordInput = document.getElementById('reset-password-val') as HTMLInputElement;
@@ -382,5 +398,4 @@ export class UsersPage {
 
         ModalsComponent.openModal('reset-password-modal');
     }
-    */
 }
