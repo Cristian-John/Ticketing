@@ -1,6 +1,7 @@
 import { UserSession } from '../types';
 
 const SESSION_KEY = 'itsupport_session';
+const REMEMBER_TOKEN_KEY = 'itsupport_remembered_token';
 
 interface AppState {
     currentUser: UserSession | null;
@@ -40,12 +41,11 @@ class Store {
 
     public loadSession(): UserSession | null {
         try {
-            let raw = localStorage.getItem(SESSION_KEY);
-            if (!raw) {
-                raw = sessionStorage.getItem(SESSION_KEY);
-            }
+            const raw = sessionStorage.getItem(SESSION_KEY);
             if (raw) {
                 this.state.currentUser = JSON.parse(raw);
+            } else {
+                this.state.currentUser = null;
             }
         } catch {
             this.state.currentUser = null;
@@ -53,20 +53,26 @@ class Store {
         return this.state.currentUser;
     }
 
+    public getRememberedToken(): string | null {
+        try {
+            return localStorage.getItem(REMEMBER_TOKEN_KEY);
+        } catch {
+            return null;
+        }
+    }
+
     public setSession(session: UserSession | null, rememberMe = false): void {
         this.state.currentUser = session;
         if (session) {
             const raw = JSON.stringify(session);
+            sessionStorage.setItem(SESSION_KEY, raw);
             if (rememberMe) {
-                localStorage.setItem(SESSION_KEY, raw);
-                sessionStorage.removeItem(SESSION_KEY);
-            } else {
-                sessionStorage.setItem(SESSION_KEY, raw);
-                localStorage.removeItem(SESSION_KEY);
+                localStorage.setItem(REMEMBER_TOKEN_KEY, session.token);
             }
         } else {
-            localStorage.removeItem(SESSION_KEY);
             sessionStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem(REMEMBER_TOKEN_KEY);
+            localStorage.removeItem(SESSION_KEY);
         }
         this.sessionListeners.forEach(l => l());
     }
