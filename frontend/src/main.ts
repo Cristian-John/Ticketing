@@ -1,5 +1,8 @@
 import './style.css';
+import './bootstrap/serviceWorkerCleanup';
 
+import { SplashManager } from './components/common/SplashManager';
+import { ThemeManager } from './components/common/theme/ThemeManager';
 import { ModalsComponent } from './components/Modals';
 import { NavbarComponent } from './components/Navbar';
 import { SidebarComponent } from './components/Sidebar';
@@ -8,13 +11,15 @@ import { CreateTicketPage } from './pages/CreateTicket';
 import { LoginPage } from './pages/Login';
 import { Router } from './router/router';
 import { store } from './state/store';
-import { LoadingManager } from './utils/loadingManager';
 
 class App {
     public static init(): void {
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize foundational modules
+            ThemeManager.initialize();
+            
             // Ensure splash is visible
-            LoadingManager.showSplash();
+            SplashManager.show();
 
             NavbarComponent.init();
             SidebarComponent.init();
@@ -30,7 +35,7 @@ class App {
                     authAPI
                         .validate(session.token)
                         .then(res => {
-                            LoadingManager.hideSplash();
+                            SplashManager.hide();
                             if (res.success) {
                                 store.setSession(res.user, true);
                                 Router.enterPortal();
@@ -40,13 +45,13 @@ class App {
                             }
                         })
                         .catch(() => {
-                            LoadingManager.hideSplash();
+                            SplashManager.hide();
                             store.setSession(null);
                             Router.showScreen('login-screen');
                         });
                 });
             } else {
-                LoadingManager.hideSplash();
+                SplashManager.hide();
                 Router.showScreen('login-screen');
             }
         });
