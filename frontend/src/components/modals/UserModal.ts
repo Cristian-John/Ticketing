@@ -1,4 +1,4 @@
-import { UserIcon, EyeIcon } from '../common/Icons';
+import { EyeIcon,UserIcon } from '../common/Icons';
 
 export class UserModal {
     private element: HTMLDivElement;

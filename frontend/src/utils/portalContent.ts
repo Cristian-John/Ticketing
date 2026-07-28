@@ -15,7 +15,7 @@ export function getPortalContentContainer(role: string): HTMLElement | null {
     }
 }
 
-export function clearPortalContent(role: string): HTMLElement | null {
+function clearPortalContent(role: string): HTMLElement | null {
     const container = getPortalContentContainer(role);
     if (container) {
         container.innerHTML = '';

@@ -1,6 +1,8 @@
+import { ModalsManager } from '../components/modals/ModalsManager';
+import { clientSidebarConfig } from '../components/navigation/configs/clientSidebarConfig';
 import { Sidebar } from '../components/navigation/Sidebar';
 import { Topbar } from '../components/navigation/Topbar';
-import { clientSidebarConfig } from '../components/navigation/configs/clientSidebarConfig';
+import { Router } from '../router/router';
 
 export class ClientLayout {
     private element: HTMLDivElement;
@@ -19,6 +21,11 @@ export class ClientLayout {
 
         // Sidebar
         this.sidebar = new Sidebar(clientSidebarConfig);
+        
+        // Wire navigation and logout actions
+        this.sidebar.onNavClick((view) => Router.switchView(view, 'client'));
+        this.sidebar.onLogoutClick(() => ModalsManager.openModal('logout-confirm-modal'));
+
         appShell.appendChild(this.sidebar.getElement());
 
         // Sidebar Overlay

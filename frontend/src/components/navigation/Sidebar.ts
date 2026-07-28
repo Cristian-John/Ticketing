@@ -4,6 +4,7 @@ import { SidebarConfig } from './configs/SidebarConfig';
 export class Sidebar {
     private element: HTMLElement;
     private onNavClickCallback?: (view: string) => void;
+    private onLogoutClickCallback?: () => void;
 
     constructor(config: SidebarConfig) {
         
@@ -109,6 +110,13 @@ export class Sidebar {
         const prefix = config.id.split('-')[0]; // 'client' or 'admin'
         logoutBtn.id = `${prefix}-logout-btn`;
         logoutBtn.innerHTML = `${LogoutIcon({ size: 16 })} Logout`;
+        
+        logoutBtn.addEventListener('click', () => {
+            if (this.onLogoutClickCallback) {
+                this.onLogoutClickCallback();
+            }
+        });
+
         bottomDiv.appendChild(logoutBtn);
 
         this.element.appendChild(bottomDiv);
@@ -120,6 +128,10 @@ export class Sidebar {
 
     public onNavClick(callback: (view: string) => void): void {
         this.onNavClickCallback = callback;
+    }
+
+    public onLogoutClick(callback: () => void): void {
+        this.onLogoutClickCallback = callback;
     }
 
     public setActiveView(view: string): void {

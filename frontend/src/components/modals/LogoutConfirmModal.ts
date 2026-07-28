@@ -1,4 +1,6 @@
+import { Router } from '../../router/router';
 import { LogoutIcon } from '../common/Icons';
+import { ModalsManager } from './ModalsManager';
 
 export class LogoutConfirmModal {
     private element: HTMLDivElement;
@@ -35,6 +37,26 @@ export class LogoutConfirmModal {
         
         modal.appendChild(body);
         this.element.appendChild(modal);
+
+        this.attachEvents();
+    }
+
+    private attachEvents(): void {
+        const cancelBtn = this.element.querySelector('#cancel-logout-btn');
+        const confirmBtn = this.element.querySelector('#confirm-logout-btn');
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                ModalsManager.closeModal('logout-confirm-modal');
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                ModalsManager.closeModal('logout-confirm-modal');
+                Router.logout();
+            });
+        }
     }
 
     public getElement(): HTMLElement {

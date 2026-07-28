@@ -1,6 +1,6 @@
-import { PlusIcon, SendIcon } from '../common/Icons';
+import { CATEGORIES,SEVERITIES } from '../../data/dropdownOptions';
 import { DepartmentService } from '../../services/DepartmentService';
-import { SEVERITIES, CATEGORIES } from '../../data/dropdownOptions';
+import { PlusIcon, SendIcon } from '../common/Icons';
 
 export class TicketModal {
     private element: HTMLDivElement;

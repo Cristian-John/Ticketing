@@ -1,4 +1,4 @@
-import { ModalsComponent } from '../components/Modals';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
@@ -268,7 +268,7 @@ export class UsersPage {
                     showToast('User created successfully', 'success');
                 }
 
-                ModalsComponent.closeModal('user-modal');
+                ModalsManager.closeModal('user-modal');
                 this.refreshUsersList();
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Action failed', 'error');
@@ -307,7 +307,7 @@ export class UsersPage {
             try {
                 await usersAPI.resetPassword(idField.value, password);
                 showToast('Password reset successfully', 'success');
-                ModalsComponent.closeModal('reset-password-modal');
+                ModalsManager.closeModal('reset-password-modal');
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Reset failed', 'error');
             } finally {
@@ -317,10 +317,10 @@ export class UsersPage {
 
         // Cancel button listeners
         document.getElementById('cancel-user-modal-btn')?.addEventListener('click', () => {
-            ModalsComponent.closeModal('user-modal');
+            ModalsManager.closeModal('user-modal');
         });
         document.getElementById('cancel-reset-modal-btn')?.addEventListener('click', () => {
-            ModalsComponent.closeModal('reset-password-modal');
+            ModalsManager.closeModal('reset-password-modal');
         });
     }
 
@@ -384,7 +384,7 @@ export class UsersPage {
             if (activeGroup) activeGroup.style.display = 'none';
         }
 
-        ModalsComponent.openModal('user-modal');
+        ModalsManager.openModal('user-modal');
     }
 
     private static openResetPasswordModal(user: User): void {
@@ -396,6 +396,6 @@ export class UsersPage {
         if (passwordInput) passwordInput.value = '';
         if (confirmInput) confirmInput.value = '';
 
-        ModalsComponent.openModal('reset-password-modal');
+        ModalsManager.openModal('reset-password-modal');
     }
 }

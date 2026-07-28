@@ -1,4 +1,4 @@
-import { ModalsComponent } from '../components/Modals';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
@@ -163,7 +163,7 @@ export class ArticlesPage {
         });
 
         document.getElementById('btn-new-article')?.addEventListener('click', () => {
-            ModalsComponent.openModal('article-modal');
+            ModalsManager.openModal('article-modal');
         });
     }
 
@@ -236,7 +236,7 @@ export class ArticlesPage {
 
                 showToast('Article created successfully!', 'success');
                 form.reset();
-                ModalsComponent.closeModal('article-modal');
+                ModalsManager.closeModal('article-modal');
                 await this.load();
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create article', 'error');

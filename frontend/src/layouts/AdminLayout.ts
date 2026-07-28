@@ -1,6 +1,8 @@
+import { ModalsManager } from '../components/modals/ModalsManager';
+import { adminSidebarConfig } from '../components/navigation/configs/adminSidebarConfig';
 import { Sidebar } from '../components/navigation/Sidebar';
 import { Topbar } from '../components/navigation/Topbar';
-import { adminSidebarConfig } from '../components/navigation/configs/adminSidebarConfig';
+import { Router } from '../router/router';
 
 export class AdminLayout {
     private element: HTMLDivElement;
@@ -30,6 +32,11 @@ export class AdminLayout {
 
         // Sidebar
         this.sidebar = new Sidebar(adminSidebarConfig);
+        
+        // Wire navigation and logout actions
+        this.sidebar.onNavClick((view) => Router.switchView(view, 'admin'));
+        this.sidebar.onLogoutClick(() => ModalsManager.openModal('logout-confirm-modal'));
+
         appShell.appendChild(this.sidebar.getElement());
 
         // Sidebar Overlay
