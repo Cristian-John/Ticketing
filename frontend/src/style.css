@@ -36,18 +36,6 @@
    RESPONSIVE DESIGN
    ============================ */
 
-/* Sidebar overlay backdrop for mobile */
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 98;
-}
-.sidebar-overlay.show {
-    display: block;
-}
-
 /* ── Large tablets / small laptops ── */
 @media (max-width: 1024px) {
     .stats-grid {
@@ -70,45 +58,12 @@
 
 /* ── Tablets / small screens ── */
 @media (max-width: 768px) {
-    .sidebar-toggle {
-        display: flex;
-    }
-
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        transform: translateX(-100%);
-        box-shadow: var(--shadow-lg);
-        width: 260px;
-        z-index: 99;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-
     .notif-banner {
         left: 0;
     }
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-    .content-area {
-        padding: 16px;
-    }
-    .filter-row {
-        width: 100%;
-    }
-    .search-box {
-        width: 100%;
-    }
-    .topbar {
-        padding: 10px 16px;
-    }
-    .page-title {
-        font-size: 15px;
     }
     .detail-header {
         flex-direction: column;
@@ -166,15 +121,6 @@
     .stat-card .stat-label {
         font-size: 9px;
     }
-    .content-area {
-        padding: 10px;
-    }
-    .topbar {
-        padding: 8px 10px;
-    }
-    .page-title {
-        font-size: 14px;
-    }
     .table-head {
         font-size: 9px;
         padding: 8px 10px;
@@ -230,13 +176,6 @@
     }
     .note-compose textarea {
         min-height: 60px !important;
-    }
-    .theme-toggle {
-        padding: 6px 10px !important;
-        font-size: 12px !important;
-    }
-    .theme-toggle span:last-child {
-        display: none;
     }
 }
 
