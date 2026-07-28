@@ -1,3 +1,4 @@
+import { SearchIcon } from '../components/common/Icons';
 import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { LayoutManager } from '../layouts/LayoutManager';
@@ -51,7 +52,10 @@ export class UsersPage {
         container.style.alignItems = 'center';
         
         container.innerHTML = `
-            <input type="text" id="users-search-input" placeholder="Search users..." class="search-box">
+            <div class="search-box">
+                ${SearchIcon({ size: 14 })}
+                <input type="text" id="users-search-input" placeholder="Search users...">
+            </div>
             <button id="create-user-btn" class="btn btn-primary" style="height: 36px; display: flex; align-items: center; gap: 8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Create User

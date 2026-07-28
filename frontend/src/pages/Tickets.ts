@@ -1,4 +1,5 @@
 import { DepartmentService } from '../services/DepartmentService';
+import { SearchIcon } from '../components/common/Icons';
 import { TicketDetailModal } from '../components/TicketDetailModal';
 import { LayoutManager } from '../layouts/LayoutManager';
 import { HtmlViewName } from '../router/router';
@@ -281,7 +282,10 @@ export class TicketsPage {
         const deptOptions = departments.map(d => `<option value="${escapeHTML(d)}">${escapeHTML(d)}</option>`).join('');
 
         container.innerHTML = `
-            <input type="text" id="admin-search" placeholder="Search tickets..." class="search-box">
+            <div class="search-box">
+                ${SearchIcon({ size: 14 })}
+                <input type="text" id="admin-search" placeholder="Search tickets...">
+            </div>
             <select id="admin-filter-status" class="filter-sel">
                 <option value="all">All Statuses</option>
                 <option value="Open">Open</option>
