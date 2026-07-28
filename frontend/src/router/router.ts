@@ -64,7 +64,7 @@ export class Router {
         // Show/hide Users tab in admin sidebar based on admin role
         const usersTab = document.getElementById('admin-nav-users');
         if (usersTab) {
-            usersTab.style.display = user && user.role === 'admin' ? 'block' : 'none';
+            usersTab.style.display = user && user.role === 'admin' ? 'flex' : 'none';
         }
 
         this.showScreen('admin-screen');
