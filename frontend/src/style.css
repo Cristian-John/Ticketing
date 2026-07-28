@@ -76,34 +76,6 @@
         margin-left: 0;
         align-self: flex-start;
     }
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    .modal {
-        max-width: 95%;
-        max-height: 95vh;
-        border-radius: 12px;
-    }
-    /* Table horizontal scroll on tablet */
-    .table-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    .table-head,
-    .table-row {
-        min-width: 600px;
-    }
-    /* Client ticket cards */
-    .ticket-card {
-        padding: 14px;
-    }
-    /* Panel padding adjustments */
-    .panel {
-        padding: 14px;
-    }
-    .panel-header {
-        font-size: 13px;
-    }
 }
 
 /* ── Mobile phones ── */
@@ -121,14 +93,6 @@
     .stat-card .stat-label {
         font-size: 9px;
     }
-    .table-head {
-        font-size: 9px;
-        padding: 8px 10px;
-    }
-    .table-row {
-        padding: 9px 10px;
-        font-size: 11px;
-    }
     .login-card {
         padding: 1.5rem 1.2rem;
         margin: 0 12px;
@@ -136,17 +100,6 @@
     }
     .login-logo h1 {
         font-size: 1.4rem;
-    }
-    .modal {
-        max-width: 100%;
-        margin: 8px;
-        border-radius: 10px;
-    }
-    .modal-header {
-        padding: 14px 16px;
-    }
-    .modal-header h3 {
-        font-size: 15px;
     }
     .detail-header {
         gap: 8px;
@@ -160,15 +113,6 @@
     .detail-badges {
         flex-wrap: wrap;
         gap: 4px;
-    }
-    .toast {
-        min-width: auto;
-        font-size: 0.82rem;
-    }
-    .toast-container {
-        right: 0.75rem;
-        bottom: 0.75rem;
-        left: 0.75rem;
     }
     /* KB client search */
     #kb-search-client {
