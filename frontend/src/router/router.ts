@@ -95,6 +95,7 @@ export class Router {
                 LayoutManager.admin.getSidebar().setActiveView(htmlViewName);
                 const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
                 LayoutManager.admin.getTopbar().setTitle(titles?.admin ?? htmlViewName.replace(/-/g, ' '));
+                LayoutManager.admin.getTopbar().clearActions();
             } else {
                 // Fallback for legacy
                 const sidebar = document.getElementById('admin-sidebar');
@@ -113,6 +114,7 @@ export class Router {
                 LayoutManager.client.getSidebar().setActiveView(htmlViewName);
                 const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
                 LayoutManager.client.getTopbar().setTitle(titles?.client ?? htmlViewName.replace(/-/g, ' '));
+                LayoutManager.client.getTopbar().clearActions();
             } else {
                 // Fallback for legacy
                 const sidebar = document.getElementById('client-sidebar');
