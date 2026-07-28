@@ -31,13 +31,6 @@ export function UsersIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', props);
 }
 
-export function AtIcon(props: IconProps = {}): string {
-    return buildSvg('<circle cx="12" cy="12" r="4" /><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />', props);
-}
-
-export function LockIcon(props: IconProps = {}): string {
-    return buildSvg('<rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />', props);
-}
 
 export function KeyIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>', props);
@@ -47,9 +40,6 @@ export function EyeIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>', props);
 }
 
-export function ArrowRightIcon(props: IconProps = {}): string {
-    return buildSvg('<path d="M5 12h14" /><path d="M12 5l7 7-7 7" />', props);
-}
 
 export function DocumentIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', props);
