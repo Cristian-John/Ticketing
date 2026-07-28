@@ -82,6 +82,13 @@
     font-size: 0.8rem;
 }
 
+.btn-icon {
+    padding: 0.4rem;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
 
 /* ──── Attachment Links ──── */
 .attachment-link {

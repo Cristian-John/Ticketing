@@ -132,12 +132,7 @@ export class UsersPage {
                         u => `
                     <tr>
                         <td>
-                            <div class="user-info-cell">
-                                <div class="user-avatar">${escapeHTML(u.fullName.charAt(0).toUpperCase())}</div>
-                                <div class="user-details">
-                                    <span class="user-name">${escapeHTML(u.fullName)}</span>
-                                </div>
-                            </div>
+                            <span class="user-name" style="font-weight: 600; color: var(--text-heading);">${escapeHTML(u.fullName)}</span>
                         </td>
                         <td><span class="text-secondary">@${escapeHTML(u.username)}</span></td>
                         <td>${escapeHTML(u.email)}</td>
@@ -152,10 +147,10 @@ export class UsersPage {
                             </span>
                         </td>
                         <td style="text-align:right">
-                            <button class="btn btn-icon btn-edit-user" data-id="${escapeHTML(u.id)}" title="Edit User">
+                            <button class="btn btn-ghost btn-icon btn-edit-user" data-id="${escapeHTML(u.id)}" title="Edit User">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                             </button>
-                            <button class="btn btn-icon btn-reset-user" data-id="${escapeHTML(u.id)}" title="Reset Password">
+                            <button class="btn btn-ghost btn-icon btn-reset-user" data-id="${escapeHTML(u.id)}" title="Reset Password">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             </button>
                             <button class="btn btn-icon btn-danger btn-deactivate-user" data-id="${escapeHTML(u.id)}" title="${Number(u.active) === 1 ? 'Deactivate User' : 'Activate User'}">
