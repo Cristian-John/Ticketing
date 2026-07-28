@@ -1,5 +1,5 @@
+import { LogoutIcon,ShieldIcon } from '../common/Icons';
 import { SidebarConfig } from './configs/SidebarConfig';
-import { ShieldIcon, LogoutIcon } from '../common/Icons';
 
 export class Sidebar {
     private element: HTMLElement;
@@ -127,6 +127,13 @@ export class Sidebar {
         const targetBtn = this.element.querySelector(`.sb-nav-btn[data-view="${view}"]`);
         if (targetBtn) {
             targetBtn.classList.add('active');
+        }
+    }
+
+    public setUserName(name: string): void {
+        const nameEl = this.element.querySelector('.sb-user-name');
+        if (nameEl) {
+            nameEl.textContent = name;
         }
     }
 }

@@ -1,8 +1,18 @@
+import { LayoutManager } from '../layouts/LayoutManager';
 import { createElement } from './dom';
 
 export function getPortalContentContainer(role: string): HTMLElement | null {
-    const id = role === 'admin' || role === 'it-support' ? 'admin-content' : 'client-content';
-    return document.getElementById(id);
+    if (role === 'admin' || role === 'it-support') {
+        if (LayoutManager.admin) {
+            return LayoutManager.admin.getContentArea();
+        }
+        return document.getElementById('admin-content');
+    } else {
+        if (LayoutManager.client) {
+            return LayoutManager.client.getContentArea();
+        }
+        return document.getElementById('client-content');
+    }
 }
 
 export function clearPortalContent(role: string): HTMLElement | null {
