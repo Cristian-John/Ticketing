@@ -74,4 +74,14 @@
     color: var(--text-secondary);
 }
 
-
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 1.5rem 1.2rem;
+        margin: 0 12px;
+        max-width: 100%;
+    }
+    .login-logo h1 {
+        font-size: 1.4rem;
+    }
+}

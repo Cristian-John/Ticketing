@@ -38,3 +38,40 @@
     border-left: 2px solid var(--status-progress);
 }
 
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .dept-bar-label {
+        width: 100px;
+    }
+    .dash-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .notif-banner {
+        left: 0;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .stat-card {
+        padding: 12px;
+    }
+    .stat-card .stat-number {
+        font-size: 22px;
+    }
+    .stat-card .stat-label {
+        font-size: 9px;
+    }
+}
