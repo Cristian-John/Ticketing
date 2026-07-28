@@ -125,3 +125,10 @@ textarea {
     resize: vertical;
     min-height: 80px;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

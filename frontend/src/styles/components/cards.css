@@ -119,3 +119,15 @@
     flex-wrap: wrap;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .ticket-card {
+        padding: 14px;
+    }
+    .panel {
+        padding: 14px;
+    }
+    .panel-header {
+        font-size: 13px;
+    }
+}

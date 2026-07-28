@@ -78,3 +78,25 @@
     border-bottom: none;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .table-head,
+    .table-row {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 480px) {
+    .table-head {
+        font-size: 9px;
+        padding: 8px 10px;
+    }
+    .table-row {
+        padding: 9px 10px;
+        font-size: 11px;
+    }
+}

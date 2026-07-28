@@ -112,3 +112,25 @@
     justify-content: center;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .modal {
+        max-width: 95%;
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal {
+        max-width: 100%;
+        margin: 8px;
+        border-radius: 10px;
+    }
+    .modal-header {
+        padding: 14px 16px;
+    }
+    .modal-header h3 {
+        font-size: 15px;
+    }
+}
