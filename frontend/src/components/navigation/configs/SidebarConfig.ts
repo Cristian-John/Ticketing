@@ -1,4 +1,4 @@
-export interface SidebarNavItem {
+interface SidebarNavItem {
     id?: string;
     view: string;
     label: string;

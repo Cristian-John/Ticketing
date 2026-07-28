@@ -12,17 +12,3 @@ export const CATEGORIES = [
     { value: 'Email', label: 'Email' },
     { value: 'Other', label: 'Other' }
 ];
-
-export const PRIORITIES = [
-    { value: 'Low', label: 'Low' },
-    { value: 'Medium', label: 'Medium' },
-    { value: 'High', label: 'High' },
-    { value: 'Critical', label: 'Critical' }
-];
-
-export const STATUSES = [
-    { value: 'Open', label: 'Open' },
-    { value: 'In Progress', label: 'In Progress' },
-    { value: 'Resolved', label: 'Resolved' },
-    { value: 'Closed', label: 'Closed' }
-];
