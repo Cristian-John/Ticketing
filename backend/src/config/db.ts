@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import { ENV } from './env';
 import bcrypt from 'bcryptjs';
+import { parseQuery } from '../utils/dbParser';
 
 const pool = new Pool({
     connectionString: ENV.DATABASE_URL
@@ -13,25 +14,9 @@ export const db = {
         if (!params) {
             return pool.query(sql);
         }
-        if (Array.isArray(params)) {
-            // Swap standard ? placeholders to $1, $2, etc.
-            let index = 1;
-            const rewrittenSql = sql.replace(/\?/g, () => `$${index++}`);
-            return pool.query(rewrittenSql, params);
-        }
         
-        const placeholders: string[] = [];
-        const regex = /@([a-zA-Z0-9_]+)/g;
-        let index = 1;
-        const values: any[] = [];
-        
-        const rewrittenSql = sql.replace(regex, (m, name) => {
-            placeholders.push(name);
-            values.push(params[name]);
-            return `$${index++}`;
-        });
-        
-        return pool.query(rewrittenSql, values);
+        const { text, values } = parseQuery(sql, params);
+        return pool.query(text, values);
     }
 };
 
