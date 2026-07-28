@@ -6,6 +6,7 @@ import { ThemeManager } from './components/common/theme/ThemeManager';
 import { AdminLayout } from './layouts/AdminLayout';
 import { ClientLayout } from './layouts/ClientLayout';
 import { LoginLayout } from './layouts/LoginLayout';
+import { LayoutManager } from './layouts/LayoutManager';
 import { ModalsComponent } from './components/Modals';
 import { NavbarComponent } from './components/Navbar';
 import { SidebarComponent } from './components/Sidebar';
@@ -28,21 +29,32 @@ class App {
             const legacyLogin = document.getElementById('login-screen');
             const loginForm = document.getElementById('login-form');
             if (legacyLogin && loginForm) {
-                const loginLayout = new LoginLayout();
-                loginLayout.appendContent(loginForm);
-                legacyLogin.replaceWith(loginLayout.getElement());
+                LayoutManager.login = new LoginLayout();
+                LayoutManager.login.appendContent(loginForm);
+                legacyLogin.replaceWith(LayoutManager.login.getElement());
             }
 
             const legacyClient = document.getElementById('client-screen');
             if (legacyClient) {
-                const clientLayout = new ClientLayout();
-                legacyClient.replaceWith(clientLayout.getElement());
+                LayoutManager.client = new ClientLayout();
+                legacyClient.replaceWith(LayoutManager.client.getElement());
             }
 
             const legacyAdmin = document.getElementById('admin-screen');
             if (legacyAdmin) {
-                const adminLayout = new AdminLayout();
-                legacyAdmin.replaceWith(adminLayout.getElement());
+                LayoutManager.admin = new AdminLayout();
+                
+                // Preserve legacy filters by moving them to the new topbar
+                const adminFilters = document.getElementById('admin-filters');
+                if (adminFilters) {
+                    LayoutManager.admin.getTopbar().appendAction(adminFilters);
+                }
+                const usersFilters = document.getElementById('admin-users-filters');
+                if (usersFilters) {
+                    LayoutManager.admin.getTopbar().appendAction(usersFilters);
+                }
+
+                legacyAdmin.replaceWith(LayoutManager.admin.getElement());
             }
 
             NavbarComponent.init();
