@@ -1,8 +1,10 @@
+import { BookIcon, DashboardIcon, ListIcon, StarIcon, UserIcon,UsersIcon } from '../../common/Icons';
 import { SidebarConfig } from './SidebarConfig';
-import { DashboardIcon, ListIcon, StarIcon, BookIcon, UsersIcon, UserIcon } from '../../common/Icons';
 
 export const adminSidebarConfig: SidebarConfig = {
-    portalName: 'Admin Portal',
+    id: 'admin-sidebar',
+    cssClass: 'sidebar-admin',
+    portalName: 'Admin Panel',
     items: [
         {
             view: 'dashboard',
@@ -12,7 +14,10 @@ export const adminSidebarConfig: SidebarConfig = {
         {
             view: 'all-tickets',
             label: 'All Tickets',
-            icon: ListIcon({ size: 16 })
+            icon: ListIcon({ size: 16 }),
+            hasBadge: true,
+            badgeClass: 'sb-badge',
+            badgeText: '0'
         },
         {
             view: 'resolved',
@@ -30,11 +35,20 @@ export const adminSidebarConfig: SidebarConfig = {
             label: 'Users',
             icon: UsersIcon({ size: 16 }),
             requireAdmin: true
-        },
-        {
-            view: 'profile',
-            label: 'Profile',
-            icon: UserIcon({ size: 16 })
         }
-    ]
+    ],
+    statsBoxHtml: `
+        <div class="sb-stats-label">OVERVIEW</div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Open</span><span class="sb-stats-val" style="color:var(--status-open)" id="as-open">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">In Progress</span><span class="sb-stats-val" style="color:var(--accent)" id="as-progress">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Severe</span><span class="sb-stats-val" style="color:var(--severity-severe)" id="as-severe">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Resolved</span><span class="sb-stats-val" style="color:var(--status-resolved)" id="as-resolved">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Avg Rating</span><span class="sb-stats-val" style="color:var(--severity-moderate)" id="as-rating">—</span></div>
+    `,
+    actionBoxHtml: `
+        <button class="sb-nav-btn" data-view="profile">
+            ${UserIcon({ size: 16 })}
+            Profile
+        </button>
+    `
 };

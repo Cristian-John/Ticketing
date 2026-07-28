@@ -2,7 +2,7 @@ import { UserSession } from '../types';
 
 const SESSION_KEY = 'itsupport_session';
 
-export interface AppState {
+interface AppState {
     currentUser: UserSession | null;
     currentView: string;
 }

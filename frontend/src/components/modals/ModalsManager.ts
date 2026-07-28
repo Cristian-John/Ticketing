@@ -12,21 +12,25 @@ export class ModalsManager {
      * Replaces legacy modals in the DOM with instances of the new TypeScript modals.
      */
     public static initializeModals(): void {
-        const replaceModal = (id: string, ModalClass: any) => {
-            const legacyModal = document.getElementById(id);
-            if (legacyModal) {
-                legacyModal.replaceWith(new ModalClass().getElement());
-            }
+        const root = document.getElementById('modal-root');
+        if (!root) {
+            console.error('modal-root not found in the DOM.');
+            return;
+        }
+
+        const appendModal = (ModalClass: any) => {
+            const modalInstance = new ModalClass();
+            root.appendChild(modalInstance.getElement());
         };
 
-        replaceModal('ticket-modal', TicketModal);
-        replaceModal('view-ticket-modal', ViewTicketModal);
-        replaceModal('edit-ticket-modal', EditTicketModal);
-        replaceModal('user-modal', UserModal);
-        replaceModal('reset-password-modal', ResetPasswordModal);
-        replaceModal('rating-modal', RatingModal);
-        replaceModal('article-modal', ArticleModal);
-        replaceModal('logout-confirm-modal', LogoutConfirmModal);
+        appendModal(TicketModal);
+        appendModal(ViewTicketModal);
+        appendModal(EditTicketModal);
+        appendModal(UserModal);
+        appendModal(ResetPasswordModal);
+        appendModal(RatingModal);
+        appendModal(ArticleModal);
+        appendModal(LogoutConfirmModal);
 
         // Bind global close listeners to the new modals
         this.initModalCloseListeners();

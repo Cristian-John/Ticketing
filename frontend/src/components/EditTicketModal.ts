@@ -2,7 +2,7 @@ import { ticketsAPI, usersAPI } from '../services/api';
 import { store } from '../state/store';
 import { Ticket } from '../types';
 import { createElement } from '../utils/dom';
-import { ModalsComponent } from './Modals';
+import { ModalsManager } from './modals/ModalsManager';
 import { showToast } from './Toast';
 
 export class EditTicketModal {
@@ -22,7 +22,7 @@ export class EditTicketModal {
         await this.create();
         this.render();
         this.attachEvents();
-        ModalsComponent.openModal('edit-ticket-modal');
+        ModalsManager.openModal('edit-ticket-modal');
     }
 
     private async create(): Promise<void> {
@@ -78,7 +78,7 @@ export class EditTicketModal {
 
         if (cancelBtn) {
             this.boundCancelHandler = () => {
-                ModalsComponent.closeModal('edit-ticket-modal');
+                ModalsManager.closeModal('edit-ticket-modal');
             };
             cancelBtn.addEventListener('click', this.boundCancelHandler);
         }
@@ -112,7 +112,7 @@ export class EditTicketModal {
                     });
 
                     showToast('Ticket updated successfully', 'success');
-                    ModalsComponent.closeModal('edit-ticket-modal');
+                    ModalsManager.closeModal('edit-ticket-modal');
                     this.onSaveCallback();
                 } catch (err: unknown) {
                     showToast((err instanceof Error ? err.message : String(err)) || 'Failed to update ticket', 'error');

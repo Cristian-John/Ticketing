@@ -1,15 +1,14 @@
 import './style.css';
-import './bootstrap/serviceWorkerCleanup';
 
+import { cleanupServiceWorkers } from './bootstrap/serviceWorkerCleanup';
+import { HexagonBackground } from './components/background/HexagonBackground';
 import { SplashManager } from './components/common/SplashManager';
 import { ThemeManager } from './components/common/theme/ThemeManager';
+import { ModalsManager } from './components/modals/ModalsManager';
 import { AdminLayout } from './layouts/AdminLayout';
 import { ClientLayout } from './layouts/ClientLayout';
-import { LoginLayout } from './layouts/LoginLayout';
 import { LayoutManager } from './layouts/LayoutManager';
-import { ModalsManager } from './components/modals/ModalsManager';
-import { NavbarComponent } from './components/Navbar';
-import { SidebarComponent } from './components/Sidebar';
+import { LoginLayout } from './layouts/LoginLayout';
 import { ArticlesPage } from './pages/Articles';
 import { CreateTicketPage } from './pages/CreateTicket';
 import { LoginPage } from './pages/Login';
@@ -20,17 +19,17 @@ class App {
     public static init(): void {
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize foundational modules
+            cleanupServiceWorkers();
             ThemeManager.initialize();
+            HexagonBackground.init();
             
             // Ensure splash is visible
             SplashManager.show();
 
             // Setup Layouts
             const legacyLogin = document.getElementById('login-screen');
-            const loginForm = document.getElementById('login-form');
-            if (legacyLogin && loginForm) {
+            if (legacyLogin) {
                 LayoutManager.login = new LoginLayout();
-                LayoutManager.login.appendContent(loginForm);
                 legacyLogin.replaceWith(LayoutManager.login.getElement());
             }
 
@@ -59,8 +58,7 @@ class App {
 
             ModalsManager.initializeModals();
 
-            NavbarComponent.init();
-            SidebarComponent.init();
+
 
             LoginPage.init();
             CreateTicketPage.init();

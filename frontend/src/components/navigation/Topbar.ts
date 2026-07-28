@@ -1,5 +1,5 @@
-import { ThemeToggle } from '../common/theme/ThemeToggle';
 import { MenuIcon } from '../common/Icons';
+import { ThemeToggle } from '../common/theme/ThemeToggle';
 
 export interface TopbarConfig {
     titleId: string;
