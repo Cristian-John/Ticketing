@@ -3,6 +3,7 @@ import './bootstrap/serviceWorkerCleanup';
 
 import { SplashManager } from './components/common/SplashManager';
 import { ThemeManager } from './components/common/theme/ThemeManager';
+import { LoginLayout } from './layouts/LoginLayout';
 import { ModalsComponent } from './components/Modals';
 import { NavbarComponent } from './components/Navbar';
 import { SidebarComponent } from './components/Sidebar';
@@ -20,6 +21,15 @@ class App {
             
             // Ensure splash is visible
             SplashManager.show();
+
+            // Setup Layouts
+            const legacyLogin = document.getElementById('login-screen');
+            const loginForm = document.getElementById('login-form');
+            if (legacyLogin && loginForm) {
+                const loginLayout = new LoginLayout();
+                loginLayout.appendContent(loginForm);
+                legacyLogin.replaceWith(loginLayout.getElement());
+            }
 
             NavbarComponent.init();
             SidebarComponent.init();

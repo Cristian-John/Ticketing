@@ -1,5 +1,6 @@
-import { ThemeToggle } from '../components/common/theme/ThemeToggle';
+import { HexagonBackground } from '../components/background/HexagonBackground';
 import { ShieldIcon } from '../components/common/Icons';
+import { ThemeToggle } from '../components/common/theme/ThemeToggle';
 
 export class LoginLayout {
     private element: HTMLDivElement;
@@ -12,6 +13,8 @@ export class LoginLayout {
 
         const themeToggle = new ThemeToggle(true);
         this.element.appendChild(themeToggle.getElement());
+
+        HexagonBackground.init();
 
         const container = document.createElement('div');
         container.className = 'login-container';
