@@ -65,14 +65,18 @@ class App {
             ArticlesPage.init();
 
             const session = store.loadSession();
-            if (session) {
+            const rememberedToken = store.getRememberedToken();
+            const tokenToValidate = session ? session.token : rememberedToken;
+            const isRemembered = !session && !!rememberedToken;
+
+            if (tokenToValidate) {
                 import('./services/api').then(({ authAPI }) => {
                     authAPI
-                        .validate(session.token)
+                        .validate(tokenToValidate)
                         .then(res => {
                             SplashManager.hide();
                             if (res.success) {
-                                store.setSession(res.user, true);
+                                store.setSession(res.user, isRemembered);
                                 Router.enterPortal();
                             } else {
                                 store.setSession(null);
