@@ -128,17 +128,6 @@ export class Router {
             }
         }
 
-        if (resolvedPortal === 'admin') {
-            const filters = document.getElementById('admin-filters');
-            if (filters) {
-                filters.style.display = htmlViewName === 'all-tickets' ? '' : 'none';
-            }
-            const userFilters = document.getElementById('admin-users-filters');
-            if (userFilters) {
-                userFilters.style.display = htmlViewName === 'users' ? '' : 'none';
-            }
-        }
-
         const storeView = HTML_TO_STORE_VIEW[htmlViewName as HtmlViewName] ?? htmlViewName;
         store.setView(storeView, { force: true });
         loadPageForHtmlView(htmlViewName);

@@ -60,6 +60,19 @@ export class Topbar {
     }
 
     /**
+     * Replaces any existing custom actions with the provided element, or clears them if null.
+     */
+    public setActions(element: HTMLElement | null): void {
+        if (element && this.actionsContainer.firstChild === element) {
+            return; // Identical action container is already mounted
+        }
+        this.clearActions();
+        if (element) {
+            this.actionsContainer.insertBefore(element, this.themeToggle.getElement());
+        }
+    }
+
+    /**
      * Appends a custom action element (like a search bar or filter) before the theme toggle.
      */
     public appendAction(element: HTMLElement): void {
