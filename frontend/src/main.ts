@@ -3,6 +3,8 @@ import './bootstrap/serviceWorkerCleanup';
 
 import { SplashManager } from './components/common/SplashManager';
 import { ThemeManager } from './components/common/theme/ThemeManager';
+import { AdminLayout } from './layouts/AdminLayout';
+import { ClientLayout } from './layouts/ClientLayout';
 import { LoginLayout } from './layouts/LoginLayout';
 import { ModalsComponent } from './components/Modals';
 import { NavbarComponent } from './components/Navbar';
@@ -29,6 +31,18 @@ class App {
                 const loginLayout = new LoginLayout();
                 loginLayout.appendContent(loginForm);
                 legacyLogin.replaceWith(loginLayout.getElement());
+            }
+
+            const legacyClient = document.getElementById('client-screen');
+            if (legacyClient) {
+                const clientLayout = new ClientLayout();
+                legacyClient.replaceWith(clientLayout.getElement());
+            }
+
+            const legacyAdmin = document.getElementById('admin-screen');
+            if (legacyAdmin) {
+                const adminLayout = new AdminLayout();
+                legacyAdmin.replaceWith(adminLayout.getElement());
             }
 
             NavbarComponent.init();
