@@ -1,5 +1,6 @@
-
+import { DepartmentService } from '../services/DepartmentService';
 import { TicketDetailModal } from '../components/TicketDetailModal';
+import { LayoutManager } from '../layouts/LayoutManager';
 import { HtmlViewName } from '../router/router';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
@@ -19,7 +20,7 @@ import { getPortalContentContainer } from '../utils/portalContent';
 import { TransitionManager } from '../utils/transitionManager';
 
 export class TicketsPage {
-    private static adminFiltersBound = false;
+    private static currentTickets: Ticket[] = [];
 
     public static async load(htmlView: HtmlViewName): Promise<void> {
         const container = getPortalContentContainer(store.getState().currentUser!.role);
@@ -49,7 +50,8 @@ export class TicketsPage {
 
         try {
             LoadingManager.showSkeleton(container, 'tickets-table');
-            const tickets = await ticketsAPI.getAll();
+            this.currentTickets = await ticketsAPI.getAll();
+            const tickets = this.currentTickets;
             await LoadingManager.hideSkeleton(container);
 
             const user = store.getState().currentUser;
@@ -59,13 +61,17 @@ export class TicketsPage {
                 if (user.role === 'admin' || user.role === 'it-support') {
                     this.updateAdminSidebarStats(tickets);
                     if (htmlView === 'all-tickets') {
+                        LayoutManager.admin?.getTopbar().setActions(this.createAdminFilters());
                         this.renderAdminAllTickets(container, tickets);
                     } else if (htmlView === 'resolved') {
+                        LayoutManager.admin?.getTopbar().clearActions();
                         this.renderResolvedView(container, tickets);
                     } else {
+                        LayoutManager.admin?.getTopbar().setActions(this.createAdminFilters());
                         this.renderAdminAllTickets(container, tickets);
                     }
                 } else {
+                    LayoutManager.client?.getTopbar().clearActions();
                     const mine = tickets.filter(
                         t =>
                             t.userId === user.id ||
@@ -263,22 +269,51 @@ export class TicketsPage {
                 }
             });
         }
-
-        this.bindAdminFilters();
     }
 
-    private static bindAdminFilters(): void {
-        if (this.adminFiltersBound) return;
-        this.adminFiltersBound = true;
+    private static createAdminFilters(): HTMLElement {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.gap = '10px';
+        container.style.alignItems = 'center';
+        
+        const departments = DepartmentService.getDepartmentsSync();
+        const deptOptions = departments.map(d => `<option value="${escapeHTML(d)}">${escapeHTML(d)}</option>`).join('');
+
+        container.innerHTML = `
+            <input type="text" id="admin-search" placeholder="Search tickets..." class="search-box">
+            <select id="admin-filter-status" class="filter-sel">
+                <option value="all">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+            </select>
+            <select id="admin-filter-severity" class="filter-sel">
+                <option value="all">All Severities</option>
+                <option value="Low">Low</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Severe">Severe</option>
+            </select>
+            <select id="admin-filter-dept" class="filter-sel">
+                <option value="all">All Departments</option>
+                ${deptOptions}
+            </select>
+        `;
 
         const rerender = debounce(() => {
-            this.load('all-tickets');
+            const listContainer = getPortalContentContainer(store.getState().currentUser!.role);
+            if (listContainer) {
+                this.renderAdminAllTickets(listContainer, this.currentTickets);
+            }
         }, 300);
 
-        document.getElementById('admin-search')?.addEventListener('input', rerender);
-        document.getElementById('admin-filter-status')?.addEventListener('change', rerender);
-        document.getElementById('admin-filter-severity')?.addEventListener('change', rerender);
-        document.getElementById('admin-filter-dept')?.addEventListener('change', rerender);
+        container.querySelector('#admin-search')?.addEventListener('input', rerender);
+        container.querySelector('#admin-filter-status')?.addEventListener('change', rerender);
+        container.querySelector('#admin-filter-severity')?.addEventListener('change', rerender);
+        container.querySelector('#admin-filter-dept')?.addEventListener('change', rerender);
+
+        return container;
     }
 
     private static renderResolvedView(container: HTMLElement, allTickets: Ticket[]): void {

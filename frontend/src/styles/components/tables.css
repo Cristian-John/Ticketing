@@ -88,6 +88,9 @@
     .table-row {
         min-width: 600px;
     }
+    .glass-table {
+        min-width: 650px;
+    }
 }
 
 @media (max-width: 480px) {

@@ -43,15 +43,7 @@ class App {
             if (legacyAdmin) {
                 LayoutManager.admin = new AdminLayout();
                 
-                // Preserve legacy filters by moving them to the new topbar
-                const adminFilters = document.getElementById('admin-filters');
-                if (adminFilters) {
-                    LayoutManager.admin.getTopbar().appendAction(adminFilters);
-                }
-                const usersFilters = document.getElementById('admin-users-filters');
-                if (usersFilters) {
-                    LayoutManager.admin.getTopbar().appendAction(usersFilters);
-                }
+
 
                 legacyAdmin.replaceWith(LayoutManager.admin.getElement());
             }

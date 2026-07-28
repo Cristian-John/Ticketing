@@ -80,3 +80,7 @@ export function EditIcon(props: IconProps = {}): string {
 export function MenuIcon(props: IconProps = {}): string {
     return buildSvg('<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>', props);
 }
+
+export function SearchIcon(props: IconProps = {}): string {
+    return buildSvg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', props);
+}
