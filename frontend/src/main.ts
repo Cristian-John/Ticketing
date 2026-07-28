@@ -7,7 +7,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { ClientLayout } from './layouts/ClientLayout';
 import { LoginLayout } from './layouts/LoginLayout';
 import { LayoutManager } from './layouts/LayoutManager';
-import { ModalsComponent } from './components/Modals';
+import { ModalsManager } from './components/modals/ModalsManager';
 import { NavbarComponent } from './components/Navbar';
 import { SidebarComponent } from './components/Sidebar';
 import { ArticlesPage } from './pages/Articles';
@@ -57,9 +57,10 @@ class App {
                 legacyAdmin.replaceWith(LayoutManager.admin.getElement());
             }
 
+            ModalsManager.initializeModals();
+
             NavbarComponent.init();
             SidebarComponent.init();
-            ModalsComponent.initModalCloseListeners();
 
             LoginPage.init();
             CreateTicketPage.init();
