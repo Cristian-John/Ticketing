@@ -9,6 +9,8 @@ export interface TicketCapabilities {
     canTransfer: boolean;
     canUpdateStatus: boolean;
     canAddCollaborator: boolean;
+    canRequestCollaboration: boolean;
+    canApproveCollaboration: boolean;
     canPostNote: boolean;
     canUploadAttachment: boolean;
     canViewHistory: boolean;
@@ -24,6 +26,8 @@ export function resolveTicketCapabilities(ticket: Ticket, user: User | UserSessi
             canTransfer: false,
             canUpdateStatus: false,
             canAddCollaborator: false,
+            canRequestCollaboration: false,
+            canApproveCollaboration: false,
             canPostNote: false,
             canUploadAttachment: false,
             canViewHistory: false,
@@ -64,6 +68,8 @@ export function resolveTicketCapabilities(ticket: Ticket, user: User | UserSessi
         canTransfer: !isClosed && (isAdmin || isOwner),
         canUpdateStatus: !isClosed && (isAdmin || isOwner),
         canAddCollaborator: !isClosed && (isAdmin || isOwner),
+        canRequestCollaboration: !isClosed && (isAdmin || isItSupport) && !isOwner && !isCollaborator && !!ticket.primary_assignee_id,
+        canApproveCollaboration: !isClosed && (isAdmin || isOwner),
         canPostNote: isAdmin || isOwner || isCollaborator || isRequester,
         canUploadAttachment: isAdmin || isOwner || isCollaborator || isRequester,
         canViewHistory: isAdmin || isOwner || isCollaborator || isItSupport,

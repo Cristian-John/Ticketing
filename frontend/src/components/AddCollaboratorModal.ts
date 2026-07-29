@@ -3,6 +3,7 @@ import { Ticket } from '../types';
 import { createElement } from '../utils/dom';
 import { handleUIError } from '../utils/errorHandler';
 import { ModalsManager } from './modals/ModalsManager';
+import { store } from '../state/store';
 import { showToast } from './Toast';
 
 export class AddCollaboratorModal {
@@ -22,6 +23,16 @@ export class AddCollaboratorModal {
         this.destroy();
         await this.create();
         this.attachEvents();
+        
+        // Update modal title/button text based on role
+        const currentUser = store.getState().currentUser;
+        const isAdmin = currentUser?.role === 'admin';
+        
+        const titleEl = document.querySelector('#add-collaborator-modal h2');
+        const submitBtn = document.querySelector('#add-collaborator-form button[type="submit"]');
+        if (titleEl) titleEl.textContent = isAdmin ? 'Add Collaborator' : 'Invite Collaborator';
+        if (submitBtn) submitBtn.textContent = isAdmin ? 'Add Collaborator' : 'Send Invite';
+        
         ModalsManager.openModal('add-collaborator-modal');
     }
 
@@ -74,12 +85,21 @@ export class AddCollaboratorModal {
                 }
 
                 try {
-                    await ticketsAPI.addCollaborator(this.ticket.id, collabId);
-                    showToast('Collaborator added successfully', 'success');
+                    const currentUser = store.getState().currentUser;
+                    const isAdmin = currentUser?.role === 'admin';
+                    
+                    if (isAdmin) {
+                        await ticketsAPI.addCollaborator(this.ticket.id, collabId);
+                        showToast('Collaborator added successfully', 'success');
+                    } else {
+                        await ticketsAPI.requestCollaboration(this.ticket.id, collabId);
+                        showToast('Collaboration invite sent successfully', 'success');
+                    }
+                    
                     ModalsManager.closeModal('add-collaborator-modal');
                     this.onSaveCallback();
                 } catch (err: unknown) {
-                    handleUIError(err, 'Failed to add collaborator');
+                    handleUIError(err, 'Failed to process collaboration request');
                 }
             };
             form.addEventListener('submit', this.boundSubmitHandler);

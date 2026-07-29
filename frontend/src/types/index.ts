@@ -31,11 +31,29 @@ export interface TicketHistory {
     created_at: string;
 }
 
+export interface AppNotification {
+    id: string;
+    recipient_id: string;
+    actor_id?: string;
+    type: string;
+    entity_type: string;
+    entity_id: string;
+    title: string;
+    message: string;
+    metadata?: any;
+    read_at?: string;
+    created_at: string;
+    actor_name?: string;
+    actor_full_name?: string;
+}
+
 export interface TicketCollaborator {
     ticket_id: string;
     user_id: string;
-    role: string;
-    created_at: string;
+    role?: string;
+    created_at?: string;
+    username?: string;
+    fullName?: string;
 }
 
 export interface Note {
@@ -112,4 +130,20 @@ export interface UpdateUserRequest {
     role?: string;
     active?: boolean;
     password?: string;
+}
+
+export interface TicketCollaborationRequest {
+    id: string;
+    ticket_id: string;
+    requester_id: string;
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+    approver_id: string | null;
+    responded_at: string | null;
+    rejection_reason: string | null;
+    cancelled_at: string | null;
+    expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+    username?: string;
+    requesterName?: string;
 }

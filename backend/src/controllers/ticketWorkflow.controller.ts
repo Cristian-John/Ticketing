@@ -44,8 +44,8 @@ export class TicketWorkflowController {
     public static async transfer(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const user = (req as any).user;
-            if (user.role === 'client') {
-                res.status(403).json({ error: 'Clients cannot transfer tickets.' });
+            if (user.role !== 'admin') {
+                res.status(403).json({ error: 'Only administrators can perform a forced transfer.' });
                 return;
             }
             
@@ -63,7 +63,7 @@ export class TicketWorkflowController {
                 user.id,
                 user.role
             );
-            res.json({ success: true, message: 'Ticket transferred successfully' });
+            res.json({ success: true, message: 'Ticket force-transferred successfully' });
         } catch (err: any) {
             if (err.message === 'Ticket not found') res.status(404).json({ error: err.message });
             else res.status(400).json({ error: err.message });
@@ -89,6 +89,126 @@ export class TicketWorkflowController {
         } catch (err: any) {
             if (err.message === 'Ticket not found') res.status(404).json({ error: err.message });
             else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async requestCollaboration(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            if (user.role === 'client') {
+                res.status(403).json({ error: 'Clients cannot request collaboration.' });
+                return;
+            }
+
+            const { targetUserId } = req.body;
+
+            await TicketWorkflowService.requestCollaboration(String(req.params.id), user.id, targetUserId);
+            res.json({ success: true, message: 'Collaboration request submitted successfully' });
+        } catch (err: any) {
+            if (err.message === 'Ticket not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async approveCollaboration(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            const requestId = String(req.params.requestId);
+            await TicketWorkflowService.approveCollaboration(requestId, user.id);
+            res.json({ success: true, message: 'Collaboration request approved' });
+        } catch (err: any) {
+            if (err.message === 'Request not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async rejectCollaboration(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            const requestId = String(req.params.requestId);
+            const { reason } = req.body;
+            await TicketWorkflowService.rejectCollaboration(requestId, user.id, reason);
+            res.json({ success: true, message: 'Collaboration request rejected' });
+        } catch (err: any) {
+            if (err.message === 'Request not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async getPendingRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const requests = await TicketWorkflowService.getPendingRequests(String(req.params.id));
+            res.json(requests);
+        } catch (err: any) {
+            next(err);
+        }
+    }
+
+    public static async requestTransfer(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            if (user.role === 'client') {
+                res.status(403).json({ error: 'Clients cannot request ticket transfers.' });
+                return;
+            }
+
+            const { targetUserId, reason } = req.body;
+            if (!targetUserId) {
+                res.status(400).json({ error: 'targetUserId is required.' });
+                return;
+            }
+
+            await TicketWorkflowService.requestTransfer(String(req.params.id), user.id, targetUserId, reason);
+            res.json({ success: true, message: 'Transfer request submitted successfully' });
+        } catch (err: any) {
+            if (err.message === 'Ticket not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async approveTransfer(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            const requestId = String(req.params.requestId);
+            await TicketWorkflowService.approveTransfer(requestId, user.id);
+            res.json({ success: true, message: 'Transfer request approved' });
+        } catch (err: any) {
+            if (err.message === 'Transfer request not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async rejectTransfer(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            const requestId = String(req.params.requestId);
+            const { reason } = req.body;
+            await TicketWorkflowService.rejectTransfer(requestId, user.id, reason);
+            res.json({ success: true, message: 'Transfer request rejected' });
+        } catch (err: any) {
+            if (err.message === 'Transfer request not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async cancelTransfer(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const user = (req as any).user;
+            const requestId = String(req.params.requestId);
+            await TicketWorkflowService.cancelTransfer(requestId, user.id);
+            res.json({ success: true, message: 'Transfer request cancelled' });
+        } catch (err: any) {
+            if (err.message === 'Transfer request not found') res.status(404).json({ error: err.message });
+            else res.status(400).json({ error: err.message });
+        }
+    }
+
+    public static async getPendingTransferRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const requests = await TicketWorkflowService.getPendingTransferRequests(String(req.params.id));
+            res.json(requests);
+        } catch (err: any) {
+            next(err);
         }
     }
 

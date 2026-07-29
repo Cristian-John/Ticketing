@@ -1,4 +1,5 @@
 import { db } from '../config/db';
+import { EventBus } from '../utils/EventBus';
 import { Ticket, Note, Attachment } from '../types';
 import { TicketWorkflowService } from './ticketWorkflow.service';
 
@@ -25,6 +26,7 @@ export class TicketService {
         department?: string;
         search?: string;
         userId?: string;
+        filterByCollaborator?: string;
     }): Promise<Ticket[]> {
         const res = await db.query('SELECT * FROM tickets ORDER BY "createdAt" DESC');
         let tickets = res.rows as Ticket[];
@@ -63,6 +65,12 @@ export class TicketService {
             );
         }
 
+        if (filters.filterByCollaborator) {
+            const collabRes = await db.query('SELECT ticket_id FROM ticket_collaborators WHERE user_id = $1', [filters.filterByCollaborator]);
+            const collabTicketIds = new Set(collabRes.rows.map(r => r.ticket_id));
+            tickets = tickets.filter(t => collabTicketIds.has(t.id));
+        }
+
         // Attach notes and attachments
         const formattedTickets: Ticket[] = [];
         for (const t of tickets) {
@@ -79,6 +87,8 @@ export class TicketService {
                 uploadedAt: this.formatAttachmentUploadedAt(a.uploadedAt)
             }));
 
+            const collaborators = await TicketWorkflowService.getCollaborators(t.id);
+
             formattedTickets.push({
                 ...t,
                 // Ensure date objects are serialized as ISO strings
@@ -86,7 +96,8 @@ export class TicketService {
                 updatedAt: (t.updatedAt as any) instanceof Date ? (t.updatedAt as any).toISOString() : String(t.updatedAt),
                 dueAt: (t.dueAt as any) instanceof Date ? (t.dueAt as any).toISOString() : t.dueAt ? String(t.dueAt) : '',
                 notes,
-                attachments
+                attachments,
+                collaborators
             });
         }
 
@@ -111,13 +122,16 @@ export class TicketService {
             uploadedAt: this.formatAttachmentUploadedAt(a.uploadedAt)
         }));
 
+        const collaborators = await TicketWorkflowService.getCollaborators(ticket.id);
+
         return {
             ...ticket,
             createdAt: (ticket.createdAt as any) instanceof Date ? (ticket.createdAt as any).toISOString() : String(ticket.createdAt),
             updatedAt: (ticket.updatedAt as any) instanceof Date ? (ticket.updatedAt as any).toISOString() : String(ticket.updatedAt),
             dueAt: (ticket.dueAt as any) instanceof Date ? (ticket.dueAt as any).toISOString() : ticket.dueAt ? String(ticket.dueAt) : '',
             notes,
-            attachments
+            attachments,
+            collaborators
         };
     }
 
@@ -220,44 +234,61 @@ export class TicketService {
     }
 
     public static async addNote(ticketId: string, text: string, author: string): Promise<Note | null> {
-        const existingRes = await db.query('SELECT 1 FROM tickets WHERE id = $1', [ticketId]);
-        if (existingRes.rowCount === 0) return null;
+        return db.withTransaction(async (tx) => {
+            const existingRes = await tx.query('SELECT 1 FROM tickets WHERE id = $1 FOR UPDATE', [ticketId]);
+            if (existingRes.rowCount === 0) return null;
 
-        const note = {
-            ticketId,
-            text,
-            author,
-            time: new Date()
-        };
+            const note = {
+                ticketId,
+                text,
+                author,
+                time: new Date()
+            };
 
-        const result = await db.query(`
-            INSERT INTO notes ("ticketId", text, author, time)
-            VALUES (@ticketId, @text, @author, @time)
-            RETURNING id
-        `, note);
+            const result = await tx.query(`
+                INSERT INTO notes ("ticketId", text, author, time)
+                VALUES (@ticketId, @text, @author, @time)
+                RETURNING id
+            `, note);
 
-        await db.query('UPDATE tickets SET "updatedAt" = $1 WHERE id = $2', [new Date(), ticketId]);
+            await tx.query('UPDATE tickets SET "updatedAt" = $1 WHERE id = $2', [new Date(), ticketId]);
 
-        return {
-            id: result.rows[0].id,
-            ticketId,
-            text,
-            author,
-            time: this.formatNoteTime(note.time)
-        };
+            await EventBus.emit(tx, 'note.added', {
+                actorId: author,
+                entityId: ticketId,
+                entityType: 'ticket',
+                metadata: { noteId: result.rows[0].id }
+            });
+
+            return {
+                id: result.rows[0].id,
+                ticketId,
+                text,
+                author,
+                time: this.formatNoteTime(note.time)
+            };
+        });
     }
 
     public static async addAttachment(attachment: Attachment): Promise<Attachment> {
-        const insertParams = {
-            ...attachment,
-            uploadedAt: new Date(attachment.uploadedAt)
-        };
+        return db.withTransaction(async (tx) => {
+            const insertParams = {
+                ...attachment,
+                uploadedAt: new Date(attachment.uploadedAt)
+            };
 
-        await db.query(`
-            INSERT INTO attachments (id, "ticketId", filename, originalname, size, "uploadedAt")
-            VALUES (@id, @ticketId, @filename, @originalname, @size, @uploadedAt)
-        `, insertParams);
+            await tx.query(`
+                INSERT INTO attachments (id, "ticketId", filename, originalname, size, "uploadedAt")
+                VALUES (@id, @ticketId, @filename, @originalname, @size, @uploadedAt)
+            `, insertParams);
 
-        return attachment;
+            await EventBus.emit(tx, 'attachment.uploaded', {
+                entityId: attachment.ticketId,
+                entityType: 'ticket',
+                metadata: { attachmentId: attachment.id }
+            });
+
+            return attachment;
+        });
     }
 }
