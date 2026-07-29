@@ -1,3 +1,4 @@
+import { LayoutManager } from '../layouts/LayoutManager';
 import { loadPageForHtmlView } from '../pageLoader';
 import { authAPI } from '../services/api';
 import { store } from '../state/store';
@@ -46,9 +47,8 @@ export class Router {
 
     public static enterClient(defaultView: HtmlViewName = 'my-tickets'): void {
         const user = store.getState().currentUser;
-        const nameEl = document.getElementById('client-sidebar-name');
-        if (nameEl && user) {
-            nameEl.textContent = user.fullName || user.username;
+        if (LayoutManager.client && user) {
+            LayoutManager.client.getSidebar().setUserName(user.fullName || user.username);
         }
 
         this.showScreen('client-screen');
@@ -57,15 +57,14 @@ export class Router {
 
     public static enterAdmin(defaultView: HtmlViewName = 'dashboard'): void {
         const user = store.getState().currentUser;
-        const nameEl = document.getElementById('admin-sidebar-name');
-        if (nameEl && user) {
-            nameEl.textContent = user.fullName || user.username;
+        if (LayoutManager.admin && user) {
+            LayoutManager.admin.getSidebar().setUserName(user.fullName || user.username);
         }
 
         // Show/hide Users tab in admin sidebar based on admin role
         const usersTab = document.getElementById('admin-nav-users');
         if (usersTab) {
-            usersTab.style.display = user && user.role === 'admin' ? 'block' : 'none';
+            usersTab.style.display = user && user.role === 'admin' ? 'flex' : 'none';
         }
 
         this.showScreen('admin-screen');
@@ -91,28 +90,43 @@ export class Router {
         const resolvedPortal: Portal =
             portal ?? (user?.role === 'admin' || user?.role === 'it-support' ? 'admin' : 'client');
 
-        const sidebarId = resolvedPortal === 'admin' ? 'admin-sidebar' : 'client-sidebar';
-        const sidebar = document.getElementById(sidebarId);
-        sidebar?.querySelectorAll('.sb-nav-btn').forEach(btn => {
-            const view = btn.getAttribute('data-view');
-            btn.classList.toggle('active', view === htmlViewName);
-        });
-
-        const titleId = resolvedPortal === 'admin' ? 'admin-page-title' : 'client-page-title';
-        const titleEl = document.getElementById(titleId);
-        if (titleEl) {
-            const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
-            titleEl.textContent = titles?.[resolvedPortal] ?? htmlViewName.replace(/-/g, ' ');
-        }
-
         if (resolvedPortal === 'admin') {
-            const filters = document.getElementById('admin-filters');
-            if (filters) {
-                filters.style.display = htmlViewName === 'all-tickets' ? '' : 'none';
+            if (LayoutManager.admin) {
+                LayoutManager.admin.getSidebar().setActiveView(htmlViewName);
+                const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
+                LayoutManager.admin.getTopbar().setTitle(titles?.admin ?? htmlViewName.replace(/-/g, ' '));
+                LayoutManager.admin.getTopbar().clearActions();
+            } else {
+                // Fallback for legacy
+                const sidebar = document.getElementById('admin-sidebar');
+                sidebar?.querySelectorAll('.sb-nav-btn').forEach(btn => {
+                    const view = btn.getAttribute('data-view');
+                    btn.classList.toggle('active', view === htmlViewName);
+                });
+                const titleEl = document.getElementById('admin-page-title');
+                if (titleEl) {
+                    const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
+                    titleEl.textContent = titles?.admin ?? htmlViewName.replace(/-/g, ' ');
+                }
             }
-            const userFilters = document.getElementById('admin-users-filters');
-            if (userFilters) {
-                userFilters.style.display = htmlViewName === 'users' ? '' : 'none';
+        } else {
+            if (LayoutManager.client) {
+                LayoutManager.client.getSidebar().setActiveView(htmlViewName);
+                const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
+                LayoutManager.client.getTopbar().setTitle(titles?.client ?? htmlViewName.replace(/-/g, ' '));
+                LayoutManager.client.getTopbar().clearActions();
+            } else {
+                // Fallback for legacy
+                const sidebar = document.getElementById('client-sidebar');
+                sidebar?.querySelectorAll('.sb-nav-btn').forEach(btn => {
+                    const view = btn.getAttribute('data-view');
+                    btn.classList.toggle('active', view === htmlViewName);
+                });
+                const titleEl = document.getElementById('client-page-title');
+                if (titleEl) {
+                    const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
+                    titleEl.textContent = titles?.client ?? htmlViewName.replace(/-/g, ' ');
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 import { Ticket } from '../types';
 
-export function getAssignees(ticket: Ticket): string[] {
+function getAssignees(ticket: Ticket): string[] {
     if (!ticket.assignee || ticket.assignee === 'Unassigned') return [];
     return ticket.assignee
         .split(',')

@@ -1,5 +1,7 @@
-import { ModalsComponent } from '../components/Modals';
+import { SearchIcon } from '../components/common/Icons';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
+import { LayoutManager } from '../layouts/LayoutManager';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
 import { User } from '../types';
@@ -38,8 +40,42 @@ export class UsersPage {
         `);
 
         LoadingManager.showSkeleton(container, 'users-table');
+        LayoutManager.admin?.getTopbar().setActions(this.createHeaderControls());
         this.initListeners();
         await this.refreshUsersList();
+    }
+
+    private static createHeaderControls(): HTMLElement {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.gap = '10px';
+        container.style.alignItems = 'center';
+        
+        container.innerHTML = `
+            <div class="search-box">
+                ${SearchIcon({ size: 14 })}
+                <input type="text" id="users-search-input" placeholder="Search users...">
+            </div>
+            <button id="create-user-btn" class="btn btn-primary" style="height: 36px; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Create User
+            </button>
+        `;
+
+        let searchTimeout: number | null = null;
+        container.querySelector('#users-search-input')?.addEventListener('input', e => {
+            const val = (e.target as HTMLInputElement).value;
+            if (searchTimeout !== null) window.clearTimeout(searchTimeout);
+            searchTimeout = window.setTimeout(() => {
+                this.refreshUsersList(val);
+            }, 300);
+        });
+
+        container.querySelector('#create-user-btn')?.addEventListener('click', () => {
+            this.openUserModal();
+        });
+
+        return container;
     }
 
     private static async refreshUsersList(search?: string): Promise<void> {
@@ -96,12 +132,7 @@ export class UsersPage {
                         u => `
                     <tr>
                         <td>
-                            <div class="user-info-cell">
-                                <div class="user-avatar">${escapeHTML(u.fullName.charAt(0).toUpperCase())}</div>
-                                <div class="user-details">
-                                    <span class="user-name">${escapeHTML(u.fullName)}</span>
-                                </div>
-                            </div>
+                            <span class="user-name" style="font-weight: 600; color: var(--text-heading);">${escapeHTML(u.fullName)}</span>
                         </td>
                         <td><span class="text-secondary">@${escapeHTML(u.username)}</span></td>
                         <td>${escapeHTML(u.email)}</td>
@@ -116,10 +147,10 @@ export class UsersPage {
                             </span>
                         </td>
                         <td style="text-align:right">
-                            <button class="btn btn-icon btn-edit-user" data-id="${escapeHTML(u.id)}" title="Edit User">
+                            <button class="btn btn-ghost btn-icon btn-edit-user" data-id="${escapeHTML(u.id)}" title="Edit User">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                             </button>
-                            <button class="btn btn-icon btn-reset-user" data-id="${escapeHTML(u.id)}" title="Reset Password">
+                            <button class="btn btn-ghost btn-icon btn-reset-user" data-id="${escapeHTML(u.id)}" title="Reset Password">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             </button>
                             <button class="btn btn-icon btn-danger btn-deactivate-user" data-id="${escapeHTML(u.id)}" title="${Number(u.active) === 1 ? 'Deactivate User' : 'Activate User'}">
@@ -191,23 +222,6 @@ export class UsersPage {
         if (this.listenersBound) return;
         this.listenersBound = true;
 
-        // Search listener
-        const searchInput = document.getElementById('users-search-input');
-        let searchTimeout: number | null = null;
-        searchInput?.addEventListener('input', e => {
-            const val = (e.target as HTMLInputElement).value;
-            if (searchTimeout !== null) clearTimeout(searchTimeout);
-            searchTimeout = window.setTimeout(() => {
-                this.refreshUsersList(val);
-            }, 300);
-        });
-
-        // Create user button
-        const createBtn = document.getElementById('create-user-btn');
-        createBtn?.addEventListener('click', () => {
-            this.openUserModal();
-        });
-
         // User password toggle
         const passwordToggle = document.getElementById('user-password-toggle');
         const passwordInput = document.getElementById('user-password') as HTMLInputElement;
@@ -268,7 +282,7 @@ export class UsersPage {
                     showToast('User created successfully', 'success');
                 }
 
-                ModalsComponent.closeModal('user-modal');
+                ModalsManager.closeModal('user-modal');
                 this.refreshUsersList();
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Action failed', 'error');
@@ -307,7 +321,7 @@ export class UsersPage {
             try {
                 await usersAPI.resetPassword(idField.value, password);
                 showToast('Password reset successfully', 'success');
-                ModalsComponent.closeModal('reset-password-modal');
+                ModalsManager.closeModal('reset-password-modal');
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Reset failed', 'error');
             } finally {
@@ -317,10 +331,10 @@ export class UsersPage {
 
         // Cancel button listeners
         document.getElementById('cancel-user-modal-btn')?.addEventListener('click', () => {
-            ModalsComponent.closeModal('user-modal');
+            ModalsManager.closeModal('user-modal');
         });
         document.getElementById('cancel-reset-modal-btn')?.addEventListener('click', () => {
-            ModalsComponent.closeModal('reset-password-modal');
+            ModalsManager.closeModal('reset-password-modal');
         });
     }
 
@@ -384,7 +398,7 @@ export class UsersPage {
             if (activeGroup) activeGroup.style.display = 'none';
         }
 
-        ModalsComponent.openModal('user-modal');
+        ModalsManager.openModal('user-modal');
     }
 
     private static openResetPasswordModal(user: User): void {
@@ -396,6 +410,6 @@ export class UsersPage {
         if (passwordInput) passwordInput.value = '';
         if (confirmInput) confirmInput.value = '';
 
-        ModalsComponent.openModal('reset-password-modal');
+        ModalsManager.openModal('reset-password-modal');
     }
 }

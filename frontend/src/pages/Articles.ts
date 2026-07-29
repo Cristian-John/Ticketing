@@ -1,4 +1,5 @@
-import { ModalsComponent } from '../components/Modals';
+import { SearchIcon } from '../components/common/Icons';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
@@ -72,8 +73,11 @@ export class ArticlesPage {
     private static renderClientArticles(container: HTMLElement, articles: Article[]): void {
         container.innerHTML = `
             <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;">
-                <input type="text" id="kb-search-client" class="search-box" style="flex:1;max-width:400px;"
-                    placeholder="Search articles, FAQs..." value="${escapeHTML(this.clientSearchQuery)}">
+                <div class="search-box" style="flex:1;max-width:400px;">
+                    ${SearchIcon({ size: 14 })}
+                    <input type="text" id="kb-search-client" style="width: 100%;"
+                        placeholder="Search articles, FAQs..." value="${escapeHTML(this.clientSearchQuery)}">
+                </div>
                 <button class="btn btn-primary" id="kb-search-btn" type="button">Search</button>
             </div>
             <div id="kb-client-list" style="display:grid;gap:15px;grid-template-columns:1fr;align-items:start;"></div>
@@ -163,7 +167,7 @@ export class ArticlesPage {
         });
 
         document.getElementById('btn-new-article')?.addEventListener('click', () => {
-            ModalsComponent.openModal('article-modal');
+            ModalsManager.openModal('article-modal');
         });
     }
 
@@ -236,7 +240,7 @@ export class ArticlesPage {
 
                 showToast('Article created successfully!', 'success');
                 form.reset();
-                ModalsComponent.closeModal('article-modal');
+                ModalsManager.closeModal('article-modal');
                 await this.load();
             } catch (err: unknown) {
                 showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create article', 'error');

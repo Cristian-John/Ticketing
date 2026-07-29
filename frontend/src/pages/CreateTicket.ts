@@ -1,4 +1,4 @@
-import { ModalsComponent } from '../components/Modals';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
@@ -16,7 +16,7 @@ export class CreateTicketPage {
         ) as HTMLInputElement;
 
         openBtn?.addEventListener('click', () => {
-            ModalsComponent.openModal('ticket-modal');
+            ModalsManager.openModal('ticket-modal');
             const titleInput = document.getElementById('ticket-title') as HTMLInputElement;
             titleInput?.focus();
         });
@@ -107,7 +107,7 @@ export class CreateTicketPage {
     }
 
     private static closeModal(form: HTMLFormElement | null): void {
-        ModalsComponent.closeModal('ticket-modal');
+        ModalsManager.closeModal('ticket-modal');
         form?.reset();
         const customDeptGroup = document.getElementById('custom-dept-group');
         const customDeptInput = document.getElementById(

@@ -10,7 +10,7 @@ import {
     getStatusBadgeClass,
 } from '../utils/formatters';
 import { EditTicketModal } from './EditTicketModal';
-import { ModalsComponent } from './Modals';
+import { ModalsManager } from './modals/ModalsManager';
 import { showToast } from './Toast';
 
 export class TicketDetailModal {
@@ -33,7 +33,7 @@ export class TicketDetailModal {
         this.create();
         this.render();
         this.attachEvents();
-        ModalsComponent.openModal('view-ticket-modal');
+        ModalsManager.openModal('view-ticket-modal');
     }
 
     private create(): void {
