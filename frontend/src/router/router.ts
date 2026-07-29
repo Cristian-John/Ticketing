@@ -3,8 +3,8 @@ import { loadPageForHtmlView } from '../pageLoader';
 import { authAPI } from '../services/api';
 import { store } from '../state/store';
 
-export type ScreenId = 'login-screen' | 'client-screen' | 'admin-screen';
-export type Portal = 'client' | 'admin';
+export type ScreenId = 'login-screen' | 'client-screen' | 'admin-screen' | 'support-screen';
+export type Portal = 'client' | 'admin' | 'support';
 
 /** HTML sidebar data-view values used in index.html */
 export type HtmlViewName =
@@ -14,22 +14,31 @@ export type HtmlViewName =
     | 'all-tickets'
     | 'resolved'
     | 'users'
-    | 'profile';
+    | 'profile'
+    | 'support-dashboard'
+    | 'unclaimed-tickets'
+    | 'collaborating-tickets';
 
-const VIEW_TITLES: Record<HtmlViewName, { client?: string; admin?: string }> = {
-    'my-tickets': { client: 'My Tickets' },
-    'knowledge-base': { client: 'Knowledge Base', admin: 'Knowledge Base' },
+const VIEW_TITLES: Record<HtmlViewName, { client?: string; admin?: string; support?: string }> = {
+    'my-tickets': { client: 'My Tickets', support: 'My Tickets' },
+    'knowledge-base': { client: 'Knowledge Base', admin: 'Knowledge Base', support: 'Knowledge Base' },
     dashboard: { admin: 'Dashboard' },
-    'all-tickets': { admin: 'All Tickets' },
+    'support-dashboard': { support: 'Support Dashboard' },
+    'all-tickets': { admin: 'All Tickets', support: 'All Tickets' },
+    'unclaimed-tickets': { support: 'Unclaimed Tickets' },
+    'collaborating-tickets': { support: 'Collaborating Tickets' },
     resolved: { admin: 'Resolved & Ratings' },
     users: { admin: 'User Management' },
-    profile: { client: 'My Profile', admin: 'My Profile' },
+    profile: { client: 'My Profile', admin: 'My Profile', support: 'My Profile' },
 };
 
 /** Maps HTML nav view names to store currentView keys (unchanged store API). */
 const HTML_TO_STORE_VIEW: Record<HtmlViewName, string> = {
     dashboard: 'dashboard',
+    'support-dashboard': 'dashboard',
     'all-tickets': 'tickets',
+    'unclaimed-tickets': 'tickets',
+    'collaborating-tickets': 'tickets',
     resolved: 'tickets',
     'my-tickets': 'tickets',
     'knowledge-base': 'kb',
@@ -47,6 +56,12 @@ export class Router {
 
     public static enterClient(defaultView: HtmlViewName = 'my-tickets'): void {
         const user = store.getState().currentUser;
+        if (user && user.role !== 'client') {
+            console.warn(`enterClient called for ${user.role} user! Redirecting...`);
+            this.enterPortal();
+            return;
+        }
+
         if (LayoutManager.client && user) {
             LayoutManager.client.getSidebar().setUserName(user.fullName || user.username);
         }
@@ -57,6 +72,12 @@ export class Router {
 
     public static enterAdmin(defaultView: HtmlViewName = 'dashboard'): void {
         const user = store.getState().currentUser;
+        if (user && user.role !== 'admin') {
+            console.warn(`enterAdmin called for ${user.role} user! Redirecting...`);
+            this.enterPortal();
+            return;
+        }
+
         if (LayoutManager.admin && user) {
             LayoutManager.admin.getSidebar().setUserName(user.fullName || user.username);
         }
@@ -71,6 +92,22 @@ export class Router {
         this.switchView(defaultView, 'admin');
     }
 
+    public static enterSupport(defaultView: HtmlViewName = 'support-dashboard'): void {
+        const user = store.getState().currentUser;
+        if (user && user.role !== 'it-support') {
+            console.warn(`enterSupport called for ${user.role} user! Redirecting...`);
+            this.enterPortal();
+            return;
+        }
+
+        if (LayoutManager.support && user) {
+            LayoutManager.support.getSidebar().setUserName(user.fullName || user.username);
+        }
+
+        this.showScreen('support-screen');
+        this.switchView(defaultView, 'support');
+    }
+
     public static enterPortal(): void {
         const user = store.getState().currentUser;
         if (!user) {
@@ -78,8 +115,10 @@ export class Router {
             return;
         }
 
-        if (user.role === 'admin' || user.role === 'it-support') {
+        if (user.role === 'admin') {
             this.enterAdmin('dashboard');
+        } else if (user.role === 'it-support') {
+            this.enterSupport('support-dashboard');
         } else {
             this.enterClient('my-tickets');
         }
@@ -87,8 +126,11 @@ export class Router {
 
     public static switchView(htmlViewName: string, portal?: Portal): void {
         const user = store.getState().currentUser;
-        const resolvedPortal: Portal =
-            portal ?? (user?.role === 'admin' || user?.role === 'it-support' ? 'admin' : 'client');
+        let resolvedPortal: Portal = portal || 'client';
+        if (!portal) {
+            if (user?.role === 'admin') resolvedPortal = 'admin';
+            else if (user?.role === 'it-support') resolvedPortal = 'support';
+        }
 
         if (resolvedPortal === 'admin') {
             if (LayoutManager.admin) {
@@ -108,6 +150,13 @@ export class Router {
                     const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
                     titleEl.textContent = titles?.admin ?? htmlViewName.replace(/-/g, ' ');
                 }
+            }
+        } else if (resolvedPortal === 'support') {
+            if (LayoutManager.support) {
+                LayoutManager.support.getSidebar().setActiveView(htmlViewName);
+                const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
+                LayoutManager.support.getTopbar().setTitle(titles?.support ?? htmlViewName.replace(/-/g, ' '));
+                LayoutManager.support.getTopbar().clearActions();
             }
         } else {
             if (LayoutManager.client) {

@@ -6,6 +6,7 @@ import { HtmlViewName } from '../router/router';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
 import { Ticket } from '../types';
+import { getErrorMessage, handleUIError } from '../utils/errorHandler';
 import {
     debounce,
     escapeHTML,
@@ -83,13 +84,13 @@ export class TicketsPage {
                 }
             });
         } catch (err) {
-            console.error('Failed to load tickets:', err);
+            handleUIError(err, 'Failed to load tickets');
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     </div>
-                    <p>Failed to load tickets. Please try again.</p>
+                    <p>${escapeHTML(getErrorMessage(err, 'Failed to load tickets. Please try again.'))}</p>
                 </div>
             `;
         }

@@ -16,15 +16,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Cristian-John/Ticketing.git"
+    "url": "git+https://github.com/CristianJohnn/Ticketing.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Cristian-John/Ticketing/issues"
+    "url": "https://github.com/CristianJohnn/Ticketing/issues"
   },
-  "homepage": "https://github.com/Cristian-John/Ticketing#readme",
+  "homepage": "https://github.com/CristianJohnn/Ticketing#readme",
   "devDependencies": {
     "@types/node": "^26.1.1",
     "concurrently": "^9.1.0"

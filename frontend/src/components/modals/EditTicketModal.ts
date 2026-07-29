@@ -55,12 +55,6 @@ export class EditTicketModal {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="edit-ticket-assignee">Assignee</label>
-                    <select id="edit-ticket-assignee" class="form-control">
-                        <!-- Loaded dynamically -->
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="edit-ticket-due">Due Date & Time</label>
                     <input type="datetime-local" id="edit-ticket-due" class="form-control">
                 </div>

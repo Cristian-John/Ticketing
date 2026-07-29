@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc"
   },
   "dependencies": {
@@ -27,6 +27,7 @@
     "@types/node": "^25.4.0",
     "@types/pg": "^8.20.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.3"
   }
 }

@@ -4,6 +4,9 @@ import { LogoutConfirmModal } from './LogoutConfirmModal';
 import { RatingModal } from './RatingModal';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { TicketModal } from './TicketModal';
+import { TransferTicketModal } from './TransferTicketModal';
+import { UpdateStatusModal } from './UpdateStatusModal';
+import { AddCollaboratorModal } from './AddCollaboratorModal';
 import { UserModal } from './UserModal';
 import { ViewTicketModal } from './ViewTicketModal';
 
@@ -31,6 +34,9 @@ export class ModalsManager {
         appendModal(RatingModal);
         appendModal(ArticleModal);
         appendModal(LogoutConfirmModal);
+        appendModal(UpdateStatusModal);
+        appendModal(TransferTicketModal);
+        appendModal(AddCollaboratorModal);
 
         // Bind global close listeners to the new modals
         this.initModalCloseListeners();

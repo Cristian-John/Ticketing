@@ -18,6 +18,24 @@ export interface Ticket {
     attachments?: Attachment[];
     ratingRequested?: number;
     userId?: string;
+    primary_assignee_id?: string | null;
+    collaborators?: TicketCollaborator[];
+}
+
+export interface TicketHistory {
+    id: string;
+    ticket_id: string;
+    actor_id: string;
+    event_type: string;
+    event_data: any;
+    created_at: string;
+}
+
+export interface TicketCollaborator {
+    ticket_id: string;
+    user_id: string;
+    role: string;
+    created_at: string;
 }
 
 export interface Note {

@@ -2,6 +2,7 @@ import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
 import { Ticket } from '../types';
 import { createElement } from '../utils/dom';
+import { handleUIError } from '../utils/errorHandler';
 import {
     formatAssignees,
     formatDate,
@@ -10,8 +11,12 @@ import {
     getStatusBadgeClass,
 } from '../utils/formatters';
 import { EditTicketModal } from './EditTicketModal';
+import { TransferTicketModal } from './TransferTicketModal';
+import { AddCollaboratorModal } from './AddCollaboratorModal';
+import { UpdateStatusModal } from './UpdateStatusModal';
 import { ModalsManager } from './modals/ModalsManager';
 import { showToast } from './Toast';
+import { resolveTicketCapabilities } from '../utils/ticketPermissions';
 
 export class TicketDetailModal {
     private container: HTMLElement;
@@ -56,15 +61,75 @@ export class TicketDetailModal {
         detailBadges.appendChild(createElement('span', { className: `badge ${getSeverityBadgeClass(this.ticket.severity)}`, textContent: this.ticket.severity }));
         badgesWrapper.appendChild(detailBadges);
 
-        if (user && (user.role === 'admin' || user.role === 'it-support')) {
-            const editBtnSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Ticket`;
-            const editBtn = createElement('button', {
-                className: 'btn btn-secondary btn-sm',
-                id: 'detail-edit-btn',
-                innerHTML: editBtnSvg,
-                attributes: { style: 'padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px;' }
-            });
-            badgesWrapper.appendChild(editBtn);
+        const caps = resolveTicketCapabilities(this.ticket, user);
+
+        if (caps.canClaim || caps.canTransfer || caps.canAddCollaborator || caps.canUpdateStatus || caps.canEdit || caps.canReopen) {
+            const actionsDiv = createElement('div', { className: 'ticket-actions', attributes: { style: 'display:flex; gap:8px; margin-top:8px;' } });
+            
+            if (caps.canClaim) {
+                const claimBtn = createElement('button', {
+                    className: 'btn btn-primary btn-sm',
+                    id: 'detail-claim-btn',
+                    textContent: 'Claim Ticket',
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
+                });
+                actionsDiv.appendChild(claimBtn);
+            }
+            
+            if (caps.canTransfer) {
+                const transferBtn = createElement('button', {
+                    className: 'btn btn-secondary btn-sm',
+                    id: 'detail-transfer-btn',
+                    textContent: 'Transfer',
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
+                });
+                actionsDiv.appendChild(transferBtn);
+            }
+
+            if (caps.canAddCollaborator) {
+                const collabBtn = createElement('button', {
+                    className: 'btn btn-secondary btn-sm',
+                    id: 'detail-collab-btn',
+                    textContent: 'Add Collaborator',
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
+                });
+                actionsDiv.appendChild(collabBtn);
+            }
+
+            if (caps.canUpdateStatus) {
+                const statusBtn = createElement('button', {
+                    className: 'btn btn-secondary btn-sm',
+                    id: 'detail-status-btn',
+                    textContent: 'Update Status',
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
+                });
+                actionsDiv.appendChild(statusBtn);
+            }
+
+            if (caps.canEdit) {
+                const editBtnSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Details`;
+                const editBtn = createElement('button', {
+                    className: 'btn btn-secondary btn-sm',
+                    id: 'detail-edit-btn',
+                    innerHTML: editBtnSvg,
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px;' }
+                });
+                actionsDiv.appendChild(editBtn);
+            }
+
+            if (caps.canReopen) {
+                const reopenBtn = createElement('button', {
+                    className: 'btn btn-primary btn-sm',
+                    id: 'detail-reopen-btn',
+                    textContent: 'Reopen Ticket',
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
+                });
+                actionsDiv.appendChild(reopenBtn);
+            }
+
+            if (actionsDiv.children.length > 0) {
+                badgesWrapper.appendChild(actionsDiv);
+            }
         }
 
         headerDiv.appendChild(titleWrapper);
@@ -135,12 +200,26 @@ export class TicketDetailModal {
         }
         notesDiv.appendChild(notesListDiv);
 
-        const form = createElement('form', { id: 'add-note-form', className: 'add-note-form', attributes: { style: 'margin-top: var(--space-md);' } });
-        form.appendChild(createElement('textarea', { id: 'note-text', className: 'form-control', attributes: { placeholder: 'Add a note or update...', rows: '3', required: 'true' } }));
-        form.appendChild(createElement('button', { className: 'btn btn-secondary btn-sm', textContent: 'Post Note', attributes: { type: 'submit', style: 'margin-top: var(--space-sm);' } }));
-        
-        notesDiv.appendChild(form);
+        if (caps.canPostNote) {
+            const form = createElement('form', { id: 'add-note-form', className: 'add-note-form', attributes: { style: 'margin-top: var(--space-md);' } });
+            form.appendChild(createElement('textarea', { id: 'note-text', className: 'form-control', attributes: { placeholder: 'Add a note or update...', rows: '3', required: 'true' } }));
+            form.appendChild(createElement('button', { className: 'btn btn-secondary btn-sm', textContent: 'Post Note', attributes: { type: 'submit', style: 'margin-top: var(--space-sm);' } }));
+            
+            notesDiv.appendChild(form);
+        }
         this.container.appendChild(notesDiv);
+
+        if (caps.canViewHistory) {
+            // History Section container
+            const historyDiv = createElement('div', { className: 'detail-section', id: 'history-section' });
+            historyDiv.appendChild(createElement('h3', { textContent: 'Event History' }));
+            const historyLoading = createElement('p', { className: 'text-muted', textContent: 'Loading history...' });
+            historyDiv.appendChild(historyLoading);
+            this.container.appendChild(historyDiv);
+
+            // Load History
+            this.loadHistory();
+        }
     }
 
     private render(): void {
@@ -183,10 +262,169 @@ export class TicketDetailModal {
                     this.open();
                     this.onRefresh();
                 } catch (err: unknown) {
-                    showToast((err instanceof Error ? err.message : String(err)) || 'Failed to add note', 'error');
+                    handleUIError(err, 'Failed to add note');
                 }
             };
             noteForm.addEventListener('submit', this.boundSubmitHandler);
+        }
+
+        const claimBtn = document.getElementById('detail-claim-btn');
+        if (claimBtn) {
+            claimBtn.addEventListener('click', async () => {
+                try {
+                    await ticketsAPI.claim(this.ticket.id);
+                    showToast('Ticket claimed successfully', 'success');
+                    const updated = await ticketsAPI.getById(this.ticket.id);
+                    this.ticket = updated;
+                    this.open();
+                    this.onRefresh();
+                } catch (err) {
+                    handleUIError(err, 'Failed to claim ticket');
+                }
+            });
+        }
+
+        const transferBtn = document.getElementById('detail-transfer-btn');
+        if (transferBtn) {
+            transferBtn.addEventListener('click', () => {
+                const transferModal = new TransferTicketModal(this.ticket, async () => {
+                    try {
+                        const updated = await ticketsAPI.getById(this.ticket.id);
+                        this.ticket = updated;
+                        this.open();
+                        this.onRefresh();
+                    } catch (err) {
+                        console.error('Failed to reload ticket after transfer:', err);
+                    }
+                });
+                transferModal.open();
+            });
+        }
+
+        const collabBtn = document.getElementById('detail-collab-btn');
+        if (collabBtn) {
+            collabBtn.addEventListener('click', () => {
+                const collabModal = new AddCollaboratorModal(this.ticket, async () => {
+                    try {
+                        const updated = await ticketsAPI.getById(this.ticket.id);
+                        this.ticket = updated;
+                        this.open();
+                        this.onRefresh();
+                    } catch (err) {
+                        console.error('Failed to reload ticket after adding collab:', err);
+                    }
+                });
+                collabModal.open().catch(console.error);
+            });
+        }
+
+        const statusBtn = document.getElementById('detail-status-btn');
+        if (statusBtn) {
+            statusBtn.addEventListener('click', () => {
+                const statusModal = new UpdateStatusModal(this.ticket, async () => {
+                    try {
+                        const updated = await ticketsAPI.getById(this.ticket.id);
+                        this.ticket = updated;
+                        this.open();
+                        this.onRefresh();
+                    } catch (err) {
+                        console.error('Failed to reload ticket after updating status:', err);
+                    }
+                });
+                statusModal.open();
+            });
+        }
+
+        const reopenBtn = document.getElementById('detail-reopen-btn');
+        if (reopenBtn) {
+            reopenBtn.addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to reopen this ticket?')) return;
+                try {
+                    await ticketsAPI.reopen(this.ticket.id);
+                    showToast('Ticket reopened successfully', 'success');
+                    const updated = await ticketsAPI.getById(this.ticket.id);
+                    this.ticket = updated;
+                    this.open();
+                    this.onRefresh();
+                } catch (err) {
+                    handleUIError(err, 'Failed to reopen ticket');
+                }
+            });
+        }
+    }
+
+    private async loadHistory(): Promise<void> {
+        try {
+            const history = await ticketsAPI.getHistory(this.ticket.id);
+            const historySection = document.getElementById('history-section');
+            if (!historySection) return;
+
+            historySection.innerHTML = '';
+            historySection.appendChild(createElement('h3', { textContent: 'Event History' }));
+
+            if (history.length === 0) {
+                historySection.appendChild(createElement('p', { className: 'text-muted', textContent: 'No history events yet.' }));
+                return;
+            }
+
+            const timelineContainer = createElement('div', { className: 'timeline-container' });
+
+            // Extensible event renderers
+            const renderers: Record<string, (ev: any) => string> = {
+                created: () => 'Ticket created.',
+                claimed: (ev) => `Claimed by <strong>${ev.event_data?.assignee_name || ev.actor_id}</strong>.`,
+                assigned: (ev) => `Assigned to <strong>${ev.event_data?.assignee_name || ev.actor_id}</strong>.`,
+                transferred: (ev) => `Transferred to department: <strong>${ev.event_data?.new_department || 'Unknown'}</strong>.`,
+                ownership_transferred: (ev) => {
+                    let text = `Ownership transferred to <strong>${ev.event_data?.newOwnerName || ev.event_data?.newOwnerId}</strong>.`;
+                    if (ev.event_data?.reason) {
+                        text += ` Reason: <em>${ev.event_data.reason}</em>`;
+                    }
+                    if (ev.event_data?.remainedCollaborator) {
+                        text += ` (Previous owner remained as collaborator).`;
+                    }
+                    return text;
+                },
+                collaborator_added: (ev) => `Collaborator <strong>${ev.event_data?.collaborator_id || 'Unknown'}</strong> added.`,
+                reopened: (ev) => `Reopened: ${ev.event_data?.reason || 'No reason provided'}.`,
+                status_updated: (ev) => `Status changed from ${ev.event_data?.old_status} to <strong>${ev.event_data?.new_status}</strong>.`,
+                default: (ev) => {
+                    const dataStr = ev.event_data ? JSON.stringify(ev.event_data) : '';
+                    return `System event: ${ev.event_type} ${dataStr}`;
+                }
+            };
+
+            history.forEach(ev => {
+                const item = createElement('div', { className: 'timeline-item' });
+                item.setAttribute('data-event', ev.event_type);
+                
+                const icon = createElement('div', { className: 'timeline-icon' });
+                item.appendChild(icon);
+
+                const content = createElement('div', { className: 'timeline-content' });
+                
+                const header = createElement('div', { className: 'timeline-header' });
+                
+                // Format title (capitalize first letter, replace underscores)
+                const titleText = ev.event_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+                header.appendChild(createElement('span', { className: 'timeline-title', textContent: titleText }));
+                
+                const date = new Date(ev.created_at).toLocaleString();
+                header.appendChild(createElement('span', { className: 'timeline-time', textContent: date }));
+                content.appendChild(header);
+
+                const body = createElement('div', { className: 'timeline-body' });
+                const renderFn = renderers[ev.event_type] || renderers['default'];
+                body.innerHTML = renderFn(ev);
+                content.appendChild(body);
+
+                item.appendChild(content);
+                timelineContainer.appendChild(item);
+            });
+
+            historySection.appendChild(timelineContainer);
+        } catch (err) {
+            console.error('Failed to load history', err);
         }
     }
 
