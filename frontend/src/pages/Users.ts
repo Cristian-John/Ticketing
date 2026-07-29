@@ -5,6 +5,7 @@ import { LayoutManager } from '../layouts/LayoutManager';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
 import { User } from '../types';
+import { getErrorMessage, handleUIError } from '../utils/errorHandler';
 import { escapeHTML } from '../utils/formatters';
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
@@ -202,7 +203,7 @@ export class UsersPage {
                                 showToast(`User ${action}d successfully`, 'success');
                                 this.refreshUsersList();
                             } catch (err: unknown) {
-                                showToast((err instanceof Error ? err.message : String(err)) || 'Deactivation failed', 'error');
+                                handleUIError(err, 'Deactivation failed');
                             }
                         }
                     }
@@ -213,7 +214,7 @@ export class UsersPage {
         } catch (err: unknown) {
             const tbody = document.getElementById('users-table-body');
             if (tbody) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML((err instanceof Error ? err.message : String(err)))}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML(getErrorMessage(err, 'Unknown error'))}</td></tr>`;
             }
         }
     }
@@ -285,7 +286,7 @@ export class UsersPage {
                 ModalsManager.closeModal('user-modal');
                 this.refreshUsersList();
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Action failed', 'error');
+                handleUIError(err, 'Action failed');
             }
         });
 
@@ -323,7 +324,7 @@ export class UsersPage {
                 showToast('Password reset successfully', 'success');
                 ModalsManager.closeModal('reset-password-modal');
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Reset failed', 'error');
+                handleUIError(err, 'Reset failed');
             } finally {
                 LoadingManager.setButtonLoading(submitBtn, false);
             }

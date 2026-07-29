@@ -9,6 +9,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { ClientLayout } from './layouts/ClientLayout';
 import { LayoutManager } from './layouts/LayoutManager';
 import { LoginLayout } from './layouts/LoginLayout';
+import { SupportLayout } from './layouts/SupportLayout';
 import { ArticlesPage } from './pages/Articles';
 import { CreateTicketPage } from './pages/CreateTicket';
 import { LoginPage } from './pages/Login';
@@ -42,10 +43,13 @@ class App {
             const legacyAdmin = document.getElementById('admin-screen');
             if (legacyAdmin) {
                 LayoutManager.admin = new AdminLayout();
-                
-
-
                 legacyAdmin.replaceWith(LayoutManager.admin.getElement());
+            }
+
+            const legacySupport = document.getElementById('support-screen');
+            if (legacySupport) {
+                LayoutManager.support = new SupportLayout();
+                legacySupport.replaceWith(LayoutManager.support.getElement());
             }
 
             ModalsManager.initializeModals();

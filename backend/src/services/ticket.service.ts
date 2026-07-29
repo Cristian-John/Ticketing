@@ -1,5 +1,6 @@
 import { db } from '../config/db';
 import { Ticket, Note, Attachment } from '../types';
+import { TicketWorkflowService } from './ticketWorkflow.service';
 
 export class TicketService {
     private static formatNoteTime(time: any): string {
@@ -182,7 +183,7 @@ export class TicketService {
             await db.query(sql, values);
         }
 
-        // Generate system notes for operational changes
+        // Generate system events for operational changes
         const fieldsToTrack: (keyof Ticket)[] = ['status', 'severity', 'priority', 'assignee', 'dueAt'];
         const changer = changedBy || 'Admin';
         for (const field of fieldsToTrack) {
@@ -200,9 +201,10 @@ export class TicketService {
                 }
                 if (oldVal === newVal) continue;
 
-                const fieldNameFormatted = field === 'dueAt' ? 'due date' : field;
-                const noteText = `${changer} changed ${fieldNameFormatted} from ${oldVal} to ${newVal}`;
-                await this.addNote(id, noteText, 'System');
+                await TicketWorkflowService.logEvent(id, changer, `${field}_changed`, {
+                    old_value: oldVal,
+                    new_value: newVal
+                });
             }
         }
 

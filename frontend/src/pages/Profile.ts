@@ -1,6 +1,7 @@
 import { showToast } from '../components/Toast';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
+import { handleUIError } from '../utils/errorHandler';
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
 import { TransitionManager } from '../utils/transitionManager';
@@ -221,7 +222,7 @@ export class ProfilePage {
                 );
                 form.reset();
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to change password.', 'error');
+                handleUIError(err, 'Failed to change password');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;

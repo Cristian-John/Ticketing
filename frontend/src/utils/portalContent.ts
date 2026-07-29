@@ -2,11 +2,16 @@ import { LayoutManager } from '../layouts/LayoutManager';
 import { createElement } from './dom';
 
 export function getPortalContentContainer(role: string): HTMLElement | null {
-    if (role === 'admin' || role === 'it-support') {
+    if (role === 'admin') {
         if (LayoutManager.admin) {
             return LayoutManager.admin.getContentArea();
         }
         return document.getElementById('admin-content');
+    } else if (role === 'it-support') {
+        if (LayoutManager.support) {
+            return LayoutManager.support.getContentArea();
+        }
+        return document.getElementById('support-content');
     } else {
         if (LayoutManager.client) {
             return LayoutManager.client.getContentArea();

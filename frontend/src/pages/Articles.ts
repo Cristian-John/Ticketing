@@ -4,6 +4,7 @@ import { showToast } from '../components/Toast';
 import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
 import { Article } from '../types';
+import { handleUIError } from '../utils/errorHandler';
 import { debounce,escapeHTML, formatDate } from '../utils/formatters';
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
@@ -50,7 +51,7 @@ export class ArticlesPage {
                 this.renderArticles(articles);
             });
         } catch (err) {
-            console.error('Failed to load KB articles:', err);
+            handleUIError(err, 'Failed to load knowledge base articles');
         }
     }
 
@@ -243,7 +244,7 @@ export class ArticlesPage {
                 ModalsManager.closeModal('article-modal');
                 await this.load();
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create article', 'error');
+                handleUIError(err, 'Failed to create article');
             }
         });
     }

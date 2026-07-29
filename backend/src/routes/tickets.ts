@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { TicketController } from '../controllers/ticket.controller';
+import { TicketWorkflowController } from '../controllers/ticketWorkflow.controller';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
@@ -21,6 +22,14 @@ router.delete('/:id', TicketController.delete);
 
 // Note routes
 router.post('/:id/notes', TicketController.addNote);
+
+// Workflow routes
+router.post('/:id/claim', TicketWorkflowController.claim);
+router.post('/:id/assign', TicketWorkflowController.assign);
+router.post('/:id/transfer', TicketWorkflowController.transfer);
+router.post('/:id/collaborators', TicketWorkflowController.addCollaborator);
+router.post('/:id/reopen', TicketWorkflowController.reopen);
+router.get('/:id/history', TicketWorkflowController.getHistory);
 
 // Attachment upload route
 router.post('/:id/attachments', upload.single('file'), TicketController.uploadAttachment);

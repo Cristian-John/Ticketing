@@ -2,6 +2,7 @@ import { showToast } from '../components/Toast';
 import { Router } from '../router/router';
 import { authAPI } from '../services/api';
 import { store } from '../state/store';
+import { handleUIError } from '../utils/errorHandler';
 import { LoadingManager } from '../utils/loadingManager';
 
 export class LoginPage {
@@ -148,7 +149,7 @@ export class LoginPage {
                         toggleAuthMode?.click();
                     }
                 } catch (err: unknown) {
-                    showToast((err instanceof Error ? err.message : String(err)) || 'Registration failed', 'error');
+                    handleUIError(err, 'Registration failed');
                 } finally {
                     LoadingManager.setButtonLoading(submitBtn, false);
                 }
@@ -169,14 +170,10 @@ export class LoginPage {
                         store.setSession(res.user, rememberMe);
                         showToast(`Welcome back, ${res.user.fullName}!`, 'success');
 
-                        if (res.user.role === 'admin' || res.user.role === 'it-support') {
-                            Router.enterAdmin('dashboard');
-                        } else {
-                            Router.enterClient('my-tickets');
-                        }
+                        Router.enterPortal();
                     }
                 } catch (err: unknown) {
-                    showToast((err instanceof Error ? err.message : String(err)) || 'Login failed', 'error');
+                    handleUIError(err, 'Login failed');
                 } finally {
                     LoadingManager.setButtonLoading(submitBtn, false);
                 }

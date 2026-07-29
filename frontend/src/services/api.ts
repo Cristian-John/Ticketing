@@ -92,6 +92,26 @@ export const ticketsAPI = {
             body: formData,
         });
     },
+    claim: (id: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/claim`, { method: 'POST' }),
+    assign: (id: string, assigneeId: string, assigneeName: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/assign`, {
+            method: 'POST',
+            body: JSON.stringify({ assigneeId, assigneeName }),
+        }),
+    transfer: (id: string, payload: { targetUserId: string; reason: string; remainCollaborator: boolean }): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/transfer`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        }),
+    addCollaborator: (id: string, targetUserId: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/collaborators`, {
+            method: 'POST',
+            body: JSON.stringify({ targetUserId }),
+        }),
+    reopen: (id: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/reopen`, { method: 'POST' }),
+    getHistory: (id: string): Promise<any[]> => api<any[]>(`/tickets/${id}/history`),
 };
 
 export const articlesAPI = {
