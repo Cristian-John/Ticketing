@@ -1,4 +1,5 @@
 import { ticketsAPI, usersAPI } from '../services/api';
+import { store } from '../state/store';
 import { Ticket } from '../types';
 import { createElement } from '../utils/dom';
 import { handleUIError } from '../utils/errorHandler';
@@ -20,6 +21,26 @@ export class TransferTicketModal {
 
     public async open(): Promise<void> {
         this.destroy();
+        
+        const currentUser = store.getState().currentUser;
+        const isAdmin = currentUser?.role === 'admin';
+        
+        // Hide the remain collaborator checkbox for requests
+        const collabContainer = document.getElementById('transfer-remain-collab')?.parentElement;
+        if (collabContainer) {
+            collabContainer.style.display = isAdmin ? 'flex' : 'none';
+        }
+
+        const titleEl = document.getElementById('transfer-ticket-modal')?.querySelector('h2');
+        if (titleEl) {
+            titleEl.textContent = isAdmin ? 'Force Transfer Ticket' : 'Request Ticket Transfer';
+        }
+
+        const submitBtn = document.getElementById('transfer-ticket-form')?.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = isAdmin ? 'Force Transfer' : 'Send Request';
+        }
+
         await this.create();
         this.attachEvents();
         ModalsManager.openModal('transfer-ticket-modal');
@@ -78,13 +99,44 @@ export class TransferTicketModal {
                     return;
                 }
 
-                try {
-                    await ticketsAPI.transfer(this.ticket.id, { targetUserId, reason, remainCollaborator });
-                    showToast('Ticket transferred successfully', 'success');
-                    ModalsManager.closeModal('transfer-ticket-modal');
-                    this.onSaveCallback();
-                } catch (err: unknown) {
-                    handleUIError(err, 'Failed to transfer ticket');
+                const currentUser = store.getState().currentUser;
+                const isAdmin = currentUser?.role === 'admin';
+                const targetOption = select.options[select.selectedIndex].text;
+
+                if (isAdmin) {
+                    const confirmed = confirm(
+                        `Are you sure you want to force-transfer this ticket to ${targetOption}?\n\n` +
+                        `- The current owner will lose ownership.\n` +
+                        `- ${targetOption} will become the new primary assignee.\n` +
+                        `- A notification will immediately be sent to the receiving technician.`
+                    );
+                    if (!confirmed) return;
+                    
+                    try {
+                        await ticketsAPI.transfer(this.ticket.id, { targetUserId, reason, remainCollaborator });
+                        showToast('Ticket force-transferred successfully', 'success');
+                        ModalsManager.closeModal('transfer-ticket-modal');
+                        this.onSaveCallback();
+                    } catch (err: unknown) {
+                        handleUIError(err, 'Failed to force-transfer ticket');
+                    }
+                } else {
+                    const confirmed = confirm(
+                        `Are you sure you want to request a transfer to ${targetOption}?\n\n` +
+                        `- You will retain ownership until the request is accepted.\n` +
+                        `- A notification will be sent to the receiving technician.\n` +
+                        `- The request will expire in 24 hours.`
+                    );
+                    if (!confirmed) return;
+
+                    try {
+                        await ticketsAPI.requestTransfer(this.ticket.id, targetUserId, reason);
+                        showToast('Transfer request sent successfully', 'success');
+                        ModalsManager.closeModal('transfer-ticket-modal');
+                        this.onSaveCallback();
+                    } catch (err: unknown) {
+                        handleUIError(err, 'Failed to send transfer request');
+                    }
                 }
             };
             form.addEventListener('submit', this.boundSubmitHandler);

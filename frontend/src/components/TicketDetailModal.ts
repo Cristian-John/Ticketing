@@ -63,7 +63,7 @@ export class TicketDetailModal {
 
         const caps = resolveTicketCapabilities(this.ticket, user);
 
-        if (caps.canClaim || caps.canTransfer || caps.canAddCollaborator || caps.canUpdateStatus || caps.canEdit || caps.canReopen) {
+        if (caps.canClaim || caps.canTransfer || caps.canAddCollaborator || caps.canUpdateStatus || caps.canEdit || caps.canReopen || caps.canRequestCollaboration) {
             const actionsDiv = createElement('div', { className: 'ticket-actions', attributes: { style: 'display:flex; gap:8px; margin-top:8px;' } });
             
             if (caps.canClaim) {
@@ -94,6 +94,16 @@ export class TicketDetailModal {
                     attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
                 });
                 actionsDiv.appendChild(collabBtn);
+            }
+
+            if (caps.canRequestCollaboration) {
+                const reqCollabBtn = createElement('button', {
+                    className: 'btn btn-secondary btn-sm',
+                    id: 'detail-req-collab-btn',
+                    textContent: 'Request Collaboration',
+                    attributes: { style: 'padding: 4px 10px; font-size: 12px;' }
+                });
+                actionsDiv.appendChild(reqCollabBtn);
             }
 
             if (caps.canUpdateStatus) {
@@ -138,11 +148,16 @@ export class TicketDetailModal {
 
         // Grid
         const gridDiv = createElement('div', { className: 'modal-detail-grid' });
+        const collaboratorsText = this.ticket.collaborators && this.ticket.collaborators.length > 0
+            ? this.ticket.collaborators.map(c => c.fullName || c.username || c.user_id).join(', ')
+            : 'None';
+
         const gridItems = [
             { label: 'Requester:', val: this.ticket.requester },
             { label: 'Department:', val: this.ticket.department },
             { label: 'Category:', val: this.ticket.category },
             { label: 'Assignee:', val: formatAssignees(this.ticket) },
+            { label: 'Collaborators:', val: collaboratorsText },
             { label: 'Created:', val: formatDate(this.ticket.createdAt) },
             { label: 'Due SLA:', val: formatDate(this.ticket.dueAt) },
         ];
@@ -220,6 +235,12 @@ export class TicketDetailModal {
             // Load History
             this.loadHistory();
         }
+
+        if (user && user.role !== 'client') {
+            const pendingDiv = createElement('div', { id: 'pending-requests-section', attributes: { style: 'margin-top: var(--space-md); margin-bottom: var(--space-md);' } });
+            this.container.insertBefore(pendingDiv, gridDiv);
+            this.loadPendingRequests();
+        }
     }
 
     private render(): void {
@@ -252,14 +273,31 @@ export class TicketDetailModal {
                 const textarea = document.getElementById('note-text') as HTMLTextAreaElement;
                 if (!textarea || !textarea.value.trim()) return;
 
+                const text = textarea.value.trim();
+                textarea.value = '';
+
                 try {
                     const user = store.getState().currentUser;
-                    const author = user ? user.username : 'User';
-                    await ticketsAPI.addNote(this.ticket.id, textarea.value.trim(), author);
+                    const author = user ? (user.fullName || user.username) : 'User';
+                    
+                    // Optimistic update
+                    const newNote = {
+                        id: Date.now(),
+                        ticketId: this.ticket.id,
+                        text,
+                        author,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+                    if (!this.ticket.notes) this.ticket.notes = [];
+                    this.ticket.notes.push(newNote);
+                    this.open(); // Re-render
+
+                    await ticketsAPI.addNote(this.ticket.id, text, author);
                     showToast('Note added successfully', 'success');
+                    
+                    // Background sync
                     const updated = await ticketsAPI.getById(this.ticket.id);
                     this.ticket = updated;
-                    this.open();
                     this.onRefresh();
                 } catch (err: unknown) {
                     handleUIError(err, 'Failed to add note');
@@ -315,6 +353,24 @@ export class TicketDetailModal {
                     }
                 });
                 collabModal.open().catch(console.error);
+            });
+        }
+
+        const reqCollabBtn = document.getElementById('detail-req-collab-btn');
+        if (reqCollabBtn) {
+            reqCollabBtn.addEventListener('click', async () => {
+                try {
+                    reqCollabBtn.setAttribute('disabled', 'true');
+                    await ticketsAPI.requestCollaboration(this.ticket.id);
+                    showToast('Collaboration request submitted.', 'success');
+                    const updated = await ticketsAPI.getById(this.ticket.id);
+                    this.ticket = updated;
+                    this.open();
+                    this.onRefresh();
+                } catch (err) {
+                    handleUIError(err, 'Failed to request collaboration');
+                    reqCollabBtn.removeAttribute('disabled');
+                }
             });
         }
 
@@ -385,7 +441,10 @@ export class TicketDetailModal {
                     }
                     return text;
                 },
-                collaborator_added: (ev) => `Collaborator <strong>${ev.event_data?.collaborator_id || 'Unknown'}</strong> added.`,
+                collaborator_added: (ev) => `Collaborator <strong>${ev.event_data?.collaborator_name || ev.event_data?.collaborator_id || 'Unknown'}</strong> added.`,
+                collaboration_requested: (ev) => `Collaboration requested by <strong>${ev.event_data?.requester_name || ev.event_data?.request_id}</strong>.`,
+                collaboration_approved: (ev) => `Collaboration request for <strong>${ev.event_data?.collaborator_name || ev.event_data?.collaborator_id}</strong> approved.`,
+                collaboration_rejected: (ev) => `Collaboration request from <strong>${ev.event_data?.requester_name || ev.event_data?.requester_id}</strong> rejected.`,
                 reopened: (ev) => `Reopened: ${ev.event_data?.reason || 'No reason provided'}.`,
                 status_updated: (ev) => `Status changed from ${ev.event_data?.old_status} to <strong>${ev.event_data?.new_status}</strong>.`,
                 default: (ev) => {
@@ -425,6 +484,175 @@ export class TicketDetailModal {
             historySection.appendChild(timelineContainer);
         } catch (err) {
             console.error('Failed to load history', err);
+        }
+    }
+
+    private async loadPendingRequests(): Promise<void> {
+        try {
+            const [collabRequests, transferRequests] = await Promise.all([
+                ticketsAPI.getPendingRequests(this.ticket.id),
+                ticketsAPI.getPendingTransferRequests(this.ticket.id)
+            ]);
+            
+            const pendingDiv = document.getElementById('pending-requests-section');
+            if (!pendingDiv) return;
+            
+            pendingDiv.innerHTML = '';
+            
+            const user = store.getState().currentUser;
+            const isOwner = this.ticket.primary_assignee_id === user?.id;
+            const isAdmin = user?.role === 'admin';
+
+            // --- Collaboration Requests ---
+            const actionableCollab = collabRequests.filter(req => {
+                if (req.target_user_id) {
+                    return req.target_user_id === user?.id || isAdmin;
+                } else {
+                    return isOwner || isAdmin;
+                }
+            });
+
+            if (actionableCollab.length > 0) {
+                const collabBanner = createElement('div', { 
+                    className: 'alert alert-info', 
+                    attributes: { style: 'display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;' } 
+                });
+                collabBanner.appendChild(createElement('strong', { textContent: 'Pending Collaboration Requests' }));
+
+                actionableCollab.forEach(req => {
+                    const item = createElement('div', { attributes: { style: 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px;' } });
+                    
+                    let message = '';
+                    if (req.target_user_id) {
+                        const requesterName = req.requesterName || req.username || req.requester_id;
+                        const targetName = req.targetName || req.targetUsername || req.target_user_id;
+                        message = req.target_user_id === user?.id 
+                            ? `${requesterName} has invited you to collaborate on this ticket.`
+                            : `${requesterName} invited ${targetName} to collaborate.`;
+                    } else {
+                        const name = req.requesterName || req.username || req.requester_id;
+                        message = `${name} is requesting to collaborate on this ticket.`;
+                    }
+                    
+                    item.appendChild(createElement('span', { textContent: message }));
+
+                    const actions = createElement('div', { attributes: { style: 'display: flex; gap: 8px;' } });
+                    
+                    const approveBtn = createElement('button', { className: 'btn btn-primary btn-sm', textContent: 'Approve' });
+                    approveBtn.addEventListener('click', async () => {
+                        try {
+                            await ticketsAPI.approveCollaboration(req.id);
+                            showToast(`Request approved successfully`, 'success');
+                            const updated = await ticketsAPI.getById(this.ticket.id);
+                            this.ticket = updated;
+                            this.open();
+                            this.onRefresh();
+                        } catch (err) { handleUIError(err, 'Failed to approve'); }
+                    });
+
+                    const rejectBtn = createElement('button', { className: 'btn btn-secondary btn-sm', textContent: 'Reject' });
+                    rejectBtn.addEventListener('click', async () => {
+                        try {
+                            await ticketsAPI.rejectCollaboration(req.id, 'Rejected');
+                            showToast(`Request rejected successfully`, 'success');
+                            const updated = await ticketsAPI.getById(this.ticket.id);
+                            this.ticket = updated;
+                            this.open();
+                            this.onRefresh();
+                        } catch (err) { handleUIError(err, 'Failed to reject'); }
+                    });
+
+                    actions.appendChild(approveBtn);
+                    actions.appendChild(rejectBtn);
+                    item.appendChild(actions);
+                    collabBanner.appendChild(item);
+                });
+                pendingDiv.appendChild(collabBanner);
+            }
+
+            // --- Transfer Requests ---
+            const relevantTransfer = transferRequests.filter(req => {
+                return req.target_user_id === user?.id || req.requester_id === user?.id || isAdmin;
+            });
+
+            if (relevantTransfer.length > 0) {
+                const transferBanner = createElement('div', { 
+                    className: 'alert alert-warning', 
+                    attributes: { style: 'display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;' } 
+                });
+                transferBanner.appendChild(createElement('strong', { textContent: 'Pending Ticket Transfer' }));
+
+                relevantTransfer.forEach(req => {
+                    const item = createElement('div', { attributes: { style: 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px;' } });
+                    
+                    const requesterName = req.requesterName || req.requesterUsername || req.requester_id;
+                    const targetName = req.targetName || req.targetUsername || req.target_user_id;
+                    
+                    let message = '';
+                    if (req.target_user_id === user?.id) {
+                        message = `${requesterName} has requested to transfer this ticket to you.`;
+                    } else if (req.requester_id === user?.id) {
+                        message = `You have requested to transfer this ticket to ${targetName}.`;
+                    } else {
+                        message = `${requesterName} has requested to transfer this ticket to ${targetName}.`;
+                    }
+                    
+                    item.appendChild(createElement('span', { textContent: message }));
+
+                    const actions = createElement('div', { attributes: { style: 'display: flex; gap: 8px;' } });
+                    
+                    if (req.target_user_id === user?.id || isAdmin) {
+                        const approveBtn = createElement('button', { className: 'btn btn-primary btn-sm', textContent: 'Accept' });
+                        approveBtn.addEventListener('click', async () => {
+                            try {
+                                await ticketsAPI.approveTransfer(req.id);
+                                showToast(`Transfer request accepted`, 'success');
+                                const updated = await ticketsAPI.getById(this.ticket.id);
+                                this.ticket = updated;
+                                this.open();
+                                this.onRefresh();
+                            } catch (err) { handleUIError(err, 'Failed to accept transfer'); }
+                        });
+
+                        const rejectBtn = createElement('button', { className: 'btn btn-secondary btn-sm', textContent: 'Reject' });
+                        rejectBtn.addEventListener('click', async () => {
+                            try {
+                                await ticketsAPI.rejectTransfer(req.id, 'Rejected from ticket details');
+                                showToast(`Transfer request rejected`, 'success');
+                                const updated = await ticketsAPI.getById(this.ticket.id);
+                                this.ticket = updated;
+                                this.open();
+                                this.onRefresh();
+                            } catch (err) { handleUIError(err, 'Failed to reject transfer'); }
+                        });
+
+                        actions.appendChild(approveBtn);
+                        actions.appendChild(rejectBtn);
+                    }
+
+                    if (req.requester_id === user?.id || isAdmin) {
+                        const cancelBtn = createElement('button', { className: 'btn btn-secondary btn-sm', textContent: 'Cancel Request' });
+                        cancelBtn.addEventListener('click', async () => {
+                            try {
+                                await ticketsAPI.cancelTransfer(req.id);
+                                showToast(`Transfer request cancelled`, 'success');
+                                const updated = await ticketsAPI.getById(this.ticket.id);
+                                this.ticket = updated;
+                                this.open();
+                                this.onRefresh();
+                            } catch (err) { handleUIError(err, 'Failed to cancel transfer'); }
+                        });
+                        actions.appendChild(cancelBtn);
+                    }
+
+                    item.appendChild(actions);
+                    transferBanner.appendChild(item);
+                });
+                pendingDiv.appendChild(transferBanner);
+            }
+
+        } catch (err) {
+            console.error('Failed to load pending requests', err);
         }
     }
 

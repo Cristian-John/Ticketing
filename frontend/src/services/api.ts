@@ -1,5 +1,5 @@
 import { store } from '../state/store';
-import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest, User, UserSession } from '../types';
+import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest, User, UserSession, AppNotification } from '../types';
 import { CONFIG } from '../utils/config';
 import { ErrorCode } from '../utils/enums';
 
@@ -104,10 +104,40 @@ export const ticketsAPI = {
             method: 'POST',
             body: JSON.stringify(payload),
         }),
+    requestTransfer: (id: string, targetUserId: string, reason?: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/transfer-request`, {
+            method: 'POST',
+            body: JSON.stringify({ targetUserId, reason }),
+        }),
+    approveTransfer: (requestId: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/transfer-requests/${requestId}/approve`, { method: 'POST' }),
+    rejectTransfer: (requestId: string, reason?: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/transfer-requests/${requestId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+        }),
+    cancelTransfer: (requestId: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/transfer-requests/${requestId}/cancel`, { method: 'POST' }),
+    getPendingTransferRequests: (id: string): Promise<any[]> =>
+        api<any[]>(`/tickets/${id}/transfer-requests/pending`),
     addCollaborator: (id: string, targetUserId: string): Promise<{ success: boolean; message: string }> =>
         api<{ success: boolean; message: string }>(`/tickets/${id}/collaborators`, {
             method: 'POST',
             body: JSON.stringify({ targetUserId }),
+        }),
+    requestCollaboration: (id: string, targetUserId?: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/${id}/collaborators/request`, { 
+            method: 'POST',
+            body: targetUserId ? JSON.stringify({ targetUserId }) : undefined
+        }),
+    getPendingRequests: (id: string): Promise<any[]> =>
+        api<any[]>(`/tickets/${id}/collaborators/requests/pending`),
+    approveCollaboration: (requestId: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/requests/${requestId}/approve`, { method: 'POST' }),
+    rejectCollaboration: (requestId: string, reason?: string): Promise<{ success: boolean; message: string }> =>
+        api<{ success: boolean; message: string }>(`/tickets/requests/${requestId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
         }),
     reopen: (id: string): Promise<{ success: boolean; message: string }> =>
         api<{ success: boolean; message: string }>(`/tickets/${id}/reopen`, { method: 'POST' }),
@@ -195,4 +225,11 @@ export const authAPI = {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         }),
+};
+
+export const notificationsAPI = {
+    getUnread: (): Promise<AppNotification[]> => api<AppNotification[]>('/notifications/unread'),
+    getAll: (): Promise<AppNotification[]> => api<AppNotification[]>('/notifications/all'),
+    markAsRead: (id: string): Promise<AppNotification> => api<AppNotification>(`/notifications/${id}/read`, { method: 'PUT' }),
+    markAllAsRead: (): Promise<{ success: boolean }> => api<{ success: boolean }>('/notifications/read-all', { method: 'PUT' })
 };

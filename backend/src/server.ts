@@ -12,6 +12,12 @@ import articleRoutes from './routes/articles';
 import statRoutes from './routes/stats';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
+import sseRoutes from './routes/sse';
+import notificationRoutes from './routes/notifications';
+
+import { SSEController } from './controllers/sse.controller';
+import { NotificationService } from './services/notification.service';
+import { TicketWorkflowService } from './services/ticketWorkflow.service';
 
 const app = express();
 
@@ -84,12 +90,19 @@ app.use('/api/v1/articles', apiLimiter, articleRoutes);
 app.use('/api/v1/stats', apiLimiter, statRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', apiLimiter, userRoutes);
+app.use('/api/sse', sseRoutes); // typically outside general rate limits due to persistent connection
+app.use('/api/v1/notifications', apiLimiter, notificationRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
 
 // ─── Start Server (Conditionally for local environments) ──────────────────────
 if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    // Initialize services
+    SSEController.initialize();
+    NotificationService.initialize();
+    TicketWorkflowService.startExpirationCleanupTask();
+
     app.listen(ENV.PORT, () => {
         console.log(`\n  🎫  IT Support Ticketing Backend (v1)`);
         console.log(`  ──────────────────────────────────────────`);
@@ -97,6 +110,11 @@ if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
         console.log(`  Environment: ${ENV.NODE_ENV}`);
         console.log(`  Database: Supabase PostgreSQL\n`);
     });
+} else {
+    // For serverless deployments, initialize once
+    SSEController.initialize();
+    NotificationService.initialize();
+    // Do not run background tasks in serverless
 }
 
 export default app;

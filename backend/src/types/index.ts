@@ -19,6 +19,7 @@ export interface Ticket {
     ratingRequested?: number;
     userId?: string;
     primary_assignee_id?: string | null;
+    collaborators?: TicketCollaborator[];
 }
 
 export interface TicketHistory {
@@ -33,8 +34,10 @@ export interface TicketHistory {
 export interface TicketCollaborator {
     ticket_id: string;
     user_id: string;
-    role: string;
-    created_at: string;
+    role?: string;
+    created_at?: string;
+    username?: string;
+    fullName?: string;
 }
 
 export interface Note {

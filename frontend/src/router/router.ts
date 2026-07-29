@@ -1,7 +1,9 @@
 import { LayoutManager } from '../layouts/LayoutManager';
 import { loadPageForHtmlView } from '../pageLoader';
 import { authAPI } from '../services/api';
+import { sseClient } from '../services/sseClient';
 import { store } from '../state/store';
+import { showToast } from '../components/Toast';
 
 export type ScreenId = 'login-screen' | 'client-screen' | 'admin-screen' | 'support-screen';
 export type Portal = 'client' | 'admin' | 'support';
@@ -115,6 +117,14 @@ export class Router {
             return;
         }
 
+        // Connect SSE for realtime notifications
+        sseClient.connect(user.id);
+        sseClient.on('notification.created', (payload: any) => {
+            if (payload.metadata?.recipientId === user.id) {
+                showToast(`${payload.metadata.title}: ${payload.metadata.message}`, 'info');
+            }
+        });
+
         if (user.role === 'admin') {
             this.enterAdmin('dashboard');
         } else if (user.role === 'it-support') {
@@ -138,6 +148,7 @@ export class Router {
                 const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
                 LayoutManager.admin.getTopbar().setTitle(titles?.admin ?? htmlViewName.replace(/-/g, ' '));
                 LayoutManager.admin.getTopbar().clearActions();
+                LayoutManager.admin.getTopbar().notificationsDropdown.loadNotifications();
             } else {
                 // Fallback for legacy
                 const sidebar = document.getElementById('admin-sidebar');
@@ -157,6 +168,7 @@ export class Router {
                 const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
                 LayoutManager.support.getTopbar().setTitle(titles?.support ?? htmlViewName.replace(/-/g, ' '));
                 LayoutManager.support.getTopbar().clearActions();
+                LayoutManager.support.getTopbar().notificationsDropdown.loadNotifications();
             }
         } else {
             if (LayoutManager.client) {
@@ -164,6 +176,7 @@ export class Router {
                 const titles = VIEW_TITLES[htmlViewName as HtmlViewName];
                 LayoutManager.client.getTopbar().setTitle(titles?.client ?? htmlViewName.replace(/-/g, ' '));
                 LayoutManager.client.getTopbar().clearActions();
+                LayoutManager.client.getTopbar().notificationsDropdown.loadNotifications();
             } else {
                 // Fallback for legacy
                 const sidebar = document.getElementById('client-sidebar');
@@ -189,6 +202,7 @@ export class Router {
         if (user) {
             authAPI.logout(user.token).catch(() => {});
         }
+        sseClient.disconnect();
         store.setSession(null);
         this.showScreen('login-screen');
     }

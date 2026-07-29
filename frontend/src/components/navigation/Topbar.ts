@@ -1,5 +1,6 @@
 import { MenuIcon } from '../common/Icons';
 import { ThemeToggle } from '../common/theme/ThemeToggle';
+import { NotificationsDropdown } from '../NotificationsDropdown';
 
 export interface TopbarConfig {
     titleId: string;
@@ -13,6 +14,8 @@ export class Topbar {
     private titleElement: HTMLHeadingElement;
     private actionsContainer: HTMLDivElement;
     private themeToggle: ThemeToggle;
+    private notifWrapper: HTMLDivElement;
+    public notificationsDropdown: NotificationsDropdown;
 
     constructor(config: TopbarConfig) {
         this.element = document.createElement('header');
@@ -44,6 +47,41 @@ export class Topbar {
         this.actionsContainer = document.createElement('div');
         this.actionsContainer.className = 'topbar-actions';
         
+        // Notifications Bell
+        this.notifWrapper = document.createElement('div');
+        this.notifWrapper.className = 'notifications-wrapper';
+        
+        const bellBtn = document.createElement('button');
+        bellBtn.className = 'notifications-btn';
+        bellBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notifications-badge"></span>
+        `;
+        
+        const dropdownContainer = document.createElement('div');
+        this.notifWrapper.appendChild(bellBtn);
+        this.notifWrapper.appendChild(dropdownContainer);
+        
+        this.notificationsDropdown = new NotificationsDropdown(dropdownContainer);
+        this.notificationsDropdown.setOnUnreadCountChanged((count) => {
+            const badge = bellBtn.querySelector('.notifications-badge');
+            if (count > 0) {
+                badge?.classList.add('visible');
+            } else {
+                badge?.classList.remove('visible');
+            }
+        });
+
+        bellBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.notificationsDropdown.toggle();
+        });
+
+        this.actionsContainer.appendChild(this.notifWrapper);
+
         // Add theme toggle (always present on the far right)
         this.themeToggle = new ThemeToggle();
         this.actionsContainer.appendChild(this.themeToggle.getElement());
@@ -68,7 +106,7 @@ export class Topbar {
         }
         this.clearActions();
         if (element) {
-            this.actionsContainer.insertBefore(element, this.themeToggle.getElement());
+            this.actionsContainer.insertBefore(element, this.notifWrapper);
         }
     }
 
@@ -76,16 +114,16 @@ export class Topbar {
      * Appends a custom action element (like a search bar or filter) before the theme toggle.
      */
     public appendAction(element: HTMLElement): void {
-        // Insert before theme toggle so theme toggle stays on far right
-        this.actionsContainer.insertBefore(element, this.themeToggle.getElement());
+        // Insert before notifWrapper so fixed elements stay on the far right
+        this.actionsContainer.insertBefore(element, this.notifWrapper);
     }
 
     /**
      * Removes all custom action elements.
      */
     public clearActions(): void {
-        while (this.actionsContainer.firstChild !== this.themeToggle.getElement()) {
-            this.actionsContainer.removeChild(this.actionsContainer.firstChild!);
+        while (this.actionsContainer.firstChild && this.actionsContainer.firstChild !== this.notifWrapper) {
+            this.actionsContainer.removeChild(this.actionsContainer.firstChild);
         }
     }
 

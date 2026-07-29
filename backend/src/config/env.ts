@@ -6,7 +6,7 @@ dotenv.config();
 
 export const ENV = {
     PORT: parseInt(process.env.PORT || '3000', 10),
-    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '@inspireSupport',
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
     NODE_ENV: process.env.NODE_ENV || 'development',
     DATABASE_URL: process.env.DATABASE_URL || '',
     SUPABASE_URL: process.env.SUPABASE_URL || '',
@@ -16,6 +16,7 @@ export const ENV = {
 
 // Strict environment configuration validation
 const requiredEnvVars: (keyof typeof ENV)[] = [
+    'ADMIN_PASSWORD',
     'DATABASE_URL',
     'SUPABASE_URL',
     'SUPABASE_SECRET_KEY',

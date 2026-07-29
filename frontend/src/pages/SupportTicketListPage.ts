@@ -11,16 +11,31 @@ import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
 import { SupportTicketFilters, TicketFilterMode } from '../utils/SupportTicketFilters';
 import { TransitionManager } from '../utils/transitionManager';
-import { debounce } from '../utils/formatters';
+import { debounce } from '../utils/debounce';
+import { sseClient } from '../services/sseClient';
 
 export class SupportTicketListPage {
     private static currentTickets: Ticket[] = [];
     private static activeMode: TicketFilterMode = TicketFilterMode.All;
+    private static initializedSSE: boolean = false;
+    private static silentReload = debounce(async () => {
+        try {
+            SupportTicketListPage.currentTickets = await ticketsAPI.getAll();
+            const container = getPortalContentContainer('it-support');
+            if (container && document.getElementById('support-search')) {
+                SupportTicketListPage.renderTickets(container);
+            }
+        } catch (e) {
+            console.error('Silent reload failed', e);
+        }
+    }, 1000);
 
     public static async load(mode: TicketFilterMode): Promise<void> {
         this.activeMode = mode;
         const container = getPortalContentContainer('it-support');
         if (!container) return;
+
+        this.setupRealtimeUpdates();
 
         // Register skeleton if not already
         LoadingManager.registerSkeleton('support-tickets-table', () => `
@@ -65,6 +80,24 @@ export class SupportTicketListPage {
                 </div>
             `;
         }
+    }
+
+    private static setupRealtimeUpdates() {
+        if (this.initializedSSE) return;
+        this.initializedSSE = true;
+
+        const eventsToWatch = [
+            'ticket.claimed',
+            'ticket.transferred',
+            'ticket.reopened',
+            'ticket.status_updated',
+            'collaboration.approved',
+            'collaboration.rejected'
+        ];
+
+        eventsToWatch.forEach(event => {
+            sseClient.on(event, () => this.silentReload());
+        });
     }
 
     private static createFilters(): HTMLElement {
