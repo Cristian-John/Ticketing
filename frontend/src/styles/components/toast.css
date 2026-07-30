@@ -16,7 +16,7 @@
     padding: 11px 20px;
     font-size: 13px;
     font-weight: 700;
-    animation: slideDown 0.3s ease;
+    animation: bannerSlideDown var(--duration-normal) var(--ease-decelerate);
 }
 .notif-banner.notif-new {
     background: var(--status-progress-bg);
@@ -38,14 +38,14 @@
     padding: 0 4px;
 }
 
-@keyframes slideDown {
+@keyframes bannerSlideDown {
     from {
-        transform: translateY(-100%);
-        opacity: 0;
+        transform: translateY(calc(var(--motion-distance-lg) * -1));
+        opacity: var(--opacity-hidden);
     }
     to {
         transform: translateY(0);
-        opacity: 1;
+        opacity: var(--opacity-visible);
     }
 }
 
