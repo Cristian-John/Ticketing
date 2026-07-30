@@ -30,7 +30,10 @@ export class SSEController {
             'ticket.status_updated',
             'note.added',
             'attachment.uploaded',
-            'notification.created'
+            'attachment.uploaded',
+            'notification.created',
+            'notification.updated',
+            'notification.read_all'
         ];
 
         for (const event of events) {
@@ -93,7 +96,16 @@ export class SSEController {
      * For notifications, we only push to the specific recipient if they are connected.
      */
     private static broadcastDomainEvent(eventType: EventName, payload: DomainEventPayload) {
-        SSEController.broadcastRaw(eventType, payload);
+        if (eventType === 'notification.created' || eventType === 'notification.updated' || eventType === 'notification.read_all') {
+            // Notifications are private; only send to the intended recipient
+            const recipientId = payload.metadata?.recipientId || payload.metadata?.recipient_id || payload.metadata?.userId;
+            if (recipientId) {
+                SSEController.sendToUser(recipientId, eventType, payload);
+            }
+        } else {
+            // Other events are broadcasted globally (e.g. ticket updates)
+            SSEController.broadcastRaw(eventType, payload);
+        }
     }
 
     /**

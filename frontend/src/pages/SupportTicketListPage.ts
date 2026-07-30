@@ -87,10 +87,12 @@ export class SupportTicketListPage {
         this.initializedSSE = true;
 
         const eventsToWatch = [
+            'ticket.created',
             'ticket.claimed',
             'ticket.transferred',
             'ticket.reopened',
             'ticket.status_updated',
+            'note.added',
             'collaboration.approved',
             'collaboration.rejected'
         ];

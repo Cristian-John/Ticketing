@@ -84,3 +84,7 @@ export function MenuIcon(props: IconProps = {}): string {
 export function SearchIcon(props: IconProps = {}): string {
     return buildSvg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', props);
 }
+
+export function ChevronLeftIcon(props: IconProps = {}): string {
+    return buildSvg('<path d="m15 18-6-6 6-6"/>', props);
+}

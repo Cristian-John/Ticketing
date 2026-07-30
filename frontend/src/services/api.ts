@@ -229,7 +229,21 @@ export const authAPI = {
 
 export const notificationsAPI = {
     getUnread: (): Promise<AppNotification[]> => api<AppNotification[]>('/notifications/unread'),
-    getAll: (): Promise<AppNotification[]> => api<AppNotification[]>('/notifications/all'),
+    getAll: (params?: { cursor?: string, limit?: number, search?: string, filter?: string, sort?: string }): Promise<{ data: AppNotification[], counts: Record<string, number>, cursor: string | null }> => {
+        const queryParams = new URLSearchParams();
+        if (params?.cursor) queryParams.append('cursor', params.cursor);
+        if (params?.limit) queryParams.append('limit', String(params.limit));
+        if (params?.search) queryParams.append('search', params.search);
+        if (params?.filter) queryParams.append('filter', params.filter);
+        if (params?.sort) queryParams.append('sort', params.sort);
+        const q = queryParams.toString();
+        return api<{ data: AppNotification[], counts: Record<string, number>, cursor: string | null }>(`/notifications/all${q ? '?' + q : ''}`);
+    },
     markAsRead: (id: string): Promise<AppNotification> => api<AppNotification>(`/notifications/${id}/read`, { method: 'PUT' }),
-    markAllAsRead: (): Promise<{ success: boolean }> => api<{ success: boolean }>('/notifications/read-all', { method: 'PUT' })
+    markAllAsRead: (): Promise<{ success: boolean }> => api<{ success: boolean }>('/notifications/read-all', { method: 'PUT' }),
+    markBulkAsRead: (ids: string[]): Promise<{ success: boolean, updatedIds: string[] }> => 
+        api<{ success: boolean, updatedIds: string[] }>('/notifications/bulk/read', { 
+            method: 'PUT',
+            body: JSON.stringify({ ids })
+        })
 };

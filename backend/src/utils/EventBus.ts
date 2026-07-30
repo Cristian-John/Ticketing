@@ -12,6 +12,7 @@ export type EventName =
     | 'collaboration.requested'
     | 'collaboration.approved'
     | 'collaboration.rejected'
+    | 'ticket.created'
     | 'ticket.claimed'
     | 'ticket.transferred'
     | 'ticket.transfer_requested'
@@ -25,7 +26,9 @@ export type EventName =
     | 'ticket.status_updated'
     | 'note.added'
     | 'attachment.uploaded'
-    | 'notification.created';
+    | 'notification.created'
+    | 'notification.updated'
+    | 'notification.read_all';
 
 class DomainEventBus {
     private transactionalEmitter = new EventEmitter();

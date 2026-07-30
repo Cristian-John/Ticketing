@@ -17,6 +17,7 @@ import { UpdateStatusModal } from './UpdateStatusModal';
 import { ModalsManager } from './modals/ModalsManager';
 import { showToast } from './Toast';
 import { resolveTicketCapabilities } from '../utils/ticketPermissions';
+import { sseClient } from '../services/sseClient';
 
 export class TicketDetailModal {
     private container: HTMLElement;
@@ -24,6 +25,7 @@ export class TicketDetailModal {
     private onRefresh: () => void;
     private boundEditHandler?: () => void;
     private boundSubmitHandler?: (e: Event) => void;
+    private sseHandler?: (payload: any) => void;
 
     constructor(ticket: Ticket, onRefresh: () => void) {
         this.ticket = ticket;
@@ -38,6 +40,29 @@ export class TicketDetailModal {
         this.create();
         this.render();
         this.attachEvents();
+
+        if (!this.sseHandler) {
+            this.sseHandler = (payload: any) => {
+                // If the event corresponds to this ticket, refresh it
+                if (payload && payload.entityId === this.ticket.id) {
+                    ticketsAPI.getById(this.ticket.id).then(updated => {
+                        if (updated) {
+                            this.ticket = updated;
+                            // Re-render the modal in place without closing it
+                            this.destroy();
+                            this.create();
+                            this.render();
+                            this.attachEvents();
+                            this.onRefresh(); // Also refresh the underlying list
+                        }
+                    }).catch(console.error);
+                }
+            };
+            
+            const events = ['note.added', 'ticket.status_updated', 'ticket.claimed', 'ticket.transferred', 'collaboration.requested', 'collaboration.approved', 'collaboration.rejected', 'attachment.uploaded', 'ticket.reopened'];
+            events.forEach(ev => sseClient.on(ev, this.sseHandler!));
+        }
+
         ModalsManager.openModal('view-ticket-modal');
     }
 
@@ -664,6 +689,11 @@ export class TicketDetailModal {
         const noteForm = document.getElementById('add-note-form');
         if (noteForm && this.boundSubmitHandler) {
             noteForm.removeEventListener('submit', this.boundSubmitHandler);
+        }
+        if (this.sseHandler) {
+            const events = ['note.added', 'ticket.status_updated', 'ticket.claimed', 'ticket.transferred', 'collaboration.requested', 'collaboration.approved', 'collaboration.rejected', 'attachment.uploaded', 'ticket.reopened'];
+            events.forEach(ev => sseClient.off(ev, this.sseHandler!));
+            this.sseHandler = undefined;
         }
         this.container.innerHTML = '';
     }

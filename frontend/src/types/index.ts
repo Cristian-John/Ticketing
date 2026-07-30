@@ -45,6 +45,9 @@ export interface AppNotification {
     created_at: string;
     actor_name?: string;
     actor_full_name?: string;
+    ticket_title?: string;
+    ticket_status?: string;
+    ticket_priority?: string;
 }
 
 export interface TicketCollaborator {
@@ -147,3 +150,12 @@ export interface TicketCollaborationRequest {
     username?: string;
     requesterName?: string;
 }
+
+export interface NotificationQuery {
+    cursor?: string;
+    search?: string;
+    filter?: string;
+    sort?: string;
+    limit?: number;
+}
+

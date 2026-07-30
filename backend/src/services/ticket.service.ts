@@ -152,12 +152,24 @@ export class TicketService {
             userId: ticket.userId || null
         };
 
-        await db.query(`
-            INSERT INTO tickets (id, title, description, category, department, priority, severity, status, assignee, requester, rating, "ratingComment", "createdAt", "updatedAt", "dueAt", "userId")
-            VALUES (@id, @title, @description, @category, @department, @priority, @severity, @status, @assignee, @requester, @rating, @ratingComment, @createdAt, @updatedAt, @dueAt, @userId)
-        `, insertParams);
+        return db.withTransaction(async (tx) => {
+            await tx.query(`
+                INSERT INTO tickets (id, title, description, category, department, priority, severity, status, assignee, requester, rating, "ratingComment", "createdAt", "updatedAt", "dueAt", "userId")
+                VALUES (@id, @title, @description, @category, @department, @priority, @severity, @status, @assignee, @requester, @rating, @ratingComment, @createdAt, @updatedAt, @dueAt, @userId)
+            `, insertParams);
 
-        return { ...ticket, notes: [], attachments: [] };
+            await EventBus.emit(tx, 'ticket.created', {
+                entityId: ticket.id,
+                entityType: 'ticket',
+                metadata: {
+                    department: ticket.department,
+                    severity: ticket.severity,
+                    requester: ticket.requester
+                }
+            });
+
+            return { ...ticket, notes: [], attachments: [] };
+        });
     }
 
     public static async update(id: string, updateData: Partial<Ticket>, changedBy?: string): Promise<Ticket | null> {

@@ -1,3 +1,5 @@
+import { store } from '../state/store';
+
 type SSEEventHandler = (payload: any) => void;
 
 class SSEClient {
@@ -12,10 +14,16 @@ class SSEClient {
         }
 
         this.userId = userId;
-        this.eventSource = new EventSource(`/api/sse/subscribe?userId=${userId}`);
+        
+        // Include token in query string since EventSource doesn't support Authorization header
+        const user = store.getState().currentUser;
+        const tokenStr = user && user.token ? `&token=${encodeURIComponent(user.token)}` : '';
+        
+        this.eventSource = new EventSource(`/api/sse/subscribe?userId=${userId}${tokenStr}`);
 
         this.eventSource.onopen = () => {
             console.log('[SSE] Connected');
+            this.dispatch('connection.state', 'connected');
             if (this.reconnectTimeout) {
                 clearTimeout(this.reconnectTimeout);
                 this.reconnectTimeout = null;
@@ -24,6 +32,7 @@ class SSEClient {
 
         this.eventSource.onerror = (err) => {
             console.error('[SSE] Connection error, reconnecting...', err);
+            this.dispatch('connection.state', 'reconnecting');
             this.eventSource?.close();
             
             // Auto reconnect with backoff
@@ -39,16 +48,26 @@ class SSEClient {
 
         // Listen for all configured domain events
         const events = [
+            'ticket.created',
             'collaboration.requested',
             'collaboration.approved',
             'collaboration.rejected',
             'ticket.claimed',
             'ticket.transferred',
+            'ticket.transfer_requested',
+            'ticket.transfer_approved',
+            'ticket.transfer_rejected',
+            'ticket.transfer_cancelled',
+            'ticket.transfer_expired',
+            'ticket.transfer_invalidated',
+            'ticket.resolved',
             'ticket.reopened',
             'ticket.status_updated',
             'note.added',
             'attachment.uploaded',
-            'notification.created'
+            'notification.created',
+            'notification.updated',
+            'notification.read_all'
         ];
 
         for (const event of events) {
@@ -67,6 +86,7 @@ class SSEClient {
         if (this.eventSource) {
             this.eventSource.close();
             this.eventSource = null;
+            this.dispatch('connection.state', 'disconnected');
         }
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
