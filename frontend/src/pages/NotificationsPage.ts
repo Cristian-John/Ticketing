@@ -38,7 +38,17 @@ export class NotificationsPage {
     private static listComponent: NotificationList;
     private static detailComponent: NotificationDetail;
 
-    // Phase 5.5: Memoization Cache
+    // Phase 5.5: Presentation Cache (ViewModel Cache)
+    // Caches the mapped ViewModel to avoid redundant mapping and rendering operations.
+    // Invalidation Strategy:
+    // A cache hit requires the exact same 'hash'. The hash incorporates:
+    // 1. notification.id
+    // 2. notification.read_at
+    // 3. notification.updated_at
+    // 4. selection state (is selected)
+    // 5. focus state (is focused)
+    // 6. active selection mode
+    // Any change to these fields will produce a new hash and trigger a re-mapping.
     private static viewModelCache = new Map<string, { hash: string, vm: any }>();
 
     public static async load(_htmlView: HtmlViewName): Promise<void> {
