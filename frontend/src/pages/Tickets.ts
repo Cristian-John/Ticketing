@@ -20,13 +20,65 @@ import {
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
 import { TransitionManager } from '../utils/transitionManager';
+import { sseClient } from '../services/sseClient';
 
 export class TicketsPage {
     private static currentTickets: Ticket[] = [];
+    private static initializedSSE: boolean = false;
+    private static activeHtmlView: HtmlViewName = 'all-tickets';
+    private static silentReload = debounce(async () => {
+        try {
+            TicketsPage.currentTickets = await ticketsAPI.getAll();
+            const container = getPortalContentContainer(store.getState().currentUser!.role);
+            if (container) {
+                const user = store.getState().currentUser;
+                if (!user) return;
+                
+                const tickets = TicketsPage.currentTickets;
+                if (user.role === 'admin' || user.role === 'it-support') {
+                    TicketsPage.updateAdminSidebarStats(tickets);
+                    if (TicketsPage.activeHtmlView === 'resolved') {
+                        TicketsPage.renderResolvedView(container, tickets);
+                    } else {
+                        TicketsPage.renderAdminAllTickets(container, tickets);
+                    }
+                } else {
+                    const mine = tickets.filter(t => t.userId === user.id || t.requester.toLowerCase() === user.username.toLowerCase());
+                    TicketsPage.updateClientSidebarStats(mine);
+                    TicketsPage.renderClientTickets(container, mine);
+                }
+            }
+        } catch (e) {
+            console.error('Silent reload failed in TicketsPage', e);
+        }
+    }, 1000);
+
+    private static setupRealtimeUpdates() {
+        if (this.initializedSSE) return;
+        this.initializedSSE = true;
+
+        const eventsToWatch = [
+            'ticket.created',
+            'ticket.claimed',
+            'ticket.transferred',
+            'ticket.reopened',
+            'ticket.status_updated',
+            'note.added',
+            'collaboration.approved',
+            'collaboration.rejected'
+        ];
+
+        eventsToWatch.forEach(event => {
+            sseClient.on(event, () => this.silentReload());
+        });
+    }
 
     public static async load(htmlView: HtmlViewName): Promise<void> {
+        this.activeHtmlView = htmlView;
         const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
+
+        this.setupRealtimeUpdates();
 
         LoadingManager.registerSkeleton('tickets-table', () => `
             <div class="controls-row" style="margin-bottom: 20px; display: flex; justify-content: space-between;">

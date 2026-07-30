@@ -6,6 +6,12 @@
 /* ============================
    APP SHELL — SIDEBAR LAYOUT
    ============================ */
+html, body {
+    margin: 0;
+    padding: 0;
+    scrollbar-gutter: stable;
+}
+
 .app-shell {
     display: flex;
     height: 100vh;
@@ -36,8 +42,15 @@
 }
 .content-area {
     flex: 1;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
     padding: var(--space-lg);
+}
+.content-area.no-padding {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ── Responsive ── */

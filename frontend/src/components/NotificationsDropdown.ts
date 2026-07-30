@@ -1,17 +1,17 @@
 import { AppNotification } from '../types';
-import { notificationsAPI } from '../services/api';
-
 import { ticketsAPI } from '../services/api';
-import { TicketDetailModal } from './TicketDetailModal';
-import { AllNotificationsModal } from './AllNotificationsModal';
+import { notificationStore } from '../state/NotificationStore';
+import { Router } from '../router/router';
 import { showToast } from './Toast';
 import { handleUIError } from '../utils/errorHandler';
+import { formatRelativeTime } from '../utils/formatters';
 
 export class NotificationsDropdown {
     private container: HTMLElement;
     private isOpen: boolean = false;
-    private notifications: AppNotification[] = [];
+    private notificationIds: string[] = [];
     private onUnreadCountChanged?: (count: number) => void;
+    private unsubscribeStore: (() => void) | null = null;
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -24,10 +24,43 @@ export class NotificationsDropdown {
             }
         });
 
-        // Close on Escape key
+        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (this.isOpen && e.key === 'Escape') {
+            if (!this.isOpen) return;
+
+            if (e.key === 'Escape') {
                 this.close();
+                return;
+            }
+
+            const items = Array.from(this.container.querySelectorAll('.notification-item')) as HTMLElement[];
+            if (items.length === 0) return;
+
+            const currentIndex = items.findIndex(item => item === document.activeElement || item.contains(document.activeElement));
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+                items[nextIndex].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const nextIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+                items[nextIndex].focus();
+            }
+        });
+
+        // Subscribe to store for live updates
+        this.unsubscribeStore = notificationStore.subscribe((event) => {
+            if (event.unreadCountChanged) {
+                if (this.onUnreadCountChanged) {
+                    this.onUnreadCountChanged(notificationStore.getCounts().unread);
+                }
+            }
+            if (this.isOpen) {
+                // If there are insertions or updates that affect our list, re-fetch/re-render
+                if (event.inserted.length > 0 || event.updated.some(id => this.notificationIds.includes(id))) {
+                    this.loadNotifications();
+                }
             }
         });
     }
@@ -38,10 +71,13 @@ export class NotificationsDropdown {
 
     public async loadNotifications() {
         try {
-            this.notifications = await notificationsAPI.getUnread();
+            const resp = await notificationStore.fetch({ limit: 10 });
+            this.notificationIds = resp.ids;
+            
             this.renderList();
+            
             if (this.onUnreadCountChanged) {
-                this.onUnreadCountChanged(this.notifications.length);
+                this.onUnreadCountChanged(notificationStore.getCounts().unread);
             }
         } catch (err) {
             console.error('Failed to load notifications:', err);
@@ -52,6 +88,7 @@ export class NotificationsDropdown {
         this.isOpen = !this.isOpen;
         if (this.isOpen) {
             this.container.querySelector('.notifications-popover')?.classList.add('open');
+            this.loadNotifications();
         } else {
             this.container.querySelector('.notifications-popover')?.classList.remove('open');
         }
@@ -64,40 +101,19 @@ export class NotificationsDropdown {
 
     private async handleNotificationClick(notification: AppNotification) {
         try {
-            // Optimistic update
-            this.notifications = this.notifications.filter(n => n.id !== notification.id);
-            this.renderList();
-            if (this.onUnreadCountChanged) {
-                this.onUnreadCountChanged(this.notifications.length);
-            }
-
-            await notificationsAPI.markAsRead(notification.id);
             this.close();
-
-            // Navigate based on entity type
-            if (notification.entity_type === 'ticket') {
-                try {
-                    const ticket = await ticketsAPI.getById(notification.entity_id);
-                    new TicketDetailModal(ticket, () => {}).open();
-                } catch (e) {
-                    console.error('Failed to load ticket for notification', e);
-                }
-            }
+            // Navigate to notification center and select the item
+            const newUrl = window.location.pathname + '?selected=' + notification.id;
+            window.history.pushState({}, '', newUrl);
+            Router.switchView('notifications');
         } catch (err) {
             console.error('Failed to handle notification click:', err);
-            // Revert on error
-            await this.loadNotifications();
         }
     }
 
     private async markAllAsRead() {
         try {
-            await notificationsAPI.markAllAsRead();
-            this.notifications = [];
-            this.renderList();
-            if (this.onUnreadCountChanged) {
-                this.onUnreadCountChanged(0);
-            }
+            await notificationStore.markAllAsRead();
             this.close();
         } catch (err) {
             console.error('Failed to mark all as read:', err);
@@ -129,7 +145,7 @@ export class NotificationsDropdown {
             e.preventDefault();
             e.stopPropagation();
             this.close();
-            new AllNotificationsModal().open();
+            Router.switchView('notifications');
         });
     }
 
@@ -137,7 +153,7 @@ export class NotificationsDropdown {
         const listContainer = this.container.querySelector('.notifications-list');
         if (!listContainer) return;
 
-        if (this.notifications.length === 0) {
+        if (this.notificationIds.length === 0) {
             listContainer.innerHTML = `
                 <div class="notifications-empty">
                     No new notifications
@@ -146,19 +162,32 @@ export class NotificationsDropdown {
             return;
         }
 
-        // Limit to latest 10 notifications
-        const displayNotifications = this.notifications.slice(0, 10);
+        const notifications = this.notificationIds
+            .map(id => notificationStore.getById(id))
+            .filter(n => n !== undefined) as AppNotification[];
+
+        // Sort unread first, then by date descending
+        notifications.sort((a, b) => {
+            if (!a.read_at && b.read_at) return -1;
+            if (a.read_at && !b.read_at) return 1;
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+
+        // Limit to latest 10
+        const displayNotifications = notifications.slice(0, 10);
 
         listContainer.innerHTML = displayNotifications.map(n => {
             let actionsHtml = '';
-            if (n.type === 'COLLABORATION_REQUESTED') {
+            const actionable = n.metadata?.actionable !== false;
+
+            if (actionable && n.type === 'COLLABORATION_REQUESTED') {
                 actionsHtml = `
                     <div class="notification-actions">
                         <button class="btn btn-primary btn-sm accept-collab" data-req-id="${n.entity_id}">Accept</button>
                         <button class="btn btn-secondary btn-sm reject-collab" data-req-id="${n.entity_id}">Reject</button>
                     </div>
                 `;
-            } else if (n.type === 'TICKET_TRANSFER_REQUESTED') {
+            } else if (actionable && n.type === 'TICKET_TRANSFER_REQUESTED') {
                 actionsHtml = `
                     <div class="notification-actions">
                         <button class="btn btn-primary btn-sm accept-transfer" data-req-id="${n.metadata?.requestId || ''}">Accept</button>
@@ -168,8 +197,9 @@ export class NotificationsDropdown {
             }
 
             return `
-            <div class="notification-item unread" data-id="${n.id}">
+            <div class="notification-item ${!n.read_at ? 'unread' : ''}" data-id="${n.id}" tabindex="0">
                 <div class="notification-icon">
+                    ${!n.read_at ? '<div class="unread-dot"></div>' : ''}
                     ${this.getIconForType(n.type)}
                 </div>
                 <div class="notification-content">
@@ -178,26 +208,33 @@ export class NotificationsDropdown {
                     ${actionsHtml}
                     <div class="notification-meta" style="margin-top: 6px;">
                         <span>${n.actor_name || 'System'}</span>
-                        <span>${this.formatRelativeTime(new Date(n.created_at))}</span>
+                        <span>${formatRelativeTime(n.created_at)}</span>
                     </div>
                 </div>
             </div>
             `;
         }).join('');
 
-        // Attach item click listeners
+        // Attach item click and enter key listeners
         listContainer.querySelectorAll('.notification-item').forEach(el => {
-            el.addEventListener('click', (e) => {
-                // If clicked on an action button, don't trigger item click
+            const handleActivation = (e: Event) => {
+                // If clicked/pressed on an action button, don't trigger item click
                 if ((e.target as HTMLElement).closest('.notification-actions')) {
                     return;
                 }
                 
                 e.stopPropagation();
                 const id = el.getAttribute('data-id');
-                const notification = this.notifications.find(n => n.id === id);
+                const notification = id ? notificationStore.getById(id) : null;
                 if (notification) {
                     this.handleNotificationClick(notification);
+                }
+            };
+
+            el.addEventListener('click', handleActivation);
+            el.addEventListener('keydown', (e) => {
+                if ((e as KeyboardEvent).key === 'Enter') {
+                    handleActivation(e);
                 }
             });
         });
@@ -268,24 +305,6 @@ export class NotificationsDropdown {
         });
     }
 
-    private formatRelativeTime(date: Date): string {
-        const now = new Date();
-        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-        
-        if (diffInSeconds < 60) return 'Just now';
-        
-        const diffInMinutes = Math.floor(diffInSeconds / 60);
-        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-        
-        const diffInHours = Math.floor(diffInMinutes / 60);
-        if (diffInHours < 24) return `${diffInHours}h ago`;
-        
-        const diffInDays = Math.floor(diffInHours / 24);
-        if (diffInDays < 7) return `${diffInDays}d ago`;
-        
-        return date.toLocaleDateString();
-    }
-
     private getIconForType(type: string): string {
         const svgSize = 16;
         switch (type) {
@@ -307,6 +326,13 @@ export class NotificationsDropdown {
                 return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)" stroke-width="2"><path d="M17 3v18"></path><path d="M3 10h14"></path><path d="m14 7 3 3-3 3"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
             default:
                 return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+        }
+    }
+
+    public destroy() {
+        if (this.unsubscribeStore) {
+            this.unsubscribeStore();
+            this.unsubscribeStore = null;
         }
     }
 }

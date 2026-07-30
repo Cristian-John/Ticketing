@@ -64,6 +64,30 @@ export class NotificationService {
         });
     }
 
+    private static async markNotificationsNotActionable(tx: TxContext, requestId: string) {
+        if (!requestId) return;
+        const result = await tx.query(`
+            UPDATE notifications 
+            SET metadata = COALESCE(metadata, '{}'::jsonb) || '{"actionable": false}'::jsonb
+            WHERE (entity_id = $1 OR metadata->>'requestId' = $1) 
+              AND (metadata->>'actionable' IS NULL OR metadata->>'actionable' != 'false')
+            RETURNING *
+        `, [requestId]);
+
+        for (const row of result.rows) {
+            await EventBus.emit(tx, 'notification.updated', {
+                actorId: 'system',
+                entityId: row.id,
+                entityType: 'notification',
+                metadata: {
+                    recipientId: row.recipient_id,
+                    notificationId: row.id,
+                    actionable: false
+                }
+            });
+        }
+    }
+
     private static handleCollaborationRequested = async (tx: TxContext, payload: DomainEventPayload) => {
         // Need to find the ticket owner
         const res = await tx.query('SELECT primary_assignee_id FROM tickets WHERE id = $1', [payload.entityId]);
@@ -85,8 +109,11 @@ export class NotificationService {
     };
 
     private static handleCollaborationApproved = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        await NotificationService.markNotificationsNotActionable(tx, requestId);
+        
         // recipient is in metadata.requesterId
-        const requesterId = payload.metadata?.requesterId;
+        const requesterId = payload.metadata?.requesterId || payload.metadata?.collaboratorId;
         if (requesterId) {
             await NotificationService.insertNotification(
                 tx,
@@ -103,6 +130,9 @@ export class NotificationService {
     };
 
     private static handleCollaborationRejected = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        await NotificationService.markNotificationsNotActionable(tx, requestId);
+
         const requesterId = payload.metadata?.requesterId;
         if (requesterId) {
             await NotificationService.insertNotification(
@@ -137,6 +167,9 @@ export class NotificationService {
     };
 
     private static handleTransferApproved = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        await NotificationService.markNotificationsNotActionable(tx, requestId);
+
         const requesterId = payload.metadata?.requesterId;
         if (requesterId) {
             await NotificationService.insertNotification(
@@ -154,6 +187,9 @@ export class NotificationService {
     };
 
     private static handleTransferRejected = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        await NotificationService.markNotificationsNotActionable(tx, requestId);
+
         const requesterId = payload.metadata?.requesterId;
         if (requesterId) {
             await NotificationService.insertNotification(
@@ -171,6 +207,9 @@ export class NotificationService {
     };
 
     private static handleTransferCancelled = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        await NotificationService.markNotificationsNotActionable(tx, requestId);
+
         const targetUserId = payload.metadata?.targetUserId;
         if (targetUserId) {
             await NotificationService.insertNotification(
@@ -188,6 +227,9 @@ export class NotificationService {
     };
 
     private static handleTransferExpired = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        await NotificationService.markNotificationsNotActionable(tx, requestId);
+
         const requesterId = payload.metadata?.requesterId;
         if (requesterId) {
             await NotificationService.insertNotification(
@@ -205,6 +247,11 @@ export class NotificationService {
     };
 
     private static handleTransferInvalidated = async (tx: TxContext, payload: DomainEventPayload) => {
+        const requestId = payload.metadata?.requestId;
+        if (requestId) {
+            await NotificationService.markNotificationsNotActionable(tx, requestId);
+        }
+
         const requesterId = payload.metadata?.requesterId;
         const targetUserId = payload.metadata?.targetUserId;
 

@@ -61,6 +61,15 @@
 
     --sidebar-width: 240px;
 
+    /* ──── Workspace Layout Tokens ──── */
+    --workspace-sidebar-width: 240px;
+    --workspace-list-min-width: 320px;
+    --workspace-detail-min-width: 400px;
+    --workspace-max-width: 1600px;
+    --workspace-panel-padding: var(--space-md);
+    --workspace-header-height: 60px;
+    --workspace-footer-height: 60px;
+    --workspace-panel-gap: 0px;
     /* ──── Spacing System Variables ──── */
     --space-3xs: 0.125rem; /* 2px */
     --space-2xs: 0.25rem; /* 4px */

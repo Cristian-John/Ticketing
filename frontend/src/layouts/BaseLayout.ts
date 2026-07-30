@@ -2,6 +2,7 @@ import { ModalsManager } from '../components/modals/ModalsManager';
 import { Sidebar } from '../components/navigation/Sidebar';
 import { Topbar } from '../components/navigation/Topbar';
 import { Portal, Router } from '../router/router';
+import { ChevronLeftIcon } from '../components/common/Icons';
 
 export interface BaseLayoutConfig {
     screenId: string;
@@ -51,6 +52,13 @@ export abstract class BaseLayout {
         this.sidebar.onLogoutClick(() => ModalsManager.openModal('logout-confirm-modal'));
 
         appShell.appendChild(this.sidebar.getElement());
+
+        // Edge Toggle Button
+        const edgeToggle = document.createElement('button');
+        edgeToggle.className = 'sidebar-edge-toggle';
+        edgeToggle.innerHTML = ChevronLeftIcon({ size: 14 });
+        edgeToggle.addEventListener('click', () => this.toggleSidebar());
+        appShell.appendChild(edgeToggle);
 
         // Sidebar Overlay
         this.overlay = document.createElement('div');
@@ -118,14 +126,25 @@ export abstract class BaseLayout {
 
     protected toggleSidebar(): void {
         const sb = this.sidebar.getElement();
-        if (sb.classList.contains('active')) {
-            this.closeSidebar();
+        if (window.innerWidth <= 768) {
+            // Mobile: toggle .active for overlay menu
+            if (sb.classList.contains('active')) {
+                this.closeSidebar();
+            } else {
+                this.openSidebar();
+            }
         } else {
-            this.openSidebar();
+            // Desktop: toggle .collapsed
+            if (sb.classList.contains('collapsed')) {
+                sb.classList.remove('collapsed');
+            } else {
+                sb.classList.add('collapsed');
+            }
         }
     }
 
     protected openSidebar(): void {
+        this.sidebar.getElement().classList.remove('collapsed');
         this.sidebar.getElement().classList.add('active');
         this.overlay.classList.add('active');
     }

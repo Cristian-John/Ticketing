@@ -19,7 +19,8 @@ export type HtmlViewName =
     | 'profile'
     | 'support-dashboard'
     | 'unclaimed-tickets'
-    | 'collaborating-tickets';
+    | 'collaborating-tickets'
+    | 'notifications';
 
 const VIEW_TITLES: Record<HtmlViewName, { client?: string; admin?: string; support?: string }> = {
     'my-tickets': { client: 'My Tickets', support: 'My Tickets' },
@@ -32,6 +33,7 @@ const VIEW_TITLES: Record<HtmlViewName, { client?: string; admin?: string; suppo
     resolved: { admin: 'Resolved & Ratings' },
     users: { admin: 'User Management' },
     profile: { client: 'My Profile', admin: 'My Profile', support: 'My Profile' },
+    notifications: { client: 'Notification Center', admin: 'Notification Center', support: 'Notification Center' },
 };
 
 /** Maps HTML nav view names to store currentView keys (unchanged store API). */
@@ -46,6 +48,7 @@ const HTML_TO_STORE_VIEW: Record<HtmlViewName, string> = {
     'knowledge-base': 'kb',
     users: 'users',
     profile: 'profile',
+    notifications: 'notifications',
 };
 
 export class Router {

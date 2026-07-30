@@ -1,6 +1,8 @@
 import { MenuIcon } from '../common/Icons';
 import { ThemeToggle } from '../common/theme/ThemeToggle';
 import { NotificationsDropdown } from '../NotificationsDropdown';
+import { notificationStore } from '../../state/NotificationStore';
+import { IconService } from '../../utils/iconService';
 
 export interface TopbarConfig {
     titleId: string;
@@ -54,11 +56,8 @@ export class Topbar {
         const bellBtn = document.createElement('button');
         bellBtn.className = 'notifications-btn';
         bellBtn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            <span class="notifications-badge"></span>
+            <i data-lucide="bell"></i>
+            <span class="notifications-badge" style="display: none;"></span>
         `;
         
         const dropdownContainer = document.createElement('div');
@@ -66,14 +65,28 @@ export class Topbar {
         this.notifWrapper.appendChild(dropdownContainer);
         
         this.notificationsDropdown = new NotificationsDropdown(dropdownContainer);
-        this.notificationsDropdown.setOnUnreadCountChanged((count) => {
-            const badge = bellBtn.querySelector('.notifications-badge');
-            if (count > 0) {
-                badge?.classList.add('visible');
-            } else {
-                badge?.classList.remove('visible');
+        
+        const updateBadge = () => {
+            const counts = notificationStore.getCounts();
+            const badge = bellBtn.querySelector('.notifications-badge') as HTMLElement;
+            if (badge) {
+                if (counts.unread > 0) {
+                    badge.textContent = counts.unread > 99 ? '99+' : counts.unread.toString();
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        };
+
+        notificationStore.subscribe((event) => {
+            if (event.unreadCountChanged) {
+                updateBadge();
             }
         });
+        
+        // Initial badge update
+        updateBadge();
 
         bellBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -88,6 +101,9 @@ export class Topbar {
 
         this.element.appendChild(leftDiv);
         this.element.appendChild(this.actionsContainer);
+        
+        // Render Lucide icons for the topbar
+        IconService.renderIcons(this.element);
     }
 
     /**

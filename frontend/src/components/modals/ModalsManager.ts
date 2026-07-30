@@ -9,6 +9,7 @@ import { UpdateStatusModal } from './UpdateStatusModal';
 import { AddCollaboratorModal } from './AddCollaboratorModal';
 import { UserModal } from './UserModal';
 import { ViewTicketModal } from './ViewTicketModal';
+import { NotificationPreferencesModal } from './NotificationPreferencesModal';
 
 export class ModalsManager {
     /**
@@ -37,6 +38,7 @@ export class ModalsManager {
         appendModal(UpdateStatusModal);
         appendModal(TransferTicketModal);
         appendModal(AddCollaboratorModal);
+        appendModal(NotificationPreferencesModal);
 
         // Bind global close listeners to the new modals
         this.initModalCloseListeners();

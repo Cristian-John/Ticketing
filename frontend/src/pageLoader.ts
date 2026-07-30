@@ -5,6 +5,7 @@ import { SupportDashboardPage } from './pages/SupportDashboardPage';
 import { SupportTicketListPage } from './pages/SupportTicketListPage';
 import { TicketsPage } from './pages/Tickets';
 import { UsersPage } from './pages/Users';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { HtmlViewName } from './router/router';
 import { store } from './state/store';
 import { getPortalContentContainer, renderPlaceholder } from './utils/portalContent';
@@ -33,6 +34,7 @@ const routeRegistry: Record<HtmlViewName, RouteHandler> = {
     'knowledge-base': () => ArticlesPage.load(),
     'users': () => UsersPage.load(),
     'profile': () => ProfilePage.load(),
+    'notifications': (view) => NotificationsPage.load(view),
 };
 
 export async function loadPageForHtmlView(htmlView: string): Promise<void> {
@@ -41,6 +43,12 @@ export async function loadPageForHtmlView(htmlView: string): Promise<void> {
 
     const container = getPortalContentContainer(user.role);
     if (!container) return;
+
+    if (htmlView === 'notifications') {
+        container.classList.add('no-padding');
+    } else {
+        container.classList.remove('no-padding');
+    }
 
     const handler = routeRegistry[htmlView as HtmlViewName];
     if (handler) {
