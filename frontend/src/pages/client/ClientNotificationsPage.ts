@@ -1,23 +1,23 @@
-import { LayoutManager } from '../layouts/LayoutManager';
-import { HtmlViewName } from '../router/router';
-import { ticketsAPI } from '../services/api';
-import { getPortalContentContainer } from '../utils/portalContent';
-import { showToast } from '../components/Toast';
-import { store } from '../state/store';
-import { notificationStore } from '../state/NotificationStore';
-import { handleUIError } from '../utils/errorHandler';
+import { LayoutManager } from '../../layouts/LayoutManager';
+import { HtmlViewName } from '../../router/router';
+import { ticketsAPI } from '../../services/api';
+import { getPortalContentContainer } from '../../utils/portalContent';
+import { showToast } from '../../components/Toast';
+import { store } from '../../state/store';
+import { notificationStore } from '../../state/NotificationStore';
+import { handleUIError } from '../../utils/errorHandler';
 
-import { NotificationEmptyState } from '../components/notifications/NotificationEmptyState';
-import { NotificationSidebar } from '../components/notifications/NotificationSidebar';
-import { NotificationToolbar } from '../components/notifications/NotificationToolbar';
-import { NotificationList } from '../components/notifications/NotificationList';
-import { NotificationCard } from '../components/notifications/NotificationCard';
-import { NotificationDetail } from '../components/notifications/NotificationDetail';
-import { NotificationMapper } from '../mappers/NotificationMapper';
-import { IconService } from '../utils/iconService';
-import { TicketDetailModal } from '../components/TicketDetailModal';
+import { NotificationEmptyState } from '../../components/notifications/NotificationEmptyState';
+import { ClientNotificationSidebar } from '../../components/notifications/client/ClientNotificationSidebar';
+import { ClientNotificationToolbar } from '../../components/notifications/client/ClientNotificationToolbar';
+import { ClientNotificationList } from '../../components/notifications/client/ClientNotificationList';
+import { ClientNotificationDetail } from '../../components/notifications/client/ClientNotificationDetail';
+import { ClientNotificationMapper } from '../../mappers/ClientNotificationMapper';
+import { NotificationMapper } from '../../mappers/NotificationMapper';
+import { IconService } from '../../utils/iconService';
+import { TicketDetailModal } from '../../components/TicketDetailModal';
 
-export class NotificationsPage {
+export class ClientNotificationsPage {
     private static currentFilter: string = '';
     private static currentSearch: string = '';
     private static currentSort: string = 'newest';
@@ -28,27 +28,12 @@ export class NotificationsPage {
     private static limit: number = 20;
     private static notificationIds: string[] = [];
     private static nextCursor: string | null = null;
-    
-    // Transient UI State for Bulk Actions
-    private static isSelectionMode: boolean = false;
-    private static selectedIds: Set<string> = new Set();
 
-    private static sidebarComponent: NotificationSidebar;
-    private static toolbarComponent: NotificationToolbar;
-    private static listComponent: NotificationList;
-    private static detailComponent: NotificationDetail;
+    private static sidebarComponent: ClientNotificationSidebar;
+    private static toolbarComponent: ClientNotificationToolbar;
+    private static listComponent: ClientNotificationList;
+    private static detailComponent: ClientNotificationDetail;
 
-    // Phase 5.5: Presentation Cache (ViewModel Cache)
-    // Caches the mapped ViewModel to avoid redundant mapping and rendering operations.
-    // Invalidation Strategy:
-    // A cache hit requires the exact same 'hash'. The hash incorporates:
-    // 1. notification.id
-    // 2. notification.read_at
-    // 3. notification.updated_at
-    // 4. selection state (is selected)
-    // 5. focus state (is focused)
-    // 6. active selection mode
-    // Any change to these fields will produce a new hash and trigger a re-mapping.
     private static viewModelCache = new Map<string, { hash: string, vm: any }>();
 
     public static async load(_htmlView: HtmlViewName): Promise<void> {
@@ -56,15 +41,13 @@ export class NotificationsPage {
         const container = getPortalContentContainer(role || 'Client');
         if (!container) return;
 
-        if (role === 'admin') LayoutManager.admin?.getTopbar().setTitle('Notification Center');
-        else if (role === 'it-support') LayoutManager.support?.getTopbar().setTitle('Notification Center');
-        else LayoutManager.client?.getTopbar().setTitle('Notification Center');
+        LayoutManager.client?.getTopbar().setTitle('Notification Center');
 
         this.parseUrlState();
         this.initializeComponents();
 
         const content = `
-            <div class="notifications-page-layout" tabindex="-1">
+            <div class="notifications-page-layout client-notifications" tabindex="-1">
                 <div id="notif-sidebar-root"></div>
                 
                 <div class="notifications-main">
@@ -83,14 +66,14 @@ export class NotificationsPage {
     }
 
     private static initializeComponents() {
-        this.sidebarComponent = new NotificationSidebar((filter) => {
+        this.sidebarComponent = new ClientNotificationSidebar((filter) => {
             this.currentFilter = filter;
             this.currentCursor = null;
             this.updateUrlState();
             this.fetchAndRender(true);
         });
 
-        this.toolbarComponent = new NotificationToolbar(
+        this.toolbarComponent = new ClientNotificationToolbar(
             (search) => {
                 this.currentSearch = search;
                 this.currentCursor = null;
@@ -112,41 +95,16 @@ export class NotificationsPage {
             async () => {
                 try {
                     await notificationStore.markAllAsRead();
-                    showToast('All notifications marked as read', 'success');
+                    showToast('All updates marked as read', 'success');
                 } catch (e) {
                     handleUIError(e, 'Failed to mark all as read');
-                }
-            },
-            () => {
-                this.isSelectionMode = !this.isSelectionMode;
-                if (!this.isSelectionMode) {
-                    this.selectedIds.clear();
-                }
-                this.renderToolbar();
-                this.renderList();
-            },
-            async () => {
-                if (this.selectedIds.size === 0) return;
-                try {
-                    const idsToMark = Array.from(this.selectedIds);
-                    await notificationStore.markBulkAsRead(idsToMark);
-                    this.isSelectionMode = false;
-                    this.selectedIds.clear();
-                    showToast('Selected notifications marked as read', 'success');
-                    this.renderToolbar();
-                    this.renderList();
-                } catch (e) {
-                    handleUIError(e, 'Failed to mark selected as read');
                 }
             }
         );
 
-        this.listComponent = new NotificationList(
+        this.listComponent = new ClientNotificationList(
             (id) => {
                 this.selectNotification(id);
-            },
-            (id) => {
-                this.toggleSelection(id);
             },
             () => {
                 this.currentCursor = this.nextCursor;
@@ -157,7 +115,7 @@ export class NotificationsPage {
             }
         );
 
-        this.detailComponent = new NotificationDetail(
+        this.detailComponent = new ClientNotificationDetail(
             async (actionType, payload) => {
                 this.handleDetailAction(actionType, payload);
             },
@@ -177,13 +135,10 @@ export class NotificationsPage {
         this.renderToolbar();
         IconService.renderIcons(container);
         
-        // Attach global keyboard listener to the layout container
         const layout = container.querySelector('.notifications-page-layout') as HTMLElement;
         if (layout) {
-            // Remove previous listener to prevent duplicates on re-render
             layout.removeEventListener('keydown', this.handleKeyDown);
             layout.addEventListener('keydown', this.handleKeyDown);
-            // Auto-focus container to start listening immediately
             layout.focus();
         }
     }
@@ -201,9 +156,7 @@ export class NotificationsPage {
                 this.currentSearch, 
                 this.currentSort, 
                 this.currentFilter, 
-                totalCount, 
-                this.isSelectionMode, 
-                this.selectedIds.size
+                totalCount
             );
             this.toolbarComponent.attachListeners(container);
             IconService.renderIcons(container);
@@ -216,7 +169,7 @@ export class NotificationsPage {
         this.currentSearch = urlParams.get('search') || '';
         this.currentSort = urlParams.get('sort') || 'newest';
         this.selectedId = urlParams.get('selected') || null;
-        this.currentCursor = null; // Always load from beginning on refresh
+        this.currentCursor = null; 
     }
 
     private static updateUrlState() {
@@ -261,7 +214,6 @@ export class NotificationsPage {
                 this.notificationIds = [...this.notificationIds, ...response.ids];
             }
 
-            // Phase 5.5 Focus refinement: if focused item is no longer in the list, fallback
             if (this.focusedId && !this.notificationIds.includes(this.focusedId)) {
                 this.focusedId = this.notificationIds.length > 0 ? this.notificationIds[0] : null;
             }
@@ -269,13 +221,13 @@ export class NotificationsPage {
             this.nextCursor = response.cursor;
 
             this.updateSidebarCounts();
-            this.renderToolbar(); // Total counts might have changed
+            this.renderToolbar();
             this.renderList();
             this.renderDetail();
         } catch (err) {
             console.error('Error fetching notifications', err);
             if (listRoot && isInitial) {
-                listRoot.innerHTML = '<div class="error-msg text-danger">Failed to load notifications.</div>';
+                listRoot.innerHTML = '<div class="error-msg text-danger">Failed to load updates.</div>';
             }
         }
     }
@@ -285,18 +237,17 @@ export class NotificationsPage {
         if (!n) return null;
 
         const isSelectedActive = this.selectedId === id;
-        const isSelectedBulk = this.selectedIds.has(id);
         const isFocused = this.focusedId === id;
         
-        // Cache key incorporates version/timestamps and transient UI states
-        const hash = `${n.created_at}_${n.read_at}_${isSelectedActive}_${isSelectedBulk}_${isFocused}_${this.isSelectionMode}`;
+        const hash = `${n.created_at}_${n.read_at}_${isSelectedActive}_${isFocused}`;
         
         const cached = this.viewModelCache.get(id);
         if (cached && cached.hash === hash) {
             return cached.vm;
         }
 
-        const vm = NotificationMapper.mapToViewModel(n, this.selectedId || undefined);
+        const sharedVm = NotificationMapper.mapToViewModel(n, this.selectedId || undefined);
+        const vm = ClientNotificationMapper.mapToClientCard(sharedVm);
         this.viewModelCache.set(id, { hash, vm });
         return vm;
     }
@@ -311,22 +262,9 @@ export class NotificationsPage {
                 .map(id => this.getViewModel(id))
                 .filter(vm => !!vm);
                 
-            listRoot.innerHTML = this.listComponent.render(vms as any, this.nextCursor, this.selectedIds, this.isSelectionMode, this.focusedId);
-            this.listComponent.attachListeners(container as HTMLElement, this.isSelectionMode);
+            listRoot.innerHTML = this.listComponent.render(vms as any, this.nextCursor, this.focusedId);
+            this.listComponent.attachListeners(container as HTMLElement);
             IconService.renderIcons(container as HTMLElement);
-        }
-    }
-
-    private static updateCardInDOM(id: string) {
-        const vm = this.getViewModel(id);
-        if (!vm) return;
-        
-        const container = getPortalContentContainer(store.getState().currentUser?.role || 'Client');
-        const cardEl = container?.querySelector(`.notification-card[data-id="${id}"]`);
-        if (cardEl) {
-            const isSelectedBulk = this.selectedIds.has(id);
-            const isFocused = this.focusedId === id;
-            cardEl.outerHTML = NotificationCard.render(vm, isSelectedBulk, this.isSelectionMode, isFocused);
         }
     }
 
@@ -335,16 +273,6 @@ export class NotificationsPage {
         this.updateUrlState();
         this.renderList();
         this.renderDetail();
-    }
-
-    private static toggleSelection = (id: string) => {
-        if (this.selectedIds.has(id)) {
-            this.selectedIds.delete(id);
-        } else {
-            this.selectedIds.add(id);
-        }
-        this.renderToolbar();
-        this.renderList();
     }
 
     private static renderDetail() {
@@ -364,7 +292,9 @@ export class NotificationsPage {
                 detailRoot.innerHTML = NotificationEmptyState.renderNotFoundDetail();
                 IconService.renderIcons(detailRoot as HTMLElement);
             } else {
-                detailRoot.innerHTML = this.detailComponent.render(NotificationMapper.mapToDetailViewModel(n));
+                const sharedDetailVm = NotificationMapper.mapToDetailViewModel(n);
+                const detailVm = ClientNotificationMapper.mapToClientDetail(sharedDetailVm);
+                detailRoot.innerHTML = this.detailComponent.render(detailVm);
                 this.detailComponent.attachListeners(detailRoot as HTMLElement);
                 IconService.renderIcons(detailRoot as HTMLElement);
             }
@@ -389,22 +319,6 @@ export class NotificationsPage {
 
         try {
             switch (actionType) {
-                case 'accept-collab':
-                    if (payload?.reqId) await ticketsAPI.approveCollaboration(payload.reqId);
-                    showToast('Collaboration accepted', 'success');
-                    break;
-                case 'reject-collab':
-                    if (payload?.reqId) await ticketsAPI.rejectCollaboration(payload.reqId);
-                    showToast('Collaboration rejected', 'info');
-                    break;
-                case 'accept-transfer':
-                    if (payload?.reqId) await ticketsAPI.approveTransfer(payload.reqId);
-                    showToast('Transfer accepted', 'success');
-                    break;
-                case 'reject-transfer':
-                    if (payload?.reqId) await ticketsAPI.rejectTransfer(payload.reqId);
-                    showToast('Transfer rejected', 'info');
-                    break;
                 case 'view-ticket':
                     if (payload?.ticketId) {
                         try {
@@ -414,10 +328,9 @@ export class NotificationsPage {
                             handleUIError(err, 'Failed to load ticket');
                         }
                     }
-                    return; // Don't mark unactionable if just viewing ticket
+                    return; 
             }
 
-            // Mark as unactionable optimistically via store
             notificationStore.upsert([{ ...notification, metadata: { ...notification.metadata, actionable: false } }]);
         } catch (e) {
             handleUIError(e, 'Failed to process action');
@@ -429,7 +342,6 @@ export class NotificationsPage {
     }
 
     private static handleKeyDown = (e: KeyboardEvent) => {
-        // Ignore if focus is in an input or textarea
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
             return;
         }
@@ -446,21 +358,12 @@ export class NotificationsPage {
             case ' ':
                 e.preventDefault();
                 if (this.focusedId) {
-                    if (this.isSelectionMode) {
-                        this.toggleSelection(this.focusedId);
-                    } else {
-                        this.selectNotification(this.focusedId);
-                    }
+                    this.selectNotification(this.focusedId);
                 }
                 break;
             case 'Escape':
                 e.preventDefault();
-                if (this.isSelectionMode) {
-                    this.isSelectionMode = false;
-                    this.selectedIds.clear();
-                    this.renderToolbar();
-                    this.renderList();
-                } else if (this.focusedId) {
+                if (this.focusedId) {
                     this.focusedId = null;
                     this.renderList();
                 }
@@ -478,7 +381,6 @@ export class NotificationsPage {
 
         for (const card of cards) {
             const rect = card.getBoundingClientRect();
-            // Check if card is visible inside the listRoot
             if (rect.top >= listRect.top && rect.bottom <= listRect.bottom) {
                 return card.getAttribute('data-id') || null;
             }
@@ -501,109 +403,30 @@ export class NotificationsPage {
             }
         }
 
-        if (key === 'ArrowDown') {
-            currentIndex = currentIndex < this.notificationIds.length - 1 ? currentIndex + 1 : currentIndex;
-        } else if (key === 'ArrowUp') {
-            currentIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-        } else if (key === 'Home') {
-            currentIndex = 0;
-        } else if (key === 'End') {
-            currentIndex = this.notificationIds.length - 1;
-        }
-
-        // Fallback if indexOf returned -1 for a valid key
         if (currentIndex === -1) currentIndex = 0;
+        else if (key === 'ArrowDown') currentIndex = Math.min(currentIndex + 1, this.notificationIds.length - 1);
+        else if (key === 'ArrowUp') currentIndex = Math.max(currentIndex - 1, 0);
+        else if (key === 'Home') currentIndex = 0;
+        else if (key === 'End') currentIndex = this.notificationIds.length - 1;
 
-        if (currentIndex >= 0 && currentIndex < this.notificationIds.length) {
-            this.focusedId = this.notificationIds[currentIndex];
-            this.renderList();
-            this.scrollToFocused();
-        }
+        this.focusedId = this.notificationIds[currentIndex];
+        this.renderList();
+        this.scrollToFocused();
     }
 
     private static scrollToFocused() {
+        if (!this.focusedId) return;
         const container = getPortalContentContainer(store.getState().currentUser?.role || 'Client');
-        if (!container) return;
-        const focusedEl = container.querySelector(`.notification-card[data-id="${this.focusedId}"]`);
-        if (focusedEl) {
-            focusedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        const card = container?.querySelector(`.notification-card[data-id="${this.focusedId}"]`);
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
-
-    private static unsubscribeStore: (() => void) | null = null;
-    private static pendingRenderFrame: number | null = null;
-    private static batchedUpdatedIds = new Set<string>();
-    private static batchedNeedsFullListRender = false;
-    private static batchedNeedsDetailRender = false;
 
     private static attachStoreListeners() {
-        if (this.unsubscribeStore) this.unsubscribeStore();
-
-        this.unsubscribeStore = notificationStore.subscribe((event) => {
-            if (event.unreadCountChanged) {
-                this.updateSidebarCounts();
-            }
-
-            if (event.inserted.length > 0 && !this.currentCursor && !this.currentSearch) {
-                this.currentCursor = null;
-                this.fetchAndRender(false);
-                return;
-            }
-
-            if (event.inserted.length > 0 || event.removed.length > 0) {
-                this.batchedNeedsFullListRender = true;
-            }
-
-            event.updated.forEach(id => {
-                if (this.notificationIds.includes(id)) {
-                    this.batchedUpdatedIds.add(id);
-                }
-                if (this.selectedId === id) {
-                    this.batchedNeedsDetailRender = true;
-                }
-            });
-
-            this.scheduleRender();
+        notificationStore.subscribe(() => {
+            if (this.currentCursor) return; 
+            this.fetchAndRender(false);
         });
-    }
-
-    private static scheduleRender() {
-        if (this.pendingRenderFrame !== null) return;
-        this.pendingRenderFrame = requestAnimationFrame(() => {
-            this.pendingRenderFrame = null;
-            this.executeBatchedRenders();
-        });
-    }
-
-    private static executeBatchedRenders() {
-        if (this.batchedNeedsFullListRender) {
-            this.renderList();
-        } else if (this.batchedUpdatedIds.size > 0) {
-            // Incremental update
-            this.batchedUpdatedIds.forEach(id => {
-                this.updateCardInDOM(id);
-            });
-            const container = getPortalContentContainer(store.getState().currentUser?.role || 'Client');
-            if (container) IconService.renderIcons(container);
-        }
-
-        if (this.batchedNeedsDetailRender) {
-            this.renderDetail();
-        }
-
-        this.batchedNeedsFullListRender = false;
-        this.batchedNeedsDetailRender = false;
-        this.batchedUpdatedIds.clear();
-    }
-
-    public static unload() {
-        this.isSelectionMode = false;
-        this.selectedIds.clear();
-        this.focusedId = null;
-        
-        if (this.unsubscribeStore) {
-            this.unsubscribeStore();
-            this.unsubscribeStore = null;
-        }
     }
 }

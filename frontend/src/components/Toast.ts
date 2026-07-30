@@ -1,3 +1,5 @@
+import { TransitionLifecycle } from '../utils/TransitionLifecycle';
+
 export function showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -10,9 +12,15 @@ export function showToast(message: string, type: 'success' | 'error' | 'info' = 
     `;
 
     container.appendChild(toast);
+    
+    // Begin opening lifecycle
+    TransitionLifecycle.open(toast, { timeoutMs: 400 });
 
     setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => toast.remove(), 300);
+        // Begin closing lifecycle, and physically remove DOM node when done
+        TransitionLifecycle.close(toast, { 
+            timeoutMs: 400,
+            onCleanup: () => toast.remove() 
+        });
     }, 4000);
 }

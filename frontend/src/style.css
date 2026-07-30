@@ -7,6 +7,7 @@
    CORE
    ========================================= */
 @import './styles/core/variables.css';
+@import './styles/core/motion.css';
 @import './styles/core/reset.css';
 @import './styles/core/utilities.css';
 

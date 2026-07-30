@@ -228,6 +228,7 @@
     overflow: hidden; /* Prevent body scroll */
     position: relative;
     border: none;
+    outline: none;
     gap: var(--space-md);
     padding: var(--space-md);
 }
@@ -637,7 +638,9 @@
     padding: var(--space-md);
     border-bottom: 1px solid var(--border-color-light);
     cursor: pointer;
-    transition: background-color var(--transition-fast);
+    transition: 
+        background-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
     position: relative;
     outline: none;
     min-height: 90px;
@@ -806,7 +809,7 @@
     display: flex;
     gap: var(--space-xs);
     opacity: 0;
-    transition: opacity var(--transition-fast);
+    transition: opacity var(--duration-fast) var(--ease-standard);
     align-items: flex-start;
 }
 .notification-card:hover .nc-quick-actions,
@@ -910,6 +913,58 @@
     gap: var(--space-md);
 }
 
+/* ──── Detail Panel Motion Orchestration ──── */
+
+#notif-detail-root .detail-header {
+    opacity: var(--opacity-hidden);
+    transform: translateY(var(--motion-distance-md));
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-1);
+}
+
+#notif-detail-root .detail-content-scroll {
+    opacity: var(--opacity-hidden);
+    transform: translateY(var(--motion-distance-lg));
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-2);
+}
+
+#notif-detail-root .detail-actions-bottom {
+    opacity: var(--opacity-hidden);
+    transform: translateY(var(--motion-distance-md));
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-3);
+}
+
+/* Empty states also stagger in */
+#notif-detail-root .notifications-empty-state,
+#notif-detail-root .detail-empty,
+#notif-detail-root .detail-empty-polished {
+    opacity: var(--opacity-hidden);
+    transform: translateY(var(--motion-distance-md));
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-2);
+}
+
+/* Active State */
+#notif-detail-root.is-open .detail-header,
+#notif-detail-root.is-open .detail-content-scroll,
+#notif-detail-root.is-open .detail-actions-bottom,
+#notif-detail-root.is-open .notifications-empty-state,
+#notif-detail-root.is-open .detail-empty,
+#notif-detail-root.is-open .detail-empty-polished {
+    opacity: var(--opacity-visible);
+    transform: translateY(0);
+}
+
 
 /* Empty & Loading States */
 .notifications-empty-state, .detail-empty {
@@ -940,3 +995,20 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* ──── Empty State Extracted Styles ──── */
+.empty-list-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 24px; }
+.glow-icon-container { position: relative; display: flex; align-items: center; justify-content: center; width: 120px; height: 120px; margin-bottom: 24px; }
+.glow-bg { position: absolute; inset: 0; background: var(--accent); opacity: 0.12; filter: blur(16px); border-radius: 50%; transform: scale(0.6); }
+.glow-icon-container i { position: relative; z-index: 1; filter: drop-shadow(0 0 12px var(--accent-light)); }
+
+.detail-empty-polished { 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    height: 100%; width: 100%; text-align: center; position: relative; overflow: hidden;
+    box-shadow: none; 
+    border-radius: var(--radius-lg, 12px);
+    background: transparent;
+}
+.detail-empty-polished .lucide { transition: transform 0.3s ease, filter 0.3s ease; }
+.detail-empty-polished:hover .lucide-mouse-pointer-click { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 4px 12px var(--accent-light)); }
+

@@ -127,30 +127,30 @@ export abstract class BaseLayout {
     protected toggleSidebar(): void {
         const sb = this.sidebar.getElement();
         if (window.innerWidth <= 768) {
-            // Mobile: toggle .active for overlay menu
-            if (sb.classList.contains('active')) {
+            // Mobile: toggle .is-expanded for overlay menu
+            if (sb.classList.contains('is-expanded')) {
                 this.closeSidebar();
             } else {
                 this.openSidebar();
             }
         } else {
-            // Desktop: toggle .collapsed
-            if (sb.classList.contains('collapsed')) {
-                sb.classList.remove('collapsed');
+            // Desktop: toggle .is-collapsed
+            if (sb.classList.contains('is-collapsed')) {
+                sb.classList.remove('is-collapsed');
             } else {
-                sb.classList.add('collapsed');
+                sb.classList.add('is-collapsed');
             }
         }
     }
 
     protected openSidebar(): void {
-        this.sidebar.getElement().classList.remove('collapsed');
-        this.sidebar.getElement().classList.add('active');
-        this.overlay.classList.add('active');
+        this.sidebar.getElement().classList.remove('is-collapsed');
+        this.sidebar.getElement().classList.add('is-expanded');
+        this.overlay.classList.add('is-expanded');
     }
 
     protected closeSidebar(): void {
-        this.sidebar.getElement().classList.remove('active');
-        this.overlay.classList.remove('active');
+        this.sidebar.getElement().classList.remove('is-expanded');
+        this.overlay.classList.remove('is-expanded');
     }
 }

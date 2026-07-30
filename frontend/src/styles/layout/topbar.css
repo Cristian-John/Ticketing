@@ -47,7 +47,10 @@
     outline: none;
     width: 200px;
     font-family: var(--font);
-    transition: var(--transition);
+    transition: 
+        border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard);
 }
 .search-box input[type="text"]:focus {
     border-color: var(--border-focus);
@@ -63,7 +66,10 @@
     outline: none;
     cursor: pointer;
     font-family: var(--font);
-    transition: var(--transition);
+    transition: 
+        border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard);
 }
 .filter-sel:focus {
     border-color: var(--border-focus);

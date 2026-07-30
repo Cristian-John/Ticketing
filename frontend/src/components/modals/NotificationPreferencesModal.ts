@@ -1,5 +1,6 @@
 import { ModalsManager } from './ModalsManager';
 import { showToast } from '../Toast';
+import { store } from '../../state/store';
 
 export class NotificationPreferencesModal {
     private element: HTMLDivElement;
@@ -30,6 +31,7 @@ export class NotificationPreferencesModal {
             const savedPrefsStr = localStorage.getItem('notification_preferences');
             const prefs = savedPrefsStr ? { ...defaultPrefs, ...JSON.parse(savedPrefsStr) } : defaultPrefs;
             const isChecked = (val: boolean) => val ? 'checked' : '';
+            const isClient = store.getState().currentUser?.role === 'client';
 
             body.innerHTML = `
                 <style>
@@ -85,6 +87,7 @@ export class NotificationPreferencesModal {
                     <div class="pref-modal-title">Notification Categories</div>
                     
                     <div class="pref-grid">
+                        ${!isClient ? `
                         <div class="pref-item">
                             <span class="pref-name">Transfers</span>
                             <label class="toggle-switch">
@@ -100,21 +103,22 @@ export class NotificationPreferencesModal {
                             </label>
                         </div>
                         <div class="pref-item">
-                            <span class="pref-name">Comments</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" ${isChecked(prefs.comments)} id="pref-cat-comments">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <div class="pref-item">
                             <span class="pref-name">Assignments</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" ${isChecked(prefs.assignments)} id="pref-cat-assignments">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
+                        ` : ''}
                         <div class="pref-item">
-                            <span class="pref-name">System Alerts</span>
+                            <span class="pref-name">${isClient ? 'Replies' : 'Comments'}</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${isChecked(prefs.comments)} id="pref-cat-comments">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="pref-item">
+                            <span class="pref-name">${isClient ? 'Ticket Status & Alerts' : 'System Alerts'}</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" ${isChecked(prefs.system)} id="pref-cat-system">
                                 <span class="toggle-slider"></span>
@@ -148,11 +152,11 @@ export class NotificationPreferencesModal {
             saveBtn.addEventListener('click', () => {
                 const email = (this.element.querySelector('#pref-email') as HTMLInputElement)?.checked;
                 const push = (this.element.querySelector('#pref-push') as HTMLInputElement)?.checked;
-                const transfers = (this.element.querySelector('#pref-cat-transfers') as HTMLInputElement)?.checked;
-                const collab = (this.element.querySelector('#pref-cat-collab') as HTMLInputElement)?.checked;
-                const comments = (this.element.querySelector('#pref-cat-comments') as HTMLInputElement)?.checked;
-                const assignments = (this.element.querySelector('#pref-cat-assignments') as HTMLInputElement)?.checked;
-                const system = (this.element.querySelector('#pref-cat-system') as HTMLInputElement)?.checked;
+                const transfers = (this.element.querySelector('#pref-cat-transfers') as HTMLInputElement)?.checked ?? true;
+                const collab = (this.element.querySelector('#pref-cat-collab') as HTMLInputElement)?.checked ?? true;
+                const comments = (this.element.querySelector('#pref-cat-comments') as HTMLInputElement)?.checked ?? true;
+                const assignments = (this.element.querySelector('#pref-cat-assignments') as HTMLInputElement)?.checked ?? true;
+                const system = (this.element.querySelector('#pref-cat-system') as HTMLInputElement)?.checked ?? true;
                 
                 const prefs = { email, push, transfers, collab, comments, assignments, system };
                 localStorage.setItem('notification_preferences', JSON.stringify(prefs));

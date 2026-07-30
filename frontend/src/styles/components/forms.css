@@ -54,7 +54,10 @@ textarea,
     color: var(--text-primary);
     font-family: var(--font);
     font-size: 0.92rem;
-    transition: var(--transition);
+    transition: 
+        border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard);
     outline: none;
 }
 input:focus,
@@ -98,10 +101,13 @@ textarea:focus,
     color: var(--text-secondary);
     cursor: pointer;
     padding: var(--space-3xs);
+    border-radius: var(--radius-sm);
+    transition: 
+        background-color var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
 }
 .password-toggle-btn:hover {
     color: var(--text-primary);

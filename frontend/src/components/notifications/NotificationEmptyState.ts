@@ -1,22 +1,6 @@
 export class NotificationEmptyState {
     public static renderEmptyList(): string {
         return `
-            <style>
-                .empty-list-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 24px; }
-                .glow-icon-container { position: relative; display: flex; align-items: center; justify-content: center; width: 120px; height: 120px; margin-bottom: 24px; }
-                .glow-bg { position: absolute; inset: 0; background: var(--accent); opacity: 0.12; filter: blur(16px); border-radius: 50%; transform: scale(0.6); }
-                .glow-icon-container i { position: relative; z-index: 1; filter: drop-shadow(0 0 12px var(--accent-light)); }
-                
-                .detail-empty-polished { 
-                    display: flex; flex-direction: column; align-items: center; justify-content: center; 
-                    height: 100%; width: 100%; text-align: center; position: relative; overflow: hidden;
-                    box-shadow: none; 
-                    border-radius: var(--radius-lg, 12px);
-                    background: transparent;
-                }
-                .detail-empty-polished .lucide { transition: transform 0.3s ease, filter 0.3s ease; }
-                .detail-empty-polished:hover .lucide-mouse-pointer-click { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 4px 12px var(--accent-light)); }
-            </style>
             <div class="empty-list-wrapper">
                 <div class="glow-icon-container">
                     <div class="glow-bg"></div>
