@@ -12,6 +12,7 @@ import { ClientNotificationSidebar } from '../../components/notifications/client
 import { ClientNotificationToolbar } from '../../components/notifications/client/ClientNotificationToolbar';
 import { ClientNotificationList } from '../../components/notifications/client/ClientNotificationList';
 import { ClientNotificationDetail } from '../../components/notifications/client/ClientNotificationDetail';
+import { ClientNotificationCard } from '../../components/notifications/client/ClientNotificationCard';
 import { ClientNotificationMapper } from '../../mappers/ClientNotificationMapper';
 import { NotificationMapper } from '../../mappers/NotificationMapper';
 import { IconService } from '../../utils/iconService';
@@ -35,6 +36,12 @@ export class ClientNotificationsPage {
     private static detailComponent: ClientNotificationDetail;
 
     private static viewModelCache = new Map<string, { hash: string, vm: any }>();
+
+    private static unsubscribeStore: (() => void) | null = null;
+    private static pendingRenderFrame: number | null = null;
+    private static batchedUpdatedIds = new Set<string>();
+    private static batchedNeedsFullListRender = false;
+    private static batchedNeedsDetailRender = false;
 
     public static async load(_htmlView: HtmlViewName): Promise<void> {
         const role = store.getState().currentUser?.role;
@@ -268,6 +275,18 @@ export class ClientNotificationsPage {
         }
     }
 
+    private static updateCardInDOM(id: string) {
+        const vm = this.getViewModel(id);
+        if (!vm) return;
+        
+        const container = getPortalContentContainer(store.getState().currentUser?.role || 'Client');
+        const cardEl = container?.querySelector(`.notification-card[data-id="${id}"]`);
+        if (cardEl) {
+            const isFocused = this.focusedId === id;
+            cardEl.outerHTML = ClientNotificationCard.render(vm, isFocused);
+        }
+    }
+
     private static selectNotification = (id: string) => {
         this.selectedId = id;
         this.updateUrlState();
@@ -424,9 +443,70 @@ export class ClientNotificationsPage {
     }
 
     private static attachStoreListeners() {
-        notificationStore.subscribe(() => {
-            if (this.currentCursor) return; 
-            this.fetchAndRender(false);
+        if (this.unsubscribeStore) this.unsubscribeStore();
+
+        this.unsubscribeStore = notificationStore.subscribe((event) => {
+            if (event.unreadCountChanged) {
+                this.updateSidebarCounts();
+            }
+
+            if (event.inserted.length > 0 && !this.currentCursor && !this.currentSearch) {
+                this.currentCursor = null;
+                this.fetchAndRender(false);
+                return;
+            }
+
+            if (event.inserted.length > 0 || event.removed.length > 0) {
+                this.batchedNeedsFullListRender = true;
+            }
+
+            event.updated.forEach(id => {
+                if (this.notificationIds.includes(id)) {
+                    this.batchedUpdatedIds.add(id);
+                }
+                if (this.selectedId === id) {
+                    this.batchedNeedsDetailRender = true;
+                }
+            });
+
+            this.scheduleRender();
         });
+    }
+
+    private static scheduleRender() {
+        if (this.pendingRenderFrame !== null) return;
+        this.pendingRenderFrame = requestAnimationFrame(() => {
+            this.pendingRenderFrame = null;
+            this.executeBatchedRenders();
+        });
+    }
+
+    private static executeBatchedRenders() {
+        if (this.batchedNeedsFullListRender) {
+            this.renderList();
+        } else if (this.batchedUpdatedIds.size > 0) {
+            this.batchedUpdatedIds.forEach(id => {
+                this.updateCardInDOM(id);
+            });
+            const container = getPortalContentContainer(store.getState().currentUser?.role || 'Client');
+            if (container) IconService.renderIcons(container);
+        }
+
+        if (this.batchedNeedsDetailRender) {
+            this.renderDetail();
+        }
+
+        this.batchedNeedsFullListRender = false;
+        this.batchedNeedsDetailRender = false;
+        this.batchedUpdatedIds.clear();
+    }
+
+    public static unload() {
+        if (this.unsubscribeStore) {
+            this.unsubscribeStore();
+            this.unsubscribeStore = null;
+        }
+        this.pendingRenderFrame = null;
+        this.focusedId = null;
     }
 }

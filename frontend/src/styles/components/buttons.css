@@ -27,6 +27,7 @@
 
 .btn:active {
     transform: scale(var(--scale-pressed));
+    transition: transform var(--duration-instant) var(--ease-accelerate);
 }
 
 .btn-primary {
@@ -36,7 +37,7 @@
     box-shadow: 0 2px 12px var(--primary-light);
 }
 .btn-primary:hover {
-    transform: scale(var(--scale-hover));
+    transform: scale(var(--scale-hover)) translateY(-1px);
     box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2);
 }
 [data-theme='light'] .btn-primary {
@@ -52,6 +53,7 @@
     background: var(--bg-input);
     color: var(--text-primary);
     border-color: var(--border-hover);
+    transform: scale(var(--scale-hover)) translateY(-1px);
 }
 
 .btn-danger {
@@ -61,6 +63,7 @@
 }
 .btn-danger:hover {
     background: rgba(255, 82, 82, 0.18);
+    transform: scale(var(--scale-hover)) translateY(-1px);
 }
 
 .btn-rate {
