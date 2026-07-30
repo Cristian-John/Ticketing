@@ -13,9 +13,10 @@
     padding: 20px 0;
     flex-shrink: 0;
     overflow-y: auto;
-    transition:
-        transform 0.3s ease,
-        width 0.3s ease;
+    transition: 
+        transform var(--duration-slow) var(--ease-standard),
+        width var(--duration-slow) var(--ease-standard),
+        margin-left var(--duration-slow) var(--ease-standard);
     z-index: 30;
 }
 
@@ -225,7 +226,9 @@
     cursor: pointer;
     font-size: 20px;
     flex-shrink: 0;
-    transition: var(--transition);
+    transition: 
+        background-color var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard);
 }
 .sidebar-toggle:hover {
     background: var(--row-hover);
@@ -250,7 +253,7 @@
     color: var(--text-secondary);
     cursor: pointer;
     z-index: 90;
-    transition: left 0.3s ease, background 0.2s ease, color 0.2s ease;
+    transition: left var(--duration-slow) var(--ease-standard), background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
 }
 
@@ -262,20 +265,20 @@
 .sidebar-edge-toggle svg {
     width: 14px;
     height: 14px;
-    transition: transform 0.3s ease;
+    transition: transform var(--duration-slow) var(--ease-standard);
 }
 
-.sidebar.collapsed ~ .sidebar-edge-toggle {
+.sidebar.is-collapsed ~ .sidebar-edge-toggle {
     left: 0;
 }
 
-.sidebar.collapsed ~ .sidebar-edge-toggle svg {
+.sidebar.is-collapsed ~ .sidebar-edge-toggle svg {
     transform: rotate(180deg);
 }
 
 /* ── Responsive ── */
 @media (min-width: 769px) {
-    .sidebar.collapsed {
+    .sidebar.is-collapsed {
         margin-left: calc(-1 * var(--sidebar-width));
     }
     
@@ -299,8 +302,9 @@
         box-shadow: var(--shadow-lg);
         width: 260px;
         z-index: 99;
+        transition: transform var(--duration-slow) var(--ease-standard);
     }
-    .sidebar.active {
+    .sidebar.is-expanded {
         transform: translateX(0);
     }
 }

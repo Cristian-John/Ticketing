@@ -27,10 +27,13 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: var(--transition);
+    transition: 
+        transform var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
 }
 .stat-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(calc(-1 * var(--motion-distance-sm)));
     background: var(--bg-card-hover);
     box-shadow: var(--shadow);
 }
@@ -80,7 +83,9 @@
     margin-bottom: var(--space-xs);
     cursor: pointer;
     border: 1px solid var(--border);
-    transition: var(--transition);
+    transition: 
+        background-color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard);
 }
 .mini-card:hover {
     background: var(--bg-card-hover);

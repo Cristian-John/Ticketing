@@ -10,6 +10,7 @@ import { AddCollaboratorModal } from './AddCollaboratorModal';
 import { UserModal } from './UserModal';
 import { ViewTicketModal } from './ViewTicketModal';
 import { NotificationPreferencesModal } from './NotificationPreferencesModal';
+import { TransitionLifecycle } from '../../utils/TransitionLifecycle';
 
 export class ModalsManager {
     /**
@@ -44,37 +45,38 @@ export class ModalsManager {
         this.initModalCloseListeners();
     }
     /**
-     * Opens a modal by adding the 'show' class to its overlay element.
+     * Opens a modal by adding the 'show' class to its overlay element,
+     * then orchestrates the opening motion lifecycle.
      */
     public static openModal(modalId: string): void {
-        const modal = document.getElementById(modalId);
-        if (modal) modal.classList.add('show');
+        const overlay = document.getElementById(modalId);
+        if (!overlay) return;
+        
+        TransitionLifecycle.open(overlay, { locksBody: true, timeoutMs: 400 });
     }
 
     /**
-     * Closes a modal by removing the 'show' class from its overlay element.
+     * Closes a modal by orchestrating the closing motion lifecycle.
      */
     public static closeModal(modalId: string): void {
-        const modal = document.getElementById(modalId);
-        if (modal) modal.classList.remove('show');
+        const overlay = document.getElementById(modalId);
+        if (!overlay) return;
+        
+        TransitionLifecycle.close(overlay, { timeoutMs: 400 });
     }
 
-    /**
-     * Initializes global event listeners for closing modals.
-     * Binds click events to .modal-close buttons and .modal-overlay backgrounds.
-     */
     public static initModalCloseListeners(): void {
         document.querySelectorAll('.modal-close').forEach(btn => {
             btn.addEventListener('click', () => {
                 const overlay = btn.closest('.modal-overlay');
-                if (overlay) overlay.classList.remove('show');
+                if (overlay) this.closeModal(overlay.id);
             });
         });
 
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', e => {
                 if (e.target === overlay) {
-                    overlay.classList.remove('show');
+                    this.closeModal(overlay.id);
                 }
             });
         });

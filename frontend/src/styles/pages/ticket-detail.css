@@ -78,6 +78,68 @@
     gap: var(--space-md);
 }
 
+/* ──── Ticket Workspace Motion Orchestration ──── */
+/* 
+ * The Ticket Workspace is rendered inside a modal. 
+ * We use the .modal-overlay.is-opening / .is-open / .is-closing lifecycle 
+ * to orchestrate the entrance staggers. 
+ */
+
+.modal-overlay:not(.is-open) .detail-header {
+    opacity: var(--opacity-hidden);
+    transform: translateY(var(--motion-distance-md));
+}
+.modal-overlay:not(.is-open) .detail-main {
+    opacity: var(--opacity-hidden);
+    transform: translateY(var(--motion-distance-lg));
+}
+.modal-overlay:not(.is-open) .detail-side {
+    opacity: var(--opacity-hidden);
+    transform: translateX(var(--motion-distance-md));
+}
+
+.modal-overlay.is-open .detail-header,
+.modal-overlay.is-open .detail-main,
+.modal-overlay.is-open .detail-side {
+    opacity: var(--opacity-visible);
+    transform: translate(0);
+}
+
+/* Apply staggered transitions when opening */
+.modal-overlay.is-opening .detail-header,
+.modal-overlay.is-open .detail-header {
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-1);
+}
+
+.modal-overlay.is-opening .detail-main,
+.modal-overlay.is-open .detail-main {
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-2);
+}
+
+.modal-overlay.is-opening .detail-side,
+.modal-overlay.is-open .detail-side {
+    transition: 
+        opacity var(--duration-normal) var(--ease-decelerate),
+        transform var(--duration-normal) var(--ease-decelerate);
+    transition-delay: var(--stagger-3);
+}
+
+/* Fast exit when closing (override delay) */
+.modal-overlay.is-closing .detail-header,
+.modal-overlay.is-closing .detail-main,
+.modal-overlay.is-closing .detail-side {
+    transition: 
+        opacity var(--duration-fast) var(--ease-accelerate),
+        transform var(--duration-fast) var(--ease-accelerate);
+    transition-delay: 0s;
+}
+
 .detail-info-row {
     display: flex;
     justify-content: space-between;
