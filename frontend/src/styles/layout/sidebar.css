@@ -201,24 +201,65 @@
     line-height: 1;
 }
 
-/* Global fixed toggle – login screen only */
-.global-theme-toggle {
+/* ──── Appearance Dropdown ──── */
+.appearance-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    width: 240px;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    color: var(--color-text-primary);
+    
+    /* Animation base state */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    opacity: var(--opacity-hidden, 0);
+    transform: translateY(var(--motion-distance-md, 8px)) scale(var(--scale-pressed, 0.95));
+    pointer-events: none;
+    visibility: hidden;
+    transition: 
+        opacity var(--duration-fast, 0.15s) var(--ease-accelerate, cubic-bezier(0.4, 0, 1, 1)),
+        transform var(--duration-fast, 0.15s) var(--ease-accelerate, cubic-bezier(0.4, 0, 1, 1)),
+        visibility var(--duration-fast, 0.15s) var(--ease-accelerate, cubic-bezier(0.4, 0, 1, 1));
+}
+
+.appearance-dropdown.open {
+    opacity: var(--opacity-visible, 1);
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    visibility: visible;
+    transition: 
+        opacity var(--duration-normal, 0.25s) var(--ease-decelerate, cubic-bezier(0, 0, 0.2, 1)),
+        transform var(--duration-normal, 0.25s) var(--ease-decelerate, cubic-bezier(0, 0, 0.2, 1)),
+        visibility var(--duration-normal, 0.25s) var(--ease-decelerate, cubic-bezier(0, 0, 0.2, 1));
+}
+
+/* Global fixed toggle container – login screen only */
+.global-theme-container {
     position: fixed;
     top: 24px;
     right: 24px;
     z-index: 100;
-    margin: 0;
-    padding: 8px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 50%;
-    color: var(--color-text-secondary);
 }
-.global-theme-toggle:hover {
+.global-theme-container .theme-toggle {
+    margin: 0;
+    padding: 8px 16px;
     background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
     color: var(--color-text-primary);
-    border: none;
+    box-shadow: var(--shadow-sm);
+}
+.global-theme-container .theme-toggle:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-hover);
 }
 
 /* ──── Hamburger / Mobile Toggle ──── */
