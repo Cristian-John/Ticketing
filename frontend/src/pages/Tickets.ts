@@ -198,7 +198,7 @@ export class TicketsPage {
                         <div class="client-card" data-id="${escapeHTML(ticket.id)}" style="border-left: 3px solid ${getSeverityColor(ticket.severity)}">
                             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
                                 <div style="flex:1;min-width:0">
-                                    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+                                    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap;justify-content:flex-start;">
                                         <span style="font-family:monospace;font-size:10px;color:var(--text-muted)">${escapeHTML(ticket.id)}</span>
                                         <span class="badge ${getStatusBadgeClass(ticket.status)}">${escapeHTML(ticket.status)}</span>
                                         <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${escapeHTML(ticket.severity)}</span>

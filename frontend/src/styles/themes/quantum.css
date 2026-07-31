@@ -4,11 +4,11 @@
    Faithful to DESIGN.md specification.
    ========================================= */
 [data-design-language="quantum"] {
-    /* Typography — Aggressive, engineered */
+    /* Typography ??? Aggressive, engineered */
     --font: 'Geist', 'Space Grotesk', system-ui, sans-serif;
     --font-heading: 'Space Grotesk', system-ui, sans-serif;
     
-    /* Shapes — Strictly sharp, 0px everywhere */
+    /* Shapes ??? Strictly sharp, 0px everywhere */
     --radius: 0px;
     --radius-sm: 0px;
     --radius-lg: 0px;
@@ -16,12 +16,12 @@
     --input-radius: 0px;
     --badge-radius: 0px;
 
-    /* Primary (Amber Flux) — Stable high energy */
+    /* Primary (Amber Flux) ??? Stable high energy */
     --color-primary: #FFBF00;
     --color-primary-hover: #FFD54F;
     --color-primary-bg-subtle: rgba(255, 191, 0, 0.12);
 
-    /* Danger (Crimson Pulse) — Unstable energy, red-line status */
+    /* Danger (Crimson Pulse) ??? Unstable energy, red-line status */
     --color-danger: #FF003C;
     --color-danger-hover: #FF4D6A;
     --color-danger-bg-subtle: rgba(255, 0, 60, 0.1);
@@ -38,7 +38,8 @@
     --switch-thumb-shadow: none;
 }
 
-/* ─── Quantum: Light Mode ─── */
+
+/* ????????? Quantum: Light Mode ????????? */
 /* Per code.html reference: warm off-white with amber tints */
 [data-design-language="quantum"][data-color-mode="light"] {
     --color-primary: #795900; /* Darker amber for readability on light bg */
@@ -69,7 +70,7 @@
     --sidebar-active-text: #261A00; /* on-primary-fixed */
     --sidebar-border: #E5E2DA;
 
-    /* Cards — 1px borders, no soft shadows */
+    /* Cards ??? 1px borders, no soft shadows */
     --card-bg: #FFFFFF;
     --card-border: #E5E2DA;
     --card-shadow: none;
@@ -78,7 +79,7 @@
     --modal-border: #CEC6B4;
     --modal-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.1);
 
-    /* Buttons — DESIGN.md spec */
+    /* Buttons ??? DESIGN.md spec */
     --btn-primary-bg: #FFBF00; /* primary-container */
     --btn-primary-hover: #FFD54F;
     --btn-primary-text: #261A00; /* on-primary-fixed */
@@ -96,7 +97,7 @@
     --btn-danger-hover: var(--color-danger);
     --btn-danger-text: var(--color-danger);
 
-    /* Inputs — Bottom-border style, "chamber" feel */
+    /* Inputs ??? Bottom-border style, "chamber" feel */
     --input-bg: transparent;
     --input-border: #CEC6B4;
     --input-focus-ring: none;
@@ -125,7 +126,7 @@
     --scrollbar-thumb-hover: #9C8F78;
 }
 
-/* ─── Quantum: Dark Mode ─── */
+/* ????????? Quantum: Dark Mode ????????? */
 /* Faithful to DESIGN.md: The Void, Carbon surfaces, Energy Leak glows */
 [data-design-language="quantum"][data-color-mode="dark"] {
     /* Level 0: The Void */
@@ -142,7 +143,7 @@
     --color-text-secondary: #D4C5AB; /* on-surface-variant (warm) */
     --color-text-muted: #9C8F78; /* outline */
 
-    /* Sidebar — The Void */
+    /* Sidebar ??? The Void */
     --sidebar-bg: #000000;
     --sidebar-text: #9C8F78;
     --sidebar-hover-bg: #0D0D0D;
@@ -151,7 +152,7 @@
     --sidebar-active-text: #000000;
     --sidebar-border: #1A1A1A;
 
-    /* Cards — Chamber style with energy-leak potential */
+    /* Cards ??? Chamber style with energy-leak potential */
     --card-bg: #0D0D0D;
     --card-border: #1A1A1A;
     --card-shadow: none; /* Depth via tonal layers, not shadows */
@@ -160,7 +161,7 @@
     --modal-border: #353535;
     --modal-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.5);
 
-    /* Buttons — DESIGN.md spec */
+    /* Buttons ??? DESIGN.md spec */
     /* Primary: Solid Amber bg, black text, energy-leak glow on hover */
     --btn-primary-bg: #FFBF00;
     --btn-primary-hover: #FFD54F;
@@ -180,7 +181,7 @@
     --btn-danger-hover: rgba(255, 0, 60, 0.15);
     --btn-danger-text: #FF003C;
 
-    /* Inputs — Baseline glow on focus */
+    /* Inputs ??? Baseline glow on focus */
     --input-bg: #000000;
     --input-border: #1A1A1A;
     --input-focus-ring: 0 15px 25px -15px rgba(255, 191, 0, 0.2);
@@ -211,3 +212,4 @@
     --scrollbar-thumb: #353535;
     --scrollbar-thumb-hover: #504532;
 }
+

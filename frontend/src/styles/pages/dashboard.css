@@ -26,7 +26,7 @@
     margin-bottom: var(--space-sm);
 }
 .client-card:hover {
-    background: var(--bg-card-hover);
+    background: var(--color-bg-surface-hover);
 }
 .client-card .latest-note {
     margin-top: 8px;
