@@ -35,20 +35,12 @@ export class NotificationPreferencesModal {
 
             body.innerHTML = `
                 <style>
-                    .pref-modal-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
-                    .pref-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+                    .pref-modal-title { font-size: 0.75rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+                    .pref-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
                     .pref-item:last-child { border-bottom: none; }
                     .pref-info { display: flex; flex-direction: column; gap: 4px; padding-right: 16px; }
-                    .pref-name { font-weight: 500; font-size: 0.95rem; color: var(--text-primary); text-transform: none; }
-                    .pref-desc { font-size: 0.8rem; color: var(--text-secondary); text-transform: none; }
-                    
-                    /* Toggle Switch */
-                    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; margin: 0; }
-                    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
-                    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-surface); transition: .2s; border-radius: 24px; border: 1px solid var(--border-color); }
-                    .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px; background-color: var(--text-secondary); transition: .2s; border-radius: 50%; }
-                    .toggle-switch input:checked + .toggle-slider { background-color: var(--accent); border-color: var(--accent); }
-                    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); background-color: #fff; }
+                    .pref-name { font-weight: 500; font-size: 0.95rem; color: var(--color-text-primary); text-transform: none; }
+                    .pref-desc { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: none; }
                     
                     .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
                 </style>

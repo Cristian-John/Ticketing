@@ -4,12 +4,23 @@
    ========================================= */
 
 /* =========================================
-   CORE
+   TOKENS & THEMES
    ========================================= */
-@import './styles/core/variables.css';
-@import './styles/core/motion.css';
-@import './styles/core/reset.css';
-@import './styles/core/utilities.css';
+@import './styles/tokens/base.css';
+@import './styles/tokens/spacing.css';
+@import './styles/tokens/typography.css';
+@import './styles/tokens/motion.css';
+@import './styles/tokens/reset.css';
+@import './styles/tokens/utilities.css';
+
+/* Color Modes (Base tokens) */
+@import './styles/themes/dark.css';
+@import './styles/themes/light.css';
+
+/* Design Languages (Override color mode tokens) */
+@import './styles/themes/standard.css';
+@import './styles/themes/hexagon-blue.css';
+@import './styles/themes/quantum.css';
 
 /* =========================================
    LAYOUT

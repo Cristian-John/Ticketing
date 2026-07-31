@@ -19,52 +19,72 @@ export class APIError extends Error {
     }
 }
 
+const inFlightRequests = new Map<string, Promise<any>>();
+
 async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
-    const user = store.getState().currentUser;
-    const token = user ? user.token : null;
+    const isGet = !opts.method || opts.method.toUpperCase() === 'GET';
+    const requestKey = `${opts.method || 'GET'}:${path}`;
 
-    const headers = new Headers(opts.headers || {});
-
-    if (!(opts.body instanceof FormData) && !headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json');
+    if (isGet && inFlightRequests.has(requestKey)) {
+        return inFlightRequests.get(requestKey);
     }
 
-    if (token && !headers.has('Authorization')) {
-        headers.set('Authorization', `Bearer ${token}`);
-    }
+    const requestPromise = (async () => {
+        const user = store.getState().currentUser;
+        const token = user ? user.token : null;
 
-    let res: Response;
-    try {
-        res = await fetch(`${API_BASE}${path}`, {
-            ...opts,
-            headers,
-        });
-    } catch (networkErr: unknown) {
-        throw new APIError(`Network error: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`, 0);
-    }
+        const headers = new Headers(opts.headers || {});
 
-    if (!res.ok) {
-        let errorMsg = `HTTP Error ${res.status}`;
-        let errorData = null;
-        try {
-            const err = await res.json();
-            errorData = err;
-            errorMsg = err.error || err.message || errorMsg;
-        } catch {
-            // Fallback for non-JSON errors
+        if (!(opts.body instanceof FormData) && !headers.has('Content-Type')) {
+            headers.set('Content-Type', 'application/json');
         }
-        throw new APIError(errorMsg, res.status, errorData);
+
+        if (token && !headers.has('Authorization')) {
+            headers.set('Authorization', `Bearer ${token}`);
+        }
+
+        let res: Response;
+        try {
+            res = await fetch(`${API_BASE}${path}`, {
+                ...opts,
+                headers,
+            });
+        } catch (networkErr: unknown) {
+            throw new APIError(`Network error: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`, 0);
+        }
+
+        if (!res.ok) {
+            let errorMsg = `HTTP Error ${res.status}`;
+            let errorData = null;
+            try {
+                const err = await res.json();
+                errorData = err;
+                errorMsg = err.error || err.message || errorMsg;
+            } catch {
+                // Fallback for non-JSON errors
+            }
+            throw new APIError(errorMsg, res.status, errorData);
+        }
+
+        if (res.status === 204) {
+            return {} as T;
+        }
+
+        try {
+            return await res.json();
+        } catch {
+            return {} as T;
+        }
+    })();
+
+    if (isGet) {
+        inFlightRequests.set(requestKey, requestPromise);
+        requestPromise.finally(() => {
+            inFlightRequests.delete(requestKey);
+        }).catch(() => { /* handled by caller */ });
     }
 
-    if (res.status === 204) {
-        return {} as T;
-    }
-
-    try {
-        return await res.json();
-    } catch {
-        return {} as T;
-    }
+    return requestPromise;
 }
 
 export const ticketsAPI = {

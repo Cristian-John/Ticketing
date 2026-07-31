@@ -90,6 +90,7 @@ export class Topbar {
 
         bellBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            document.dispatchEvent(new CustomEvent('close-dropdowns', { detail: { except: 'notifications' } }));
             this.notificationsDropdown.toggle();
         });
 

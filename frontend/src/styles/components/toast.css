@@ -19,14 +19,14 @@
     animation: bannerSlideDown var(--duration-normal) var(--ease-decelerate);
 }
 .notif-banner.notif-new {
-    background: var(--status-progress-bg);
-    border-bottom: 2px solid var(--status-progress);
-    color: var(--status-progress);
+    background: var(--badge-info-bg);
+    border-bottom: 2px solid var(--badge-info-border);
+    color: var(--badge-info-text);
 }
 .notif-banner.notif-critical {
-    background: var(--severity-severe-bg);
-    border-bottom: 2px solid var(--severity-severe);
-    color: var(--severity-severe);
+    background: var(--badge-danger-bg);
+    border-bottom: 2px solid var(--badge-danger-border);
+    color: var(--badge-danger-text);
 }
 .notif-close {
     background: none;
@@ -68,7 +68,7 @@
     border-radius: var(--radius-sm);
     font-size: 0.88rem;
     font-weight: 500;
-    color: #fff;
+    color: var(--color-text-primary);
     box-shadow: var(--shadow-lg);
     min-width: 280px;
 
@@ -94,37 +94,23 @@
     pointer-events: none;
 }
 .toast-success {
-    background: linear-gradient(135deg, #0d2a0d, #1a4a1a);
-    border: 1px solid rgba(76, 175, 110, 0.35);
-    color: #6ee77a;
+    background: var(--color-success-bg-subtle);
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
 }
 .toast-error {
-    background: linear-gradient(135deg, #2a0d0d, #4a1a1a);
-    border: 1px solid rgba(255, 82, 82, 0.35);
-    color: #ff8a8a;
+    background: var(--color-danger-bg-subtle);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
 }
 .toast-info {
-    background: linear-gradient(135deg, #00151a, #002629);
-    border: 1px solid rgba(0, 229, 255, 0.35);
-    color: #00e5ff;
+    background: var(--color-info-bg-subtle);
+    border: 1px solid var(--color-info);
+    color: var(--color-info);
 }
-
-[data-theme='light'] .toast-success {
-    background: #dcfce7;
-    border-color: rgba(22, 163, 74, 0.3);
-    color: #166534;
+.toast-info .toast-icon {
+    color: var(--color-info);
 }
-[data-theme='light'] .toast-error {
-    background: #fef2f2;
-    border-color: rgba(220, 38, 38, 0.3);
-    color: #991b1b;
-}
-[data-theme='light'] .toast-info {
-    background: #e0f7fa;
-    border-color: rgba(0, 131, 143, 0.3);
-    color: #00695c;
-}
-
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
