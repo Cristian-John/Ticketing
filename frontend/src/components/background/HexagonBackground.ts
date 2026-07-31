@@ -6,12 +6,25 @@
 
 export class HexagonBackground {
     private static initialized = false;
+    public static isActive = false;
+    private static animationFrameId = 0;
+    private static loopFn: (now: number) => void;
+
+    public static setVisible(visible: boolean) {
+        this.isActive = visible;
+        if (visible && this.initialized) {
+            this.animationFrameId = requestAnimationFrame(this.loopFn);
+        } else if (!visible && this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = 0;
+        }
+    }
 
     public static init(): void {
         if (this.initialized) return;
         this.initialized = true;
 
-        const HEX_RADIUS = 32;
+        const HEX_RADIUS = 24;
         const LINE_WIDTH = 0.8;
         const GLOW_LINE_WIDTH = 1.8;
         const CLUSTER_COUNT = 8;
@@ -57,17 +70,6 @@ export class HexagonBackground {
         let themeProgress = getComputedLight();
         let lastThemeTime = performance.now();
         let w: number, h: number, centerX: number, centerY: number, maxDist: number;
-        let targetOffsetX = 0;
-        let targetOffsetY = 0;
-        let currentOffsetX = 0;
-        let currentOffsetY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            const dx = (e.clientX / window.innerWidth - 0.5) * 50;
-            const dy = (e.clientY / window.innerHeight - 0.5) * 50;
-            targetOffsetX = -dx;
-            targetOffsetY = -dy;
-        });
 
         function resize() {
             const dpr = window.devicePixelRatio || 1;
@@ -86,13 +88,14 @@ export class HexagonBackground {
         }
 
         function buildGrid() {
+            hexagons = [];
             cols = Math.ceil(w / hexW) + 2;
             rows = Math.ceil(h / (hexH * 0.75)) + 2;
-            hexagons = [];
-            for (let r = -1; r < rows; r++) {
-                for (let c = -1; c < cols; c++) {
-                    const x = c * hexW + (r % 2 !== 0 ? hexW / 2 : 0);
-                    const y = r * hexH * 0.75;
+
+            for (let row = -1; row < rows; row++) {
+                for (let col = -1; col < cols; col++) {
+                    const x = col * hexW + (row % 2 === 1 ? hexW / 2 : 0);
+                    const y = row * hexH * 0.75;
                     hexagons.push({ x, y, glow: 0 });
                 }
             }
@@ -147,12 +150,8 @@ export class HexagonBackground {
 
         function draw(now: number) {
             ctx!.clearRect(0, 0, w, h);
-
-            currentOffsetX += (targetOffsetX - currentOffsetX) * 0.05;
-            currentOffsetY += (targetOffsetY - currentOffsetY) * 0.05;
             
             ctx!.save();
-            ctx!.translate(currentOffsetX, currentOffsetY);
 
             // Interpolate themeProgress
             const targetLight = getComputedLight();
@@ -175,9 +174,10 @@ export class HexagonBackground {
             }
 
             // Colors & properties interpolation
-            const r = 8 + (210 - 8) * themeProgress;
-            const g = 12 + (225 - 12) * themeProgress;
-            const b = 15 + (235 - 15) * themeProgress;
+            // Much darker base color for dark mode to remove the greyish look
+            const r = 4 + (210 - 4) * themeProgress;
+            const g = 6 + (225 - 6) * themeProgress;
+            const b = 10 + (235 - 10) * themeProgress;
 
             const er = 0;
             const eg = 180 + (188 - 180) * themeProgress;
@@ -224,7 +224,9 @@ export class HexagonBackground {
 
                 // Base fill
                 hexPath(hex.x, hex.y);
-                const baseFillOpacity = (0.5 - 0.38 * themeProgress) + centerBrightness * (0.3 - 0.12 * themeProgress);
+                // Drastically INCREASED fill opacity to obscure the lighter DOM background 
+                // and apply our very dark fill color.
+                const baseFillOpacity = (0.9 - 0.4 * themeProgress) + centerBrightness * (0.1 - 0.05 * themeProgress);
                 const fillOpacity = baseFillOpacity * (1 - distFactor * 0.5);
                 ctx!.fillStyle = `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${fillOpacity})`;
                 ctx!.fill();
@@ -267,12 +269,14 @@ export class HexagonBackground {
             ctx!.restore();
         }
 
-        function loop(now: number) {
+        this.loopFn = function loop(now: number) {
+            if (!HexagonBackground.isActive) return;
+
             if (now - lastFrame >= frameInterval) {
                 lastFrame = now;
                 draw(now);
             }
-            requestAnimationFrame(loop);
+            HexagonBackground.animationFrameId = requestAnimationFrame(HexagonBackground.loopFn);
         }
 
         let resizeTimer: number;
@@ -285,11 +289,15 @@ export class HexagonBackground {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function () { 
                 resize(); 
-                requestAnimationFrame(loop); 
+                if (HexagonBackground.isActive) {
+                    HexagonBackground.animationFrameId = requestAnimationFrame(HexagonBackground.loopFn); 
+                }
             });
         } else {
             resize();
-            requestAnimationFrame(loop);
+            if (HexagonBackground.isActive) {
+                HexagonBackground.animationFrameId = requestAnimationFrame(HexagonBackground.loopFn);
+            }
         }
     }
 }
