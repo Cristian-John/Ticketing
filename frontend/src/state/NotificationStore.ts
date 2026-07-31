@@ -24,7 +24,7 @@ export type StoreSubscriber = (event: NotificationStoreEvent) => void;
 
 class NotificationStore {
     private entities: Record<string, AppNotification> = {};
-    private queryCache: Record<string, { ids: string[]; cursor: string | null; hasMore: boolean }> = {};
+    private queryCache: Record<string, { ids: string[]; cursor: string | null; hasMore: boolean; timestamp: number }> = {};
     private counts: NotificationCounts = { total: 0, unread: 0, transfers: 0, collaboration: 0, comments: 0, assignments: 0, system: 0 };
     private subscribers: StoreSubscriber[] = [];
     private isInitialized = false;
@@ -69,6 +69,12 @@ class NotificationStore {
         }
 
         const queryKey = JSON.stringify(query);
+        const cached = this.queryCache[queryKey];
+        
+        // Return cached result if it's less than 15 seconds old
+        if (cached && Date.now() - cached.timestamp < 15000) {
+            return { ids: cached.ids, cursor: cached.cursor, hasMore: cached.hasMore };
+        }
         
         try {
             const resp = await notificationsAPI.getAll(query);
@@ -81,16 +87,18 @@ class NotificationStore {
             const result = {
                 ids: newIds,
                 cursor: resp.cursor,
-                hasMore: resp.cursor !== null
+                hasMore: resp.cursor !== null,
+                timestamp: Date.now()
             };
             this.queryCache[queryKey] = result;
             
             this.notifySubscribers({ inserted: [], updated: [], removed: [], unreadCountChanged: true });
-            return result;
+            return { ids: result.ids, cursor: result.cursor, hasMore: result.hasMore };
         } catch (err) {
             // Fallback to cache if network fails
             if (this.queryCache[queryKey]) {
-                return this.queryCache[queryKey];
+                const c = this.queryCache[queryKey];
+                return { ids: c.ids, cursor: c.cursor, hasMore: c.hasMore };
             }
             throw err;
         }

@@ -24,6 +24,13 @@ export class NotificationsDropdown {
             }
         });
 
+        // Close when another dropdown opens
+        document.addEventListener('close-dropdowns', ((e: CustomEvent) => {
+            if (e.detail?.except !== 'notifications') {
+                this.close();
+            }
+        }) as EventListener);
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (!this.isOpen) return;
@@ -69,10 +76,13 @@ export class NotificationsDropdown {
         this.onUnreadCountChanged = callback;
     }
 
+    private hasLoaded = false;
+
     public async loadNotifications() {
         try {
             const resp = await notificationStore.fetch({ limit: 10 });
             this.notificationIds = resp.ids;
+            this.hasLoaded = true;
             
             this.renderList();
             
@@ -88,7 +98,11 @@ export class NotificationsDropdown {
         this.isOpen = !this.isOpen;
         if (this.isOpen) {
             this.container.querySelector('.notifications-popover')?.classList.add('open');
-            this.loadNotifications();
+            // Since SSE keeps us updated, we only force a load if we haven't loaded yet.
+            // (Store caching also protects us, but this prevents unnecessary re-renders)
+            if (!this.hasLoaded) {
+                this.loadNotifications();
+            }
         } else {
             this.container.querySelector('.notifications-popover')?.classList.remove('open');
         }

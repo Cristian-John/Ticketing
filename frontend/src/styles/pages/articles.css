@@ -10,20 +10,20 @@
         box-shadow 0.2s;
 }
 .kb-drag-row:hover .kb-drag-handle {
-    color: var(--accent) !important;
+    color: var(--color-primary) !important;
 }
 .kb-dragging {
     opacity: 0.4;
 }
 .kb-drag-over {
-    background: rgba(0, 200, 200, 0.08) !important;
-    box-shadow: inset 0 -2px 0 0 var(--accent);
+    background: var(--color-primary-bg-subtle) !important;
+    box-shadow: inset 0 -2px 0 0 var(--color-primary);
 }
 
 /* ==================== KNOWLEDGE BASE ARTICLE CARDS ==================== */
 .kb-article-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 24px;
     transition: var(--transition);
@@ -38,7 +38,7 @@
     left: 0;
     width: 4px;
     height: 100%;
-    background: linear-gradient(180deg, var(--accent), var(--primary));
+    background: linear-gradient(180deg, var(--color-primary), var(--color-primary));
     opacity: 0;
     transition: var(--transition);
 }
@@ -46,7 +46,7 @@
 .kb-article-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
-    border-color: var(--border-hover);
+    border-color: var(--color-border-hover);
 }
 
 .kb-article-card:hover::before {
@@ -69,12 +69,12 @@
 
 .kb-article-date {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--color-text-secondary);
     font-weight: 500;
 }
 
 .kb-article-title {
-    color: var(--text-heading);
+    color: var(--color-text-heading);
     font-size: 18px;
     font-weight: 700;
     margin: 0 0 var(--space-md) 0;
@@ -83,7 +83,7 @@
 }
 
 .kb-article-content {
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
     font-size: 14px;
     line-height: 1.75;
     white-space: pre-wrap;

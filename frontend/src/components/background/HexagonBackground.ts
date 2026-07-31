@@ -14,10 +14,10 @@ export class HexagonBackground {
         const HEX_RADIUS = 32;
         const LINE_WIDTH = 0.8;
         const GLOW_LINE_WIDTH = 1.8;
-        const CLUSTER_COUNT = 5;
+        const CLUSTER_COUNT = 8;
         const CLUSTER_SIZE = 6;
-        const CYCLE_DURATION = 5000;
-        const FPS_CAP = 24;
+        const CYCLE_DURATION = 6000;
+        const FPS_CAP = 30;
 
         const sqrt3 = Math.sqrt(3);
         const hexW = sqrt3 * HEX_RADIUS;
@@ -49,9 +49,25 @@ export class HexagonBackground {
         let hexagons: Hexagon[] = [];
         let clusters: Cluster[] = [];
         let lastFrame = 0;
-        let themeProgress = document.documentElement.getAttribute('data-theme') === 'light' ? 1.0 : 0.0;
+        const getComputedLight = () => {
+            const mode = document.documentElement.getAttribute('data-color-mode');
+            if (mode === 'system') return window.matchMedia('(prefers-color-scheme: light)').matches ? 1.0 : 0.0;
+            return mode === 'light' ? 1.0 : 0.0;
+        };
+        let themeProgress = getComputedLight();
         let lastThemeTime = performance.now();
         let w: number, h: number, centerX: number, centerY: number, maxDist: number;
+        let targetOffsetX = 0;
+        let targetOffsetY = 0;
+        let currentOffsetX = 0;
+        let currentOffsetY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            const dx = (e.clientX / window.innerWidth - 0.5) * 50;
+            const dy = (e.clientY / window.innerHeight - 0.5) * 50;
+            targetOffsetX = -dx;
+            targetOffsetY = -dy;
+        });
 
         function resize() {
             const dpr = window.devicePixelRatio || 1;
@@ -132,8 +148,14 @@ export class HexagonBackground {
         function draw(now: number) {
             ctx!.clearRect(0, 0, w, h);
 
+            currentOffsetX += (targetOffsetX - currentOffsetX) * 0.05;
+            currentOffsetY += (targetOffsetY - currentOffsetY) * 0.05;
+            
+            ctx!.save();
+            ctx!.translate(currentOffsetX, currentOffsetY);
+
             // Interpolate themeProgress
-            const targetLight = document.documentElement.getAttribute('data-theme') === 'light' ? 1 : 0;
+            const targetLight = getComputedLight();
             const timeDelta = now - lastThemeTime;
             lastThemeTime = now;
             
@@ -242,6 +264,7 @@ export class HexagonBackground {
                     ctx!.fill();
                 }
             }
+            ctx!.restore();
         }
 
         function loop(now: number) {

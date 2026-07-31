@@ -1,47 +1,66 @@
+export type ColorMode = 'light' | 'dark' | 'system';
+export type DesignLanguage = 'standard' | 'hexagon-blue' | 'quantum';
+
 export class ThemeManager {
-    static readonly STORAGE_KEY = 'ticketing_theme';
-    static readonly DEFAULT_THEME = 'dark';
+    static readonly COLOR_MODE_KEY = 'ticketing_color_mode';
+    static readonly DESIGN_LANGUAGE_KEY = 'ticketing_design_language';
+    
+    static readonly DEFAULT_COLOR_MODE: ColorMode = 'system';
+    static readonly DEFAULT_DESIGN_LANGUAGE: DesignLanguage = 'standard';
 
     /**
-     * Initialize the theme based on local storage or system preference.
+     * Initialize the theme based on session storage or system preference.
      */
     static initialize(): void {
-        const savedTheme = localStorage.getItem(this.STORAGE_KEY);
-        let themeToApply = this.DEFAULT_THEME;
+        const savedColorMode = (sessionStorage.getItem(this.COLOR_MODE_KEY) as ColorMode) || this.DEFAULT_COLOR_MODE;
+        const savedDesignLanguage = (sessionStorage.getItem(this.DESIGN_LANGUAGE_KEY) as DesignLanguage | null);
+        const validatedDesignLanguage = (savedDesignLanguage && (['standard', 'hexagon-blue', 'quantum'] as DesignLanguage[]).includes(savedDesignLanguage)) ? savedDesignLanguage : this.DEFAULT_DESIGN_LANGUAGE;
 
-        if (savedTheme === 'light' || savedTheme === 'dark') {
-            themeToApply = savedTheme;
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            themeToApply = 'light';
+        this.applyDesignLanguage(validatedDesignLanguage);
+        this.applyColorMode(savedColorMode);
+
+        // Listen for system changes if mode is 'system'
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (this.getColorMode() === 'system') {
+                this.applySystemColorMode();
+            }
+        });
+    }
+
+    static setColorMode(mode: ColorMode): void {
+        sessionStorage.setItem(this.COLOR_MODE_KEY, mode);
+        this.applyColorMode(mode);
+        window.dispatchEvent(new CustomEvent('appearanceChanged', { detail: { colorMode: mode, designLanguage: this.getDesignLanguage() } }));
+    }
+
+    static setDesignLanguage(language: DesignLanguage): void {
+        sessionStorage.setItem(this.DESIGN_LANGUAGE_KEY, language);
+        this.applyDesignLanguage(language);
+        window.dispatchEvent(new CustomEvent('appearanceChanged', { detail: { colorMode: this.getColorMode(), designLanguage: language } }));
+    }
+
+    static getColorMode(): ColorMode {
+        return (sessionStorage.getItem(this.COLOR_MODE_KEY) as ColorMode) || this.DEFAULT_COLOR_MODE;
+    }
+
+    static getDesignLanguage(): DesignLanguage {
+        return (sessionStorage.getItem(this.DESIGN_LANGUAGE_KEY) as DesignLanguage) || this.DEFAULT_DESIGN_LANGUAGE;
+    }
+
+    private static applyColorMode(mode: ColorMode): void {
+        if (mode === 'system') {
+            this.applySystemColorMode();
+        } else {
+            document.documentElement.setAttribute('data-color-mode', mode);
         }
-
-        this.applyTheme(themeToApply);
     }
 
-    /**
-     * Toggles the current theme between 'light' and 'dark'.
-     */
-    static toggle(): void {
-        const currentTheme = this.getCurrentTheme();
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        this.applyTheme(newTheme);
-        
-        // Dispatch a custom event so ThemeToggle UI can update
-        window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+    private static applySystemColorMode(): void {
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-color-mode', isDark ? 'dark' : 'light');
     }
 
-    /**
-     * Gets the currently applied theme.
-     */
-    static getCurrentTheme(): 'light' | 'dark' {
-        return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-    }
-
-    /**
-     * Applies a specific theme and persists it.
-     */
-    private static applyTheme(theme: string): void {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem(this.STORAGE_KEY, theme);
+    private static applyDesignLanguage(language: DesignLanguage): void {
+        document.documentElement.setAttribute('data-design-language', language);
     }
 }

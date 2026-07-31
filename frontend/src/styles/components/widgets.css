@@ -9,10 +9,10 @@
     align-items: center;
     gap: 8px;
     padding: 5px 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--color-border);
 }
 .dept-bar-label {
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
     font-size: 12px;
     width: 140px;
     flex-shrink: 0;
@@ -29,23 +29,18 @@
 }
 .dept-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #00e5ff, #00b8d4);
+    background: var(--color-primary);
     border-radius: 3px;
     transition: width 0.5s ease;
 }
 .dept-bar-count {
-    color: #00e5ff;
+    color: var(--color-primary);
     font-weight: 700;
     font-size: 12px;
     min-width: 14px;
     text-align: right;
 }
-[data-theme='light'] .dept-bar-fill {
-    background: linear-gradient(90deg, #00838f, #00acc1);
-}
-[data-theme='light'] .dept-bar-count {
-    color: #00838f;
-}
+
 
 /* ──── Assignee Checklist ──── */
 .assignee-list {
@@ -62,17 +57,17 @@
     cursor: pointer;
     transition: var(--transition);
     font-size: 12px;
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
     user-select: none;
 }
 .assignee-check:hover {
-    background: var(--row-hover);
-    color: var(--text-primary);
+    background: var(--color-bg-surface-hover);
+    color: var(--color-text-primary);
 }
 .assignee-check input[type='checkbox'] {
     width: 15px;
     height: 15px;
-    accent-color: var(--accent);
+    accent-color: var(--color-primary);
     cursor: pointer;
     flex-shrink: 0;
 }

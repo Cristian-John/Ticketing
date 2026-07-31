@@ -1,7 +1,7 @@
 import './style.css';
 
 import { cleanupServiceWorkers } from './bootstrap/serviceWorkerCleanup';
-import { HexagonBackground } from './components/background/HexagonBackground';
+import { BackgroundRenderer } from './components/background/BackgroundRenderer';
 import { SplashManager } from './components/common/SplashManager';
 import { ThemeManager } from './components/common/theme/ThemeManager';
 import { ModalsManager } from './components/modals/ModalsManager';
@@ -22,7 +22,7 @@ class App {
             // Initialize foundational modules
             cleanupServiceWorkers();
             ThemeManager.initialize();
-            HexagonBackground.init();
+            BackgroundRenderer.init();
             
             // Ensure splash is visible
             SplashManager.show();
