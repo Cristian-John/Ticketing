@@ -37,7 +37,7 @@
 }
 
 .glass-table tbody tr.clickable-row:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     cursor: pointer;
 }
 
@@ -72,7 +72,7 @@
     transition: var(--transition);
 }
 .table-row:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
 }
 .table-row:last-child {
     border-bottom: none;

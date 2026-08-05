@@ -122,8 +122,8 @@ export function isResolved(ticket: Ticket): boolean {
 }
 
 export function getSeverityColor(severity: string): string {
-    if (severity === 'Severe') return 'var(--severity-severe)';
-    if (severity === 'High') return 'var(--severity-high)';
-    if (severity === 'Moderate') return 'var(--severity-moderate)';
-    return 'var(--severity-low)';
+    if (severity === 'Severe') return 'var(--badge-danger-text)';
+    if (severity === 'High') return 'var(--badge-warning-text)';
+    if (severity === 'Moderate') return 'var(--badge-warning-text)';
+    return 'var(--badge-success-text)';
 }

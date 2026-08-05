@@ -1,8 +1,8 @@
 import { AppNotification } from '../types';
-import { BadgeViewModel, NotificationCardViewModel } from '../viewmodels/NotificationCardViewModel';
-import { NotificationDetailViewModel, NotificationActionViewModel, NotificationStoryViewModel, NotificationMetadataItem } from '../viewmodels/NotificationDetailViewModel';
-import { NotificationIconRegistry } from '../utils/NotificationIconRegistry';
 import { formatRelativeTime } from '../utils/formatters';
+import { NotificationIconRegistry } from '../utils/NotificationIconRegistry';
+import { BadgeViewModel, NotificationCardViewModel } from '../viewmodels/NotificationCardViewModel';
+import { NotificationActionViewModel, NotificationDetailViewModel, NotificationMetadataItem,NotificationStoryViewModel } from '../viewmodels/NotificationDetailViewModel';
 
 export class NotificationMapper {
     public static mapToViewModel(n: AppNotification, selectedId?: string): NotificationCardViewModel {
@@ -93,6 +93,8 @@ export class NotificationMapper {
         } else if (actionable && n.type === 'TICKET_TRANSFER_REQUESTED') {
             actions.push({ id: 'acc', label: 'Accept Transfer', icon: 'check', style: 'primary', actionType: 'accept-transfer', payload: { reqId: n.metadata?.requestId || '' } });
             actions.push({ id: 'rej', label: 'Decline', icon: 'x', style: 'secondary', actionType: 'reject-transfer', payload: { reqId: n.metadata?.requestId || '' } });
+        } else if (actionable && n.type === 'CSAT_SURVEY_REQUESTED') {
+            actions.push({ id: 'rate', label: 'Rate Experience', icon: 'star', style: 'primary', actionType: 'rate-experience', payload: { ticketId: n.metadata?.ticketId || n.entity_id } });
         }
 
         if (n.entity_type === 'ticket' || n.metadata?.ticketId) {
@@ -155,6 +157,9 @@ export class NotificationMapper {
             case 'TICKET_STATUS_UPDATED': return 'updated ticket status';
             case 'NOTE_ADDED': return 'left a comment';
             case 'ATTACHMENT_UPLOADED': return 'uploaded an attachment';
+            case 'CSAT_SURVEY_REQUESTED': return 'requested survey feedback';
+            case 'CSAT_LOW_SCORE_ALERT': return 'flagged a low rating';
+            case 'TICKET_RATED': return 'submitted a rating';
             default: return 'triggered an event';
         }
     }

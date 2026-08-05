@@ -57,7 +57,7 @@
         background-color var(--duration-fast) var(--ease-standard);
 }
 .search-box input[type="text"]:focus {
-    border-color: var(--color-border-focus);
+    border-color: var(--input-focus-border);
     box-shadow: var(--input-focus-ring);
 }
 .filter-sel {
@@ -76,7 +76,7 @@
         background-color var(--duration-fast) var(--ease-standard);
 }
 .filter-sel:focus {
-    border-color: var(--color-border-focus);
+    border-color: var(--input-focus-border);
     box-shadow: var(--input-focus-ring);
 }
 

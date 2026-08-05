@@ -1,4 +1,4 @@
-import { DashboardIcon, ListIcon, DocumentIcon, UsersIcon, UserIcon, BookIcon } from '../../common/Icons';
+import { BookIcon, DashboardIcon, DocumentIcon, ListIcon, UserIcon, UsersIcon, BarChartIcon } from '../../common/Icons';
 import { SidebarConfig } from './SidebarConfig';
 
 export const supportSidebarConfig: SidebarConfig = {
@@ -7,9 +7,14 @@ export const supportSidebarConfig: SidebarConfig = {
     portalName: 'Support Workspace',
     items: [
         {
-            view: 'support-dashboard',
+            view: 'dashboard',
             label: 'Support Dashboard',
             icon: DashboardIcon({ size: 16 })
+        },
+        {
+            view: 'analytics',
+            label: 'My Analytics',
+            icon: BarChartIcon({ size: 16 })
         },
         {
             view: 'my-tickets',

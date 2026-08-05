@@ -19,8 +19,12 @@ export interface Ticket {
     ratingRequested?: number;
     userId?: string;
     primary_assignee_id?: string | null;
+    resolved_at?: string | null;
+    resolving_assignee_id?: string | null;
     collaborators?: TicketCollaborator[];
 }
+
+export * from './rating.types';
 
 export interface TicketHistory {
     id: string;

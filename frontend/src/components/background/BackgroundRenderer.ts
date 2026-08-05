@@ -1,6 +1,6 @@
+import { DesignLanguage,ThemeManager } from '../common/theme/ThemeManager';
 import { HexagonBackground } from './HexagonBackground';
 import { QuantumBackground } from './QuantumBackground';
-import { ThemeManager, DesignLanguage } from '../common/theme/ThemeManager';
 
 export class BackgroundRenderer {
     private static initialized = false;

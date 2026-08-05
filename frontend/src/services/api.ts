@@ -1,5 +1,5 @@
 import { store } from '../state/store';
-import { Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest, User, UserSession, AppNotification } from '../types';
+import { AppNotification, Article, Attachment, CreateUserRequest, Note, Stats, Ticket, UpdateUserRequest, User, UserSession, ExecutiveKPIs, TicketTrend, Breakdown, LeaderboardEntry, SidebarStats, RecentFeedback } from '../types';
 import { CONFIG } from '../utils/config';
 import { ErrorCode } from '../utils/enums';
 
@@ -21,7 +21,7 @@ export class APIError extends Error {
 
 const inFlightRequests = new Map<string, Promise<any>>();
 
-async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
+export async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const isGet = !opts.method || opts.method.toUpperCase() === 'GET';
     const requestKey = `${opts.method || 'GET'}:${path}`;
 
@@ -91,6 +91,9 @@ export const ticketsAPI = {
     getAll: (params: Record<string, string> = {}): Promise<Ticket[]> => {
         const query = new URLSearchParams(params).toString();
         return api<Ticket[]>(`/tickets${query ? '?' + query : ''}`);
+    },
+    getRecent: (limit: number = 5): Promise<Ticket[]> => {
+        return api<Ticket[]>(`/tickets/recent?limit=${limit}`);
     },
     getById: (id: string): Promise<Ticket> => api<Ticket>(`/tickets/${id}`),
     create: (ticket: Partial<Ticket>): Promise<Ticket> =>
@@ -185,6 +188,38 @@ export const articlesAPI = {
 
 export const statsAPI = {
     get: (): Promise<Stats> => api<Stats>('/stats'),
+    
+    getStats: (): Promise<Stats> => api<Stats>('/stats'),
+    getExecutiveKPIs: (params: Record<string, string> = {}): Promise<ExecutiveKPIs> => {
+        const query = new URLSearchParams(params).toString();
+        const tzOffset = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return api<ExecutiveKPIs>(`/stats/executive${query ? '?' + query : ''}`, {
+            headers: { 'X-Timezone-Offset': tzOffset }
+        });
+    },
+    getTicketTrends: (params: Record<string, string> = {}): Promise<TicketTrend[]> => {
+        const query = new URLSearchParams(params).toString();
+        const tzOffset = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return api<TicketTrend[]>(`/stats/tickets/trends${query ? '?' + query : ''}`, {
+            headers: { 'X-Timezone-Offset': tzOffset }
+        });
+    },
+    getBreakdowns: (params: Record<string, string> = {}): Promise<Breakdown> => {
+        const query = new URLSearchParams(params).toString();
+        return api<Breakdown>(`/stats/tickets/breakdowns${query ? '?' + query : ''}`);
+    },
+    getLeaderboards: (params: Record<string, string> = {}): Promise<LeaderboardEntry[]> => {
+        const query = new URLSearchParams(params).toString();
+        return api<LeaderboardEntry[]>(`/stats/leaderboards${query ? '?' + query : ''}`);
+    },
+    getSidebarStats: async (filters: Record<string, string> = {}): Promise<SidebarStats> => {
+        const query = new URLSearchParams(filters).toString();
+        return api<SidebarStats>(`/stats/sidebar?${query}`);
+    },
+    getRecentFeedback: async (filters: Record<string, string> = {}): Promise<RecentFeedback[]> => {
+        const query = new URLSearchParams(filters).toString();
+        return api<RecentFeedback[]>(`/stats/recent-feedback?${query}`);
+    }
 };
 
 export const usersAPI = {

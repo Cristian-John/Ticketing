@@ -1,9 +1,9 @@
+import { showToast } from '../components/Toast';
 import { LayoutManager } from '../layouts/LayoutManager';
 import { loadPageForHtmlView } from '../pageLoader';
 import { authAPI } from '../services/api';
 import { sseClient } from '../services/sseClient';
 import { store } from '../state/store';
-import { showToast } from '../components/Toast';
 
 export type ScreenId = 'login-screen' | 'client-screen' | 'admin-screen' | 'support-screen';
 export type Portal = 'client' | 'admin' | 'support';
@@ -13,6 +13,7 @@ export type HtmlViewName =
     | 'my-tickets'
     | 'knowledge-base'
     | 'dashboard'
+    | 'analytics'
     | 'all-tickets'
     | 'resolved'
     | 'users'
@@ -26,6 +27,7 @@ const VIEW_TITLES: Record<HtmlViewName, { client?: string; admin?: string; suppo
     'my-tickets': { client: 'My Tickets', support: 'My Tickets' },
     'knowledge-base': { client: 'Knowledge Base', admin: 'Knowledge Base', support: 'Knowledge Base' },
     dashboard: { admin: 'Dashboard' },
+    analytics: { admin: 'Analytics', support: 'My Analytics' },
     'support-dashboard': { support: 'Support Dashboard' },
     'all-tickets': { admin: 'All Tickets', support: 'All Tickets' },
     'unclaimed-tickets': { support: 'Unclaimed Tickets' },
@@ -39,6 +41,7 @@ const VIEW_TITLES: Record<HtmlViewName, { client?: string; admin?: string; suppo
 /** Maps HTML nav view names to store currentView keys (unchanged store API). */
 const HTML_TO_STORE_VIEW: Record<HtmlViewName, string> = {
     dashboard: 'dashboard',
+    analytics: 'analytics',
     'support-dashboard': 'dashboard',
     'all-tickets': 'tickets',
     'unclaimed-tickets': 'tickets',

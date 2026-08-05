@@ -15,6 +15,7 @@ router.use(requireAuth());
 
 // Ticket routes
 router.get('/', TicketController.getAll);
+router.get('/recent', TicketController.getRecent);
 router.get('/:id', TicketController.getById);
 router.post('/', TicketController.create);
 router.put('/:id', TicketController.update);

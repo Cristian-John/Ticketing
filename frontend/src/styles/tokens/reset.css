@@ -16,7 +16,7 @@
 html {
     font-size: 15px;
     scroll-behavior: smooth;
-    background: var(--bg-body);
+    background: var(--color-bg-base);
     transition: var(--theme-transition);
 }
 

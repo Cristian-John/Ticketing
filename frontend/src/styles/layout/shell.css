@@ -32,7 +32,7 @@ body {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--modal-overlay);
     z-index: 98;
 }
 .sidebar-overlay.show {

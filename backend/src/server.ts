@@ -14,6 +14,8 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import sseRoutes from './routes/sse';
 import notificationRoutes from './routes/notifications';
+import ratingRoutes from './routes/ratings';
+import reportRoutes from './routes/reports';
 
 import { SSEController } from './controllers/sse.controller';
 import { NotificationService } from './services/notification.service';
@@ -88,20 +90,25 @@ app.get('/health', async (req: Request, res: Response) => {
 app.use('/api/v1/tickets', apiLimiter, ticketRoutes);
 app.use('/api/v1/articles', apiLimiter, articleRoutes);
 app.use('/api/v1/stats', apiLimiter, statRoutes);
+app.use('/api/v1/reports', apiLimiter, reportRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', apiLimiter, userRoutes);
 app.use('/api/sse', sseRoutes); // typically outside general rate limits due to persistent connection
 app.use('/api/v1/notifications', apiLimiter, notificationRoutes);
+app.use('/api/v1/ratings', apiLimiter, ratingRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
 
 // ─── Start Server (Conditionally for local environments) ──────────────────────
+import { StatsService } from './services/stats.service';
+
 if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
     // Initialize services
     SSEController.initialize();
     NotificationService.initialize();
     TicketWorkflowService.startExpirationCleanupTask();
+    StatsService.initializeCacheInvalidation();
 
     app.listen(ENV.PORT, () => {
         console.log(`\n  🎫  IT Support Ticketing Backend (v1)`);
@@ -114,6 +121,7 @@ if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
     // For serverless deployments, initialize once
     SSEController.initialize();
     NotificationService.initialize();
+    StatsService.initializeCacheInvalidation();
     // Do not run background tasks in serverless
 }
 

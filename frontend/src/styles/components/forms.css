@@ -96,6 +96,12 @@ textarea:focus,
     font-weight: 500;
 }
 
+/* Disable native browser password reveal button to prevent duplicate icons */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
 .password-toggle-btn {
     position: absolute;
     right: 12px;
@@ -116,6 +122,10 @@ textarea:focus,
 }
 .password-toggle-btn:hover {
     color: var(--color-text-primary);
+}
+.password-toggle-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 .input-wrapper input,

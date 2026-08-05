@@ -22,8 +22,8 @@ export class ClientNotificationMapper {
      * - Simplifies story
      */
     public static mapToClientDetail(vm: NotificationDetailViewModel): NotificationDetailViewModel {
-        // Only keep "View Ticket" action
-        const clientActions = vm.actions.filter(a => a.actionType === 'view-ticket');
+        // Keep "View Ticket" and "Rate Experience" actions
+        const clientActions = vm.actions.filter(a => a.actionType === 'view-ticket' || a.actionType === 'rate-experience');
 
         // Remove complex workflow stories, fallback to simple message if needed
         let clientStory = vm.content.story;

@@ -36,7 +36,7 @@
 }
 .stat-card:hover {
     transform: translateY(calc(-1 * var(--motion-distance-sm)));
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     box-shadow: var(--shadow-lg);
 }
 .stat-card .stat-icon {
@@ -90,7 +90,7 @@
         border-color var(--duration-fast) var(--ease-standard);
 }
 .mini-card:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     border-color: var(--color-border-hover);
 }
 .mini-card:last-child {

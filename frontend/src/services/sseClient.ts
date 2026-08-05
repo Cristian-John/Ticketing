@@ -67,7 +67,9 @@ class SSEClient {
             'attachment.uploaded',
             'notification.created',
             'notification.updated',
-            'notification.read_all'
+            'notification.read_all',
+            'ticket.rated',
+            'csat.low_score_alert'
         ];
 
         for (const event of events) {

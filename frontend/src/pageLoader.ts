@@ -1,12 +1,13 @@
+import { AnalyticsPage } from './pages/Analytics';
 import { ArticlesPage } from './pages/Articles';
+import { ClientNotificationsPage } from './pages/client/ClientNotificationsPage';
 import { DashboardPage } from './pages/Dashboard';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/Profile';
-import { SupportDashboardPage } from './pages/SupportDashboardPage';
+
 import { SupportTicketListPage } from './pages/SupportTicketListPage';
 import { TicketsPage } from './pages/Tickets';
 import { UsersPage } from './pages/Users';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { ClientNotificationsPage } from './pages/client/ClientNotificationsPage';
 import { HtmlViewName } from './router/router';
 import { store } from './state/store';
 import { getPortalContentContainer, renderPlaceholder } from './utils/portalContent';
@@ -16,7 +17,8 @@ export type RouteHandler = (view: HtmlViewName) => Promise<void>;
 
 const routeRegistry: Record<HtmlViewName, RouteHandler> = {
     'dashboard': () => DashboardPage.load(),
-    'support-dashboard': () => SupportDashboardPage.load(),
+    'support-dashboard': () => DashboardPage.load(),
+    'analytics': () => AnalyticsPage.load(),
     'my-tickets': (view) => {
         if (store.getState().currentUser?.role === 'it-support') {
             return SupportTicketListPage.load(TicketFilterMode.Owned);

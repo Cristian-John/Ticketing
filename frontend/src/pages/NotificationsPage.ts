@@ -1,21 +1,20 @@
-import { LayoutManager } from '../layouts/LayoutManager';
-import { HtmlViewName } from '../router/router';
-import { ticketsAPI } from '../services/api';
-import { getPortalContentContainer } from '../utils/portalContent';
-import { showToast } from '../components/Toast';
-import { store } from '../state/store';
-import { notificationStore } from '../state/NotificationStore';
-import { handleUIError } from '../utils/errorHandler';
-
-import { NotificationEmptyState } from '../components/notifications/NotificationEmptyState';
-import { NotificationSidebar } from '../components/notifications/NotificationSidebar';
-import { NotificationToolbar } from '../components/notifications/NotificationToolbar';
-import { NotificationList } from '../components/notifications/NotificationList';
 import { NotificationCard } from '../components/notifications/NotificationCard';
 import { NotificationDetail } from '../components/notifications/NotificationDetail';
-import { NotificationMapper } from '../mappers/NotificationMapper';
-import { IconService } from '../utils/iconService';
+import { NotificationEmptyState } from '../components/notifications/NotificationEmptyState';
+import { NotificationList } from '../components/notifications/NotificationList';
+import { NotificationSidebar } from '../components/notifications/NotificationSidebar';
+import { NotificationToolbar } from '../components/notifications/NotificationToolbar';
 import { TicketDetailModal } from '../components/TicketDetailModal';
+import { showToast } from '../components/Toast';
+import { LayoutManager } from '../layouts/LayoutManager';
+import { NotificationMapper } from '../mappers/NotificationMapper';
+import { HtmlViewName } from '../router/router';
+import { ticketsAPI } from '../services/api';
+import { notificationStore } from '../state/NotificationStore';
+import { store } from '../state/store';
+import { handleUIError } from '../utils/errorHandler';
+import { IconService } from '../utils/iconService';
+import { getPortalContentContainer } from '../utils/portalContent';
 
 export class NotificationsPage {
     private static currentFilter: string = '';

@@ -1,16 +1,17 @@
+import { TransitionLifecycle } from '../../utils/TransitionLifecycle';
+import { AddCollaboratorModal } from './AddCollaboratorModal';
 import { ArticleModal } from './ArticleModal';
+import { DeleteArticleModal } from './DeleteArticleModal';
 import { EditTicketModal } from './EditTicketModal';
 import { LogoutConfirmModal } from './LogoutConfirmModal';
+import { NotificationPreferencesModal } from './NotificationPreferencesModal';
 import { RatingModal } from './RatingModal';
 import { ResetPasswordModal } from './ResetPasswordModal';
 import { TicketModal } from './TicketModal';
 import { TransferTicketModal } from './TransferTicketModal';
 import { UpdateStatusModal } from './UpdateStatusModal';
-import { AddCollaboratorModal } from './AddCollaboratorModal';
 import { UserModal } from './UserModal';
 import { ViewTicketModal } from './ViewTicketModal';
-import { NotificationPreferencesModal } from './NotificationPreferencesModal';
-import { TransitionLifecycle } from '../../utils/TransitionLifecycle';
 
 export class ModalsManager {
     /**
@@ -35,6 +36,7 @@ export class ModalsManager {
         appendModal(ResetPasswordModal);
         appendModal(RatingModal);
         appendModal(ArticleModal);
+        appendModal(DeleteArticleModal);
         appendModal(LogoutConfirmModal);
         appendModal(UpdateStatusModal);
         appendModal(TransferTicketModal);

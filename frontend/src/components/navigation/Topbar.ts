@@ -1,8 +1,8 @@
+import { notificationStore } from '../../state/NotificationStore';
+import { IconService } from '../../utils/iconService';
 import { MenuIcon } from '../common/Icons';
 import { ThemeToggle } from '../common/theme/ThemeToggle';
 import { NotificationsDropdown } from '../NotificationsDropdown';
-import { notificationStore } from '../../state/NotificationStore';
-import { IconService } from '../../utils/iconService';
 
 export interface TopbarConfig {
     titleId: string;

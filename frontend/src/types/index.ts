@@ -107,6 +107,77 @@ export interface Stats {
     rated: number;
 }
 
+export interface ExecutiveKPIs {
+    total_tickets: number;
+    open_tickets: number;
+    pending_tickets: number;
+    in_progress_tickets: number;
+    resolved_tickets: number;
+    closed_tickets: number;
+    total_reopens: number;
+    avg_resolution_time_seconds: number | null;
+    avg_response_time_seconds: number | null;
+    overall_csat: number | null;
+    total_ratings: number;
+    eligible_surveys: number;
+    prev_total_tickets?: number;
+    prev_open_tickets?: number;
+    prev_resolved_tickets?: number;
+    prev_avg_resolution_time_seconds?: number | null;
+}
+
+export interface TicketTrend {
+    date: string;
+    created: number;
+    resolved: number;
+}
+
+export interface Breakdown {
+    byCategory: { category: string; count: number }[];
+    byPriority: { priority: string; count: number }[];
+    byStatus: { status: string; count: number }[];
+    byAging?: { age_group: string; count: number }[];
+}
+
+export interface SidebarStats {
+    total_tickets: number;
+    open_tickets: number;
+    in_progress_tickets: number;
+    severe_tickets: number;
+    resolved_tickets: number;
+    avg_csat: number | null;
+}
+
+export interface LeaderboardEntry {
+    tech_id: string;
+    tech_name: string;
+    tickets_resolved: number;
+    avg_csat: number;
+    total_ratings: number;
+    avg_resolution_time_seconds: number;
+    total_reopens: number;
+}
+
+
+export interface RecentFeedback {
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+    ticket_title: string;
+    ticket_id: string;
+}
+
+export interface TechStat {
+    tech_id: string;
+    tech_name: string;
+    tickets_resolved: number;
+    avg_csat: number | null;
+    total_ratings: number;
+    avg_resolution_time_seconds: number | null;
+    total_reopens: number;
+}
+
 export interface User {
     id: string;
     username: string;
@@ -158,4 +229,6 @@ export interface NotificationQuery {
     sort?: string;
     limit?: number;
 }
+
+export * from './rating.types';
 

@@ -3,16 +3,16 @@ import { TicketDetailModal } from '../components/TicketDetailModal';
 import { LayoutManager } from '../layouts/LayoutManager';
 import { ticketsAPI } from '../services/api';
 import { DepartmentService } from '../services/DepartmentService';
+import { sseClient } from '../services/sseClient';
 import { store } from '../state/store';
 import { Ticket } from '../types';
+import { debounce } from '../utils/debounce';
 import { getErrorMessage, handleUIError } from '../utils/errorHandler';
 import { escapeHTML, formatDate, getSeverityBadgeClass, getStatusBadgeClass } from '../utils/formatters';
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
 import { SupportTicketFilters, TicketFilterMode } from '../utils/SupportTicketFilters';
 import { TransitionManager } from '../utils/transitionManager';
-import { debounce } from '../utils/debounce';
-import { sseClient } from '../services/sseClient';
 
 export class SupportTicketListPage {
     private static currentTickets: Ticket[] = [];
@@ -46,9 +46,9 @@ export class SupportTicketListPage {
                     <div class="skeleton skeleton-btn" style="width: 200px;"></div>
                 </div>
             </div>
-            <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+            <div style="background: var(--color-bg-surface); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
                 ${Array.from({ length: 5 }).map(() => `
-                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--border); align-items: center;">
+                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--color-border); align-items: center;">
                         <div class="skeleton skeleton-text" style="width: 40px; margin-bottom: 0; margin-right: 16px;"></div>
                         <div style="flex: 1;">
                             <div class="skeleton skeleton-text" style="width: 40%; margin-bottom: 8px;"></div>
@@ -73,12 +73,20 @@ export class SupportTicketListPage {
                 this.renderTickets(container);
             });
         } catch (err) {
+            await LoadingManager.hideSkeleton(container);
             handleUIError(err, 'Failed to load tickets');
             container.innerHTML = `
-                <div class="empty-state">
-                    <p>${escapeHTML(getErrorMessage(err, 'Failed to load tickets. Please try again.'))}</p>
+                <div class="empty-state" style="margin-top: var(--space-xl);">
+                    <div class="empty-state-icon" style="color: var(--color-danger);">
+                        <i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i>
+                    </div>
+                    <div class="empty-state-title" style="color: var(--color-danger); font-size: 1.25rem;">Failed to Load Tickets</div>
+                    <p>${escapeHTML(getErrorMessage(err, 'An unexpected error occurred.'))}</p>
+                    <button class="btn btn-primary" style="margin-top: var(--space-md);" onclick="window.location.reload()">Retry</button>
                 </div>
             `;
+            // @ts-ignore
+            if (window.lucide) window.lucide.createIcons({ root: container });
         }
     }
 
@@ -212,13 +220,13 @@ export class SupportTicketListPage {
         } else {
             body.innerHTML = tickets.map(t => `
                 <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
-                    <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
-                    <td style="font-weight:600;color:var(--text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
+                    <td style="font-family:monospace;font-size:11px;color:var(--color-text-muted)">${escapeHTML(t.id)}</td>
+                    <td style="font-weight:600;color:var(--color-text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
                     <td><span class="badge-dept">${escapeHTML(t.department)}</span></td>
                     <td><span class="badge ${getSeverityBadgeClass(t.severity)}">${escapeHTML(t.severity)}</span></td>
                     <td><span class="badge ${getStatusBadgeClass(t.status)}">${escapeHTML(t.status)}</span></td>
                     <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.requester)}</td>
-                    <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
+                    <td style="color:var(--color-text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
                 </tr>
             `).join('');
 

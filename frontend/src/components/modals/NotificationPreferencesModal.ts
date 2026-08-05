@@ -1,6 +1,6 @@
-import { ModalsManager } from './ModalsManager';
-import { showToast } from '../Toast';
 import { store } from '../../state/store';
+import { showToast } from '../Toast';
+import { ModalsManager } from './ModalsManager';
 
 export class NotificationPreferencesModal {
     private element: HTMLDivElement;
@@ -45,7 +45,7 @@ export class NotificationPreferencesModal {
                     .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
                 </style>
 
-                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.9rem;">
+                <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 0.9rem;">
                     Customize how and when you want to receive notifications across the ticketing system.
                 </p>
 

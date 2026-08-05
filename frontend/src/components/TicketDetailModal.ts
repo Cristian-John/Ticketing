@@ -1,4 +1,5 @@
 import { ticketsAPI } from '../services/api';
+import { sseClient } from '../services/sseClient';
 import { store } from '../state/store';
 import { Ticket } from '../types';
 import { createElement } from '../utils/dom';
@@ -10,14 +11,17 @@ import {
     getSeverityBadgeClass,
     getStatusBadgeClass,
 } from '../utils/formatters';
-import { EditTicketModal } from './EditTicketModal';
-import { TransferTicketModal } from './TransferTicketModal';
+import { resolveTicketCapabilities } from '../utils/ticketPermissions';
 import { AddCollaboratorModal } from './AddCollaboratorModal';
-import { UpdateStatusModal } from './UpdateStatusModal';
+import { EditTicketModal } from './EditTicketModal';
+import { CSATExpiredBanner } from './csat/CSATExpiredBanner';
+import { CSATPromptCard } from './csat/CSATPromptCard';
+import { RatingSummary } from './csat/RatingSummary';
+import { ratingStore } from '../state/RatingStore';
 import { ModalsManager } from './modals/ModalsManager';
 import { showToast } from './Toast';
-import { resolveTicketCapabilities } from '../utils/ticketPermissions';
-import { sseClient } from '../services/sseClient';
+import { TransferTicketModal } from './TransferTicketModal';
+import { UpdateStatusModal } from './UpdateStatusModal';
 
 export class TicketDetailModal {
     private container: HTMLElement;
@@ -26,6 +30,7 @@ export class TicketDetailModal {
     private boundEditHandler?: () => void;
     private boundSubmitHandler?: (e: Event) => void;
     private sseHandler?: (payload: any) => void;
+    private csatUnsubscribe?: () => void;
 
     constructor(ticket: Ticket, onRefresh: () => void) {
         this.ticket = ticket;
@@ -193,6 +198,20 @@ export class TicketDetailModal {
             gridDiv.appendChild(div);
         });
         this.container.appendChild(gridDiv);
+
+        // CSAT Container
+        const csatContainer = createElement('div', { className: 'csat-ticket-container', attributes: { id: `csat-container-${this.ticket.id}`, style: 'margin-bottom: var(--space-md);' } });
+        this.container.appendChild(csatContainer);
+        this.loadCSATState(csatContainer);
+
+        // Bind reactive updates
+        this.csatUnsubscribe = ratingStore.subscribe((event) => {
+            if (event.ticketId === this.ticket.id) {
+                if (event.type === 'ELIGIBILITY_CHANGED' || event.type === 'RATING_SUBMITTED') {
+                    this.loadCSATState(csatContainer);
+                }
+            }
+        });
 
         // Description
         const descDiv = createElement('div', { className: 'detail-section' });
@@ -545,9 +564,9 @@ export class TicketDetailModal {
                 collabBanner.appendChild(createElement('strong', { textContent: 'Pending Collaboration Requests' }));
 
                 actionableCollab.forEach(req => {
-                    const item = createElement('div', { attributes: { style: 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px;' } });
+                    const item = createElement('div', { attributes: { style: 'display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-surface-hover); padding: 8px; border-radius: 4px;' } });
                     
-                    let message = '';
+                    let message: string;
                     if (req.target_user_id) {
                         const requesterName = req.requesterName || req.username || req.requester_id;
                         const targetName = req.targetName || req.targetUsername || req.target_user_id;
@@ -608,12 +627,12 @@ export class TicketDetailModal {
                 transferBanner.appendChild(createElement('strong', { textContent: 'Pending Ticket Transfer' }));
 
                 relevantTransfer.forEach(req => {
-                    const item = createElement('div', { attributes: { style: 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 4px;' } });
+                    const item = createElement('div', { attributes: { style: 'display: flex; justify-content: space-between; align-items: center; background: var(--color-bg-surface-hover); padding: 8px; border-radius: 4px;' } });
                     
                     const requesterName = req.requesterName || req.requesterUsername || req.requester_id;
                     const targetName = req.targetName || req.targetUsername || req.target_user_id;
                     
-                    let message = '';
+                    let message: string;
                     if (req.target_user_id === user?.id) {
                         message = `${requesterName} has requested to transfer this ticket to you.`;
                     } else if (req.requester_id === user?.id) {
@@ -681,6 +700,25 @@ export class TicketDetailModal {
         }
     }
 
+    private async loadCSATState(container: HTMLElement) {
+        try {
+            const eligibility = await ratingStore.getEligibility(this.ticket.id);
+            container.innerHTML = '';
+            
+            if (eligibility.status === 'RATED' && eligibility.rating) {
+                container.innerHTML = RatingSummary.render({ rating: eligibility.rating });
+            } else if (eligibility.canRate) {
+                const promptEl = CSATPromptCard.render(this.ticket);
+                container.appendChild(promptEl);
+            } else if (eligibility.status === 'EXPIRED') {
+                const expiredEl = CSATExpiredBanner.render();
+                container.appendChild(expiredEl);
+            }
+        } catch (e) {
+            console.error('Failed to load CSAT state', e);
+        }
+    }
+
     public destroy(): void {
         const editBtn = document.getElementById('detail-edit-btn');
         if (editBtn && this.boundEditHandler) {
@@ -694,6 +732,10 @@ export class TicketDetailModal {
             const events = ['note.added', 'ticket.status_updated', 'ticket.claimed', 'ticket.transferred', 'collaboration.requested', 'collaboration.approved', 'collaboration.rejected', 'attachment.uploaded', 'ticket.reopened'];
             events.forEach(ev => sseClient.off(ev, this.sseHandler!));
             this.sseHandler = undefined;
+        }
+        if (this.csatUnsubscribe) {
+            this.csatUnsubscribe();
+            this.csatUnsubscribe = undefined;
         }
         this.container.innerHTML = '';
     }

@@ -1,10 +1,10 @@
-import { AppNotification } from '../types';
+import { Router } from '../router/router';
 import { ticketsAPI } from '../services/api';
 import { notificationStore } from '../state/NotificationStore';
-import { Router } from '../router/router';
-import { showToast } from './Toast';
+import { AppNotification } from '../types';
 import { handleUIError } from '../utils/errorHandler';
 import { formatRelativeTime } from '../utils/formatters';
+import { showToast } from './Toast';
 
 export class NotificationsDropdown {
     private container: HTMLElement;
@@ -323,23 +323,23 @@ export class NotificationsDropdown {
         const svgSize = 16;
         switch (type) {
             case 'COLLABORATION_REQUESTED':
-                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>`;
+                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>`;
             case 'COLLABORATION_APPROVED':
-                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--success-color)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>`;
+                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>`;
             case 'COLLABORATION_REJECTED':
-                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="18" y1="8" x2="22" y2="12"></line><line x1="22" y1="8" x2="18" y2="12"></line></svg>`;
+                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="18" y1="8" x2="22" y2="12"></line><line x1="22" y1="8" x2="18" y2="12"></line></svg>`;
             case 'TICKET_TRANSFERRED':
             case 'TICKET_TRANSFER_REQUESTED':
             case 'TICKET_TRANSFER_APPROVED':
             case 'TICKET_OWNERSHIP_TRANSFERRED':
-                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2"><path d="M17 3v18"></path><path d="M3 10h14"></path><path d="m14 7 3 3-3 3"></path></svg>`;
+                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M17 3v18"></path><path d="M3 10h14"></path><path d="m14 7 3 3-3 3"></path></svg>`;
             case 'TICKET_TRANSFER_REJECTED':
             case 'TICKET_TRANSFER_CANCELLED':
             case 'TICKET_TRANSFER_EXPIRED':
             case 'TICKET_TRANSFER_INVALIDATED':
-                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)" stroke-width="2"><path d="M17 3v18"></path><path d="M3 10h14"></path><path d="m14 7 3 3-3 3"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
+                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2"><path d="M17 3v18"></path><path d="M3 10h14"></path><path d="m14 7 3 3-3 3"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
             default:
-                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+                return `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
         }
     }
 

@@ -1,9 +1,9 @@
 import { ticketsAPI, usersAPI } from '../services/api';
+import { store } from '../state/store';
 import { Ticket } from '../types';
 import { createElement } from '../utils/dom';
 import { handleUIError } from '../utils/errorHandler';
 import { ModalsManager } from './modals/ModalsManager';
-import { store } from '../state/store';
 import { showToast } from './Toast';
 
 export class AddCollaboratorModal {

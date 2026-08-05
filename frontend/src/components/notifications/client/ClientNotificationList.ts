@@ -1,6 +1,6 @@
 import { NotificationCardViewModel } from '../../../viewmodels/NotificationCardViewModel';
-import { ClientNotificationCard } from './ClientNotificationCard';
 import { NotificationEmptyState } from '../NotificationEmptyState';
+import { ClientNotificationCard } from './ClientNotificationCard';
 
 export class ClientNotificationList {
     private onNotificationSelect: (id: string) => void;
