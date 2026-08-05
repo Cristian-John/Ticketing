@@ -137,6 +137,28 @@ export class LoginLayout {
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
+                <div id="password-requirements" style="display:none; margin-top:8px; font-size:12px; overflow:hidden; max-height:0; transition: max-height var(--duration-normal) var(--ease-standard), opacity var(--duration-normal) var(--ease-standard); opacity:0;">
+                    <div class="pw-req" data-req="length" style="display:flex;align-items:center;gap:6px;padding:2px 0;color:var(--color-text-muted);transition:color var(--duration-fast) var(--ease-standard)">
+                        <svg class="pw-req-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5" opacity="0" class="pw-check-path"/></svg>
+                        <span>Minimum 8 characters</span>
+                    </div>
+                    <div class="pw-req" data-req="uppercase" style="display:flex;align-items:center;gap:6px;padding:2px 0;color:var(--color-text-muted);transition:color var(--duration-fast) var(--ease-standard)">
+                        <svg class="pw-req-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5" opacity="0" class="pw-check-path"/></svg>
+                        <span>Uppercase letter</span>
+                    </div>
+                    <div class="pw-req" data-req="lowercase" style="display:flex;align-items:center;gap:6px;padding:2px 0;color:var(--color-text-muted);transition:color var(--duration-fast) var(--ease-standard)">
+                        <svg class="pw-req-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5" opacity="0" class="pw-check-path"/></svg>
+                        <span>Lowercase letter</span>
+                    </div>
+                    <div class="pw-req" data-req="number" style="display:flex;align-items:center;gap:6px;padding:2px 0;color:var(--color-text-muted);transition:color var(--duration-fast) var(--ease-standard)">
+                        <svg class="pw-req-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5" opacity="0" class="pw-check-path"/></svg>
+                        <span>Number</span>
+                    </div>
+                    <div class="pw-req" data-req="special" style="display:flex;align-items:center;gap:6px;padding:2px 0;color:var(--color-text-muted);transition:color var(--duration-fast) var(--ease-standard)">
+                        <svg class="pw-req-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5" opacity="0" class="pw-check-path"/></svg>
+                        <span>Special character</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Confirm Password (Register Only) -->
@@ -165,15 +187,15 @@ export class LoginLayout {
                 </svg>
             </button>
             
-            <div class="auth-toggle-container animate-stagger" style="text-align:center; margin-top:20px; font-size:14px; color:var(--text-secondary)">
+            <div class="auth-toggle-container animate-stagger" style="text-align:center; margin-top:20px; font-size:14px; color:var(--color-text-secondary)">
                 <span id="auth-toggle-message">Don't have an account?</span>
-                <a href="#" id="toggle-auth-mode" style="color:var(--accent); text-decoration:none; font-weight:600; margin-left:4px;">Register</a>
+                <a href="#" id="toggle-auth-mode" style="color:var(--color-primary); text-decoration:none; font-weight:600; margin-left:4px;">Register</a>
             </div>
 
             <div id="forgot-password-container" class="animate-stagger" style="text-align:center; margin-top:12px;">
-                <a href="#" id="forgot-password-link" style="color:var(--text-muted); text-decoration:none; font-size:13px;">Forgot Password?</a>
-                <div id="forgot-password-message" style="display:none; margin-top:8px; padding:10px; background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.15); border-radius:6px; font-size:12px; color:var(--text-secondary);">
-                    🔒 This is an internal system. Please contact your <strong>System Administrator</strong> to reset your password.
+                <a href="#" id="forgot-password-link" style="color:var(--color-text-muted); text-decoration:none; font-size:13px;">Forgot Password?</a>
+                <div id="forgot-password-message" style="display:none; margin-top:8px; padding:10px; background:var(--color-primary-bg-subtle); border:1px solid var(--color-border); border-radius:6px; font-size:12px; color:var(--color-text-secondary);">
+                    This is an internal system. Please contact your <strong>System Administrator</strong> to reset your password.
                 </div>
             </div>
         `;

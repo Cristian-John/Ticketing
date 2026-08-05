@@ -224,7 +224,7 @@ class NotificationStore {
 
         sseClient.on('notification.read_all', () => {
             // Optimistic update
-            let updatedIds: string[] = [];
+            const updatedIds: string[] = [];
             Object.values(this.entities).forEach(n => {
                 if (!n.read_at) {
                     n.read_at = new Date().toISOString();

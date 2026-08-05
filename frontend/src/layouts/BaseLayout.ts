@@ -1,8 +1,8 @@
+import { ChevronLeftIcon } from '../components/common/Icons';
 import { ModalsManager } from '../components/modals/ModalsManager';
 import { Sidebar } from '../components/navigation/Sidebar';
 import { Topbar } from '../components/navigation/Topbar';
 import { Portal, Router } from '../router/router';
-import { ChevronLeftIcon } from '../components/common/Icons';
 
 export interface BaseLayoutConfig {
     screenId: string;

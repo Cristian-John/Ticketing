@@ -1,22 +1,22 @@
-import { LayoutManager } from '../../layouts/LayoutManager';
-import { HtmlViewName } from '../../router/router';
-import { ticketsAPI } from '../../services/api';
-import { getPortalContentContainer } from '../../utils/portalContent';
-import { showToast } from '../../components/Toast';
-import { store } from '../../state/store';
-import { notificationStore } from '../../state/NotificationStore';
-import { handleUIError } from '../../utils/errorHandler';
-
-import { NotificationEmptyState } from '../../components/notifications/NotificationEmptyState';
+import { ClientNotificationCard } from '../../components/notifications/client/ClientNotificationCard';
+import { ClientNotificationDetail } from '../../components/notifications/client/ClientNotificationDetail';
+import { ClientNotificationList } from '../../components/notifications/client/ClientNotificationList';
 import { ClientNotificationSidebar } from '../../components/notifications/client/ClientNotificationSidebar';
 import { ClientNotificationToolbar } from '../../components/notifications/client/ClientNotificationToolbar';
-import { ClientNotificationList } from '../../components/notifications/client/ClientNotificationList';
-import { ClientNotificationDetail } from '../../components/notifications/client/ClientNotificationDetail';
-import { ClientNotificationCard } from '../../components/notifications/client/ClientNotificationCard';
+import { NotificationEmptyState } from '../../components/notifications/NotificationEmptyState';
+import { RatingModal } from '../../components/csat/RatingModal';
+import { TicketDetailModal } from '../../components/TicketDetailModal';
+import { showToast } from '../../components/Toast';
+import { LayoutManager } from '../../layouts/LayoutManager';
 import { ClientNotificationMapper } from '../../mappers/ClientNotificationMapper';
 import { NotificationMapper } from '../../mappers/NotificationMapper';
+import { HtmlViewName } from '../../router/router';
+import { ticketsAPI } from '../../services/api';
+import { notificationStore } from '../../state/NotificationStore';
+import { store } from '../../state/store';
+import { handleUIError } from '../../utils/errorHandler';
 import { IconService } from '../../utils/iconService';
-import { TicketDetailModal } from '../../components/TicketDetailModal';
+import { getPortalContentContainer } from '../../utils/portalContent';
 
 export class ClientNotificationsPage {
     private static currentFilter: string = '';
@@ -348,6 +348,16 @@ export class ClientNotificationsPage {
                         }
                     }
                     return; 
+                case 'rate-experience':
+                    if (payload?.ticketId) {
+                        try {
+                            const ticket = await ticketsAPI.getById(payload.ticketId);
+                            RatingModal.open(ticket);
+                        } catch (err) {
+                            handleUIError(err, 'Failed to load ticket for rating');
+                        }
+                    }
+                    return;
             }
 
             notificationStore.upsert([{ ...notification, metadata: { ...notification.metadata, actionable: false } }]);

@@ -1,4 +1,4 @@
-import { BookIcon, DashboardIcon, ListIcon, StarIcon, UserIcon,UsersIcon } from '../../common/Icons';
+import { BookIcon, DashboardIcon, ListIcon, StarIcon, UserIcon, UsersIcon, BarChartIcon } from '../../common/Icons';
 import { SidebarConfig } from './SidebarConfig';
 
 export const adminSidebarConfig: SidebarConfig = {
@@ -10,6 +10,11 @@ export const adminSidebarConfig: SidebarConfig = {
             view: 'dashboard',
             label: 'Dashboard',
             icon: DashboardIcon({ size: 16 })
+        },
+        {
+            view: 'analytics',
+            label: 'Analytics',
+            icon: BarChartIcon({ size: 16 })
         },
         {
             view: 'all-tickets',
@@ -39,11 +44,11 @@ export const adminSidebarConfig: SidebarConfig = {
     ],
     statsBoxHtml: `
         <div class="sb-stats-label">OVERVIEW</div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Open</span><span class="sb-stats-val" style="color:var(--status-open)" id="as-open">0</span></div>
-        <div class="sb-stats-row"><span class="sb-stats-key">In Progress</span><span class="sb-stats-val" style="color:var(--accent)" id="as-progress">0</span></div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Severe</span><span class="sb-stats-val" style="color:var(--severity-severe)" id="as-severe">0</span></div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Resolved</span><span class="sb-stats-val" style="color:var(--status-resolved)" id="as-resolved">0</span></div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Avg Rating</span><span class="sb-stats-val" style="color:var(--severity-moderate)" id="as-rating">—</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Open</span><span class="sb-stats-val" style="color:var(--color-warning)" id="as-open">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">In Progress</span><span class="sb-stats-val" style="color:var(--color-primary)" id="as-progress">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Severe</span><span class="sb-stats-val" style="color:var(--color-danger)" id="as-severe">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Resolved</span><span class="sb-stats-val" style="color:var(--color-success)" id="as-resolved">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Avg Rating</span><span class="sb-stats-val" style="color:var(--color-success)" id="as-rating">—</span></div>
     `,
     actionBoxHtml: `
         <button class="sb-nav-btn" data-view="profile">

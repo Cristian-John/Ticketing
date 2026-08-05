@@ -28,10 +28,10 @@ export class LogoutConfirmModal {
         const body = document.createElement('div');
         body.className = 'modal-body text-center';
         body.innerHTML = `
-            <p style="color: var(--text-secondary); margin-bottom: 24px;">Are you sure you want to log out of your account?</p>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px;">Are you sure you want to log out of your account?</p>
             <div class="modal-actions centered">
                 <button type="button" class="btn btn-ghost" id="cancel-logout-btn">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirm-logout-btn" style="background-color: var(--severity-severe); border-color: var(--severity-severe);">Log Out</button>
+                <button type="button" class="btn btn-danger" id="confirm-logout-btn">Log Out</button>
             </div>
         `;
         

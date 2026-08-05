@@ -21,6 +21,9 @@ export class NotificationIconRegistry {
         'TICKET_STATUS_UPDATED': { icon: 'clipboard-list', style: 'system' },
         'NOTE_ADDED': { icon: 'message-circle', style: 'comment' },
         'ATTACHMENT_UPLOADED': { icon: 'paperclip', style: 'system' },
+        'CSAT_SURVEY_REQUESTED': { icon: 'star', style: 'warning' },
+        'CSAT_LOW_SCORE_ALERT': { icon: 'alert-triangle', style: 'danger' },
+        'TICKET_RATED': { icon: 'star', style: 'warning' },
     };
 
     public static getIconForType(type: string): NotificationIconMapping {

@@ -29,6 +29,10 @@
     transform: scale(var(--scale-pressed));
     transition: transform var(--duration-instant) var(--ease-accelerate);
 }
+.btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
 
 .btn-primary {
     background: var(--btn-primary-bg);

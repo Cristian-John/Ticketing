@@ -1,5 +1,5 @@
-import { ThemeManager, ColorMode, DesignLanguage } from './ThemeManager';
 import { PaletteIcon } from '../Icons';
+import { ColorMode, DesignLanguage,ThemeManager } from './ThemeManager';
 
 export class ThemeToggle {
     private element: HTMLDivElement;

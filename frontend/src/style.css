@@ -44,6 +44,8 @@
 @import './styles/components/splash.css';
 @import './styles/components/timeline.css';
 @import './styles/components/notifications.css';
+@import './styles/components/csat.css';
+@import './styles/components/analytics.css';
 
 /* =========================================
    PAGES

@@ -33,12 +33,12 @@
 .sb-logo-icon {
     width: 32px;
     height: 32px;
-    background: var(--btn-primary-bg, var(--primary));
+    background: var(--btn-primary-bg, var(--color-primary));
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--btn-primary-text, #fff);
+    color: var(--btn-primary-text);
     box-shadow: var(--btn-primary-shadow, none);
 }
 .sb-brand-name {
@@ -108,6 +108,10 @@
     background: var(--sidebar-active-bg);
     color: var(--sidebar-active-text);
 }
+.sb-nav-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
 .sb-badge {
     margin-left: auto;
     background: var(--badge-warning-bg);
@@ -173,6 +177,10 @@
     font-size: 12px;
     color: var(--color-text-secondary);
 }
+.sb-logout-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
 
 /* ──── Theme Toggle ──── */
 .theme-toggle {
@@ -192,9 +200,13 @@
     transition: var(--transition);
 }
 .theme-toggle:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     color: var(--color-text-secondary);
     border-color: var(--color-border-hover);
+}
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
 }
 .theme-toggle .theme-icon {
     font-size: 16px;
@@ -258,7 +270,7 @@
     box-shadow: var(--shadow-sm);
 }
 .global-theme-container .theme-toggle:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     border-color: var(--color-border-hover);
 }
 
@@ -281,7 +293,7 @@
         color var(--duration-fast) var(--ease-standard);
 }
 .sidebar-toggle:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     color: var(--color-text-primary);
 }
 
@@ -304,11 +316,11 @@
     cursor: pointer;
     z-index: 90;
     transition: left var(--duration-slow) var(--ease-standard), background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .sidebar-edge-toggle:hover {
-    background: var(--color-bg-hover);
+    background: var(--color-bg-surface-hover);
     color: var(--color-text-primary);
 }
 

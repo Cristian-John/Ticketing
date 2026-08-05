@@ -23,7 +23,7 @@
 .dept-bar-track {
     flex: 1;
     height: 5px;
-    background: var(--bg-body);
+    background: var(--color-bg-base);
     border-radius: 3px;
     overflow: hidden;
 }

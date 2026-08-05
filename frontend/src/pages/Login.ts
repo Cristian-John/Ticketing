@@ -24,6 +24,7 @@ export class LoginPage {
         const emailGroup = document.getElementById('email-group');
         const confirmPasswordGroup = document.getElementById('confirm-password-group');
         const rememberMeGroup = document.getElementById('remember-me-group');
+        const passwordRequirements = document.getElementById('password-requirements');
 
         // Form texts
         const authTitle = document.getElementById('auth-title');
@@ -62,6 +63,15 @@ export class LoginPage {
                 if (rememberMeGroup) rememberMeGroup.style.display = 'none';
                 if (forgotContainer) forgotContainer.style.display = 'none';
 
+                // Show password requirements
+                if (passwordRequirements) {
+                    passwordRequirements.style.display = 'block';
+                    requestAnimationFrame(() => {
+                        passwordRequirements.style.maxHeight = '200px';
+                        passwordRequirements.style.opacity = '1';
+                    });
+                }
+
                 if (authTitle) authTitle.textContent = 'Register';
                 if (loginBtnText) loginBtnText.textContent = 'Register';
                 if (authToggleMessage) authToggleMessage.textContent = 'Already have an account?';
@@ -78,6 +88,17 @@ export class LoginPage {
                 if (confirmPasswordGroup) confirmPasswordGroup.style.display = 'none';
                 if (rememberMeGroup) rememberMeGroup.style.display = 'flex';
                 if (forgotContainer) forgotContainer.style.display = 'block';
+
+                // Hide password requirements
+                if (passwordRequirements) {
+                    passwordRequirements.style.maxHeight = '0';
+                    passwordRequirements.style.opacity = '0';
+                    setTimeout(() => {
+                        if (!this.isRegisterMode && passwordRequirements) {
+                            passwordRequirements.style.display = 'none';
+                        }
+                    }, 300);
+                }
 
                 if (authTitle) authTitle.textContent = 'Sign In';
                 if (loginBtnText) loginBtnText.textContent = 'Sign In';
@@ -99,6 +120,31 @@ export class LoginPage {
             if (forgotMsg) {
                 forgotMsg.style.display = forgotMsg.style.display === 'none' ? 'block' : 'none';
             }
+        });
+
+        // Live password requirements validation
+        passwordInput?.addEventListener('input', () => {
+            if (!this.isRegisterMode) return;
+            const val = passwordInput.value;
+            const rules: Record<string, boolean> = {
+                length: val.length >= 8,
+                uppercase: /[A-Z]/.test(val),
+                lowercase: /[a-z]/.test(val),
+                number: /[0-9]/.test(val),
+                special: /[^a-zA-Z0-9]/.test(val),
+            };
+            Object.entries(rules).forEach(([key, passed]) => {
+                const row = document.querySelector(`.pw-req[data-req="${key}"]`) as HTMLElement;
+                if (!row) return;
+                const checkPath = row.querySelector('.pw-check-path') as SVGElement;
+                if (passed) {
+                    row.style.color = 'var(--badge-success-text)';
+                    if (checkPath) checkPath.setAttribute('opacity', '1');
+                } else {
+                    row.style.color = 'var(--color-text-muted)';
+                    if (checkPath) checkPath.setAttribute('opacity', '0');
+                }
+            });
         });
 
         loginForm?.addEventListener('submit', async e => {

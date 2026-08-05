@@ -1,0 +1,113 @@
+/* StatCard styles */
+.stat-card {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-card-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+}
+
+.stat-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+}
+
+.stat-card-trend {
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+}
+
+.stat-card-trend.trend-up {
+    color: var(--color-success);
+}
+
+.stat-card-trend.trend-down {
+    color: var(--color-danger);
+}
+
+.stat-card-trend.trend-neutral {
+    color: var(--color-text-secondary);
+}
+
+.trend-icon {
+    display: flex;
+    align-items: center;
+}
+
+/* BarChart styles */
+.bar-chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.bar-chart-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.bar-chart-label {
+    width: 120px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bar-chart-track {
+    flex-grow: 1;
+    height: 16px;
+    background-color: var(--color-text-secondary);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+}
+
+.bar-chart-bar {
+    height: 100%;
+    background-color: var(--color-primary);
+    border-radius: var(--radius);
+    transition: width var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bar-chart-value {
+    width: 40px;
+    text-align: right;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}

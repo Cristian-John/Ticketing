@@ -30,7 +30,7 @@
     width: 70px;
     height: 70px;
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary));
-    color: #fff;
+    color: var(--btn-primary-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -100,8 +100,8 @@
 }
 
 .profile-info-value .status-dot.active {
-    background: #00e676;
-    box-shadow: 0 0 8px #00e676;
+    background: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success);
 }
 
 .profile-section-title {
