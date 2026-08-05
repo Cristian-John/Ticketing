@@ -49,11 +49,15 @@
     /* Layout */
     --sidebar-bg: #09090b; /* Same depth as body */
     --sidebar-text: #a1a1aa; /* Zinc 400 */
+    --sidebar-heading: #ffffff;
     --sidebar-hover-bg: rgba(255, 255, 255, 0.04);
     --sidebar-hover-text: #fafafa;
     --sidebar-active-bg: rgba(129, 140, 248, 0.15);
     --sidebar-active-text: #c7d2fe; /* Indigo 200 */
     --sidebar-border: #27272a;
+    --sidebar-card-bg: #18181b;
+    --sidebar-card-border: #27272a;
+    --sidebar-accent: #818cf8;
 
     /* Buttons */
     --btn-primary-bg: var(--color-primary);

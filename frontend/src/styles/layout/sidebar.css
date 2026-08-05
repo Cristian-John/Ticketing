@@ -45,7 +45,7 @@
     font-weight: 800;
     font-size: 14px;
     letter-spacing: 0.5px;
-    color: var(--sidebar-hover-text, var(--color-text-heading));
+    color: var(--sidebar-heading, var(--color-text-heading));
 }
 .sb-brand-role {
     font-size: 9px;
@@ -58,20 +58,20 @@
 .sb-user-card {
     margin: 0 var(--space-sm) var(--space-sm);
     padding: var(--space-sm);
-    background: var(--badge-info-bg);
-    border: 1px solid var(--badge-info-border);
+    background: var(--sidebar-card-bg, var(--badge-info-bg));
+    border: 1px solid var(--sidebar-card-border, var(--badge-info-border));
     border-radius: 8px;
 }
 
 .sb-user-label {
     font-size: 9px;
-    color: var(--badge-info-text);
+    color: var(--sidebar-accent, var(--badge-info-text));
     font-weight: 700;
     letter-spacing: 1px;
     margin-bottom: 2px;
 }
 .sb-user-name {
-    color: var(--color-text-heading);
+    color: var(--sidebar-heading, var(--color-text-heading));
     font-weight: 600;
     font-size: 14px;
 }
@@ -132,13 +132,13 @@
 .sb-stats-box {
     margin: var(--space-sm) var(--space-sm) 0;
     padding: var(--space-sm);
-    background: var(--color-bg-base);
+    background: var(--sidebar-card-bg, var(--color-bg-base));
     border-radius: 8px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--sidebar-card-border, var(--color-border));
 }
 .sb-stats-label {
     font-size: 9px;
-    color: var(--color-text-secondary);
+    color: var(--sidebar-text, var(--color-text-secondary));
     letter-spacing: 1.5px;
     margin-bottom: 8px;
     font-weight: 700;
@@ -150,9 +150,10 @@
     font-size: 12px;
 }
 .sb-stats-key {
-    color: var(--color-text-secondary);
+    color: var(--sidebar-text, var(--color-text-secondary));
 }
 .sb-stats-val {
+    color: var(--sidebar-heading, var(--color-text-heading));
     font-weight: 700;
 }
 
@@ -175,7 +176,7 @@
     justify-content: center;
     padding: 8px;
     font-size: 12px;
-    color: var(--color-text-secondary);
+    color: var(--sidebar-text, var(--color-text-secondary));
 }
 .sb-logout-btn:focus-visible {
     outline: 2px solid var(--color-primary);
@@ -190,9 +191,9 @@
     padding: 8px 13px;
     margin: 8px 10px;
     border-radius: 7px;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg-base);
-    color: var(--color-text-secondary);
+    border: 1px solid var(--sidebar-card-border, var(--color-border));
+    background: var(--sidebar-card-bg, var(--color-bg-base));
+    color: var(--sidebar-text, var(--color-text-secondary));
     cursor: pointer;
     font-size: 12px;
     font-weight: 500;
@@ -200,9 +201,9 @@
     transition: var(--transition);
 }
 .theme-toggle:hover {
-    background: var(--color-bg-surface-hover);
-    color: var(--color-text-secondary);
-    border-color: var(--color-border-hover);
+    background: var(--sidebar-hover-bg, var(--color-bg-surface-hover));
+    color: var(--sidebar-hover-text, var(--color-text-primary));
+    border-color: var(--sidebar-border, var(--color-border-hover));
 }
 .theme-toggle:focus-visible {
     outline: 2px solid var(--color-primary);

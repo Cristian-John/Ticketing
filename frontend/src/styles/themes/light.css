@@ -46,14 +46,18 @@
 
     /* 2. COMPONENT TOKENS */
     
-    /* Layout — Dark Sidebar for contrast anchor */
-    --sidebar-bg: #0f172a; /* Slate 900 — strong, professional */
-    --sidebar-text: #94a3b8; /* Slate 400 */
-    --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
-    --sidebar-hover-text: #e2e8f0;
-    --sidebar-active-bg: rgba(79, 70, 229, 0.2);
-    --sidebar-active-text: #c7d2fe; /* Indigo 200 */
-    --sidebar-border: rgba(255, 255, 255, 0.06);
+    /* Layout — Light Sidebar */
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #64748b; /* Slate 500 */
+    --sidebar-heading: #0f172a; /* Slate 900 */
+    --sidebar-hover-bg: #f1f5f9;
+    --sidebar-hover-text: #0f172a;
+    --sidebar-active-bg: #eef2ff;
+    --sidebar-active-text: #4f46e5;
+    --sidebar-border: #e2e8f0;
+    --sidebar-card-bg: #f8fafc;
+    --sidebar-card-border: #e2e8f0;
+    --sidebar-accent: #4f46e5;
 
     /* Buttons */
     --btn-primary-bg: var(--color-primary);

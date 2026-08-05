@@ -64,11 +64,15 @@
     /* Sidebar */
     --sidebar-bg: #FFFFFF;
     --sidebar-text: #49473A;
+    --sidebar-heading: #1A1C18;
     --sidebar-hover-bg: #F0EBE4;
     --sidebar-hover-text: #1A1C18;
     --sidebar-active-bg: #FFBF00;
     --sidebar-active-text: #261A00; /* on-primary-fixed */
     --sidebar-border: #E5E2DA;
+    --sidebar-card-bg: #F6F3EB;
+    --sidebar-card-border: #E5E2DA;
+    --sidebar-accent: #795900;
 
     /* Cards ??? 1px borders, no soft shadows */
     --card-bg: #FFFFFF;
@@ -143,14 +147,18 @@
     --color-text-secondary: #D4C5AB; /* on-surface-variant (warm) */
     --color-text-muted: #9C8F78; /* outline */
 
-    /* Sidebar ??? The Void */
+    /* Sidebar — The Void */
     --sidebar-bg: #000000;
     --sidebar-text: #9C8F78;
+    --sidebar-heading: #FFFFFF;
     --sidebar-hover-bg: #0D0D0D;
     --sidebar-hover-text: #E2E2E2;
     --sidebar-active-bg: #FFBF00;
     --sidebar-active-text: #000000;
     --sidebar-border: #1A1A1A;
+    --sidebar-card-bg: #0D0D0D;
+    --sidebar-card-border: #1A1A1A;
+    --sidebar-accent: #FFBF00;
 
     /* Cards ??? Chamber style with energy-leak potential */
     --card-bg: #0D0D0D;

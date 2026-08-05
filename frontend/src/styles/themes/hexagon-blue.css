@@ -58,11 +58,15 @@
     /* Sidebar — Frosted glass */
     --sidebar-bg: rgba(5, 10, 20, 0.75);
     --sidebar-text: #80cbc4;
+    --sidebar-heading: #e0f7fa;
     --sidebar-hover-bg: rgba(0, 229, 255, 0.08);
     --sidebar-hover-text: #e0f7fa;
     --sidebar-active-bg: rgba(0, 229, 255, 0.15);
     --sidebar-active-text: #00e5ff;
     --sidebar-border: rgba(0, 229, 255, 0.08);
+    --sidebar-card-bg: rgba(0, 229, 255, 0.06);
+    --sidebar-card-border: rgba(0, 229, 255, 0.12);
+    --sidebar-accent: #00e5ff;
 
     /* Cards & Modals — Frosted glass */
     --card-bg: rgba(10, 20, 40, 0.5);
@@ -101,14 +105,18 @@
     --color-text-heading: #042f44;
     --color-text-secondary: #0e7490;
 
-    /* Sidebar — Dark teal */
-    --sidebar-bg: #042f44;
-    --sidebar-text: #67e8f9;
-    --sidebar-hover-bg: rgba(0, 229, 255, 0.08);
-    --sidebar-hover-text: #ffffff;
-    --sidebar-active-bg: rgba(0, 229, 255, 0.2);
-    --sidebar-active-text: #00e5ff;
-    --sidebar-border: rgba(0, 229, 255, 0.1);
+    /* Sidebar — Clean cyan/teal */
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #0e7490;
+    --sidebar-heading: #042f44;
+    --sidebar-hover-bg: rgba(0, 151, 167, 0.08);
+    --sidebar-hover-text: #042f44;
+    --sidebar-active-bg: rgba(0, 151, 167, 0.15);
+    --sidebar-active-text: #0097a7;
+    --sidebar-border: rgba(0, 151, 167, 0.15);
+    --sidebar-card-bg: rgba(0, 151, 167, 0.05);
+    --sidebar-card-border: rgba(0, 151, 167, 0.12);
+    --sidebar-accent: #0097a7;
 
     /* Cards */
     --card-bg: rgba(255, 255, 255, 0.85);

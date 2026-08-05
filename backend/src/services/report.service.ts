@@ -31,7 +31,7 @@ export class ReportService {
                     tickets."updatedAt" as "Updated At",
                     tickets."dueAt" as "Due At",
                     ticket_ratings.rating as "CSAT Rating",
-                    ticket_ratings.comment as "CSAT Comment"
+                    ticket_ratings.feedback as "CSAT Comment"
                 FROM tickets
                 LEFT JOIN users as u_requester ON tickets."userId" = u_requester.id
                 LEFT JOIN ticket_ratings ON tickets.id = ticket_ratings.ticket_id
@@ -112,7 +112,7 @@ export class ReportService {
                     tickets."updatedAt" as "Updated At",
                     tickets."dueAt" as "Due At",
                     ticket_ratings.rating as "CSAT Rating",
-                    ticket_ratings.comment as "CSAT Comment"
+                    ticket_ratings.feedback as "CSAT Comment"
                 FROM tickets
                 LEFT JOIN users as u_requester ON tickets."userId" = u_requester.id
                 LEFT JOIN ticket_ratings ON tickets.id = ticket_ratings.ticket_id
