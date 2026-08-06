@@ -1,72 +1,11 @@
-# Dependencies
 node_modules/
-backend/node_modules/
-frontend/node_modules/
-
-# Build outputs
 dist/
-backend/dist/
-frontend/dist/
-
-# Environment files
 .env
-backend/.env
-frontend/.env
 
-# Database files
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-
-# Uploads
-uploads/
-backend/uploads/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Testing & Logs
+# Playwright Test Artifacts
 playwright-report/
 test-results/
+playwright/.cache/
+
+# Logs
 *.log
-
-# Cache/Temp
-.vite-temp/
-.eslintcache
-
-# ==================================================
-# AI Workspace Configuration
-# ==================================================
-.agents/
-.agent/
-.cursor/
-.cursorrules
-.clinerules
-.gemini/
-
-# ==================================================
-# IDE Configuration
-# ==================================================
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# ==================================================
-# Temporary & QA Artifacts
-# ==================================================
-scratch/
-scratch.*
-tmp/
-temp/
-coverage/
-/*.png
-/*.jpg
-/*.mp4
-
-# ==================================================
-# Documentation
-# ==================================================
-docs/
