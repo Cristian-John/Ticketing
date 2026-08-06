@@ -1,11 +1,26 @@
+import { LayoutManager } from '../layouts/LayoutManager';
 import { createElement } from './dom';
 
 export function getPortalContentContainer(role: string): HTMLElement | null {
-    const id = role === 'admin' || role === 'it-support' ? 'admin-content' : 'client-content';
-    return document.getElementById(id);
+    if (role === 'admin') {
+        if (LayoutManager.admin) {
+            return LayoutManager.admin.getContentArea();
+        }
+        return document.getElementById('admin-content');
+    } else if (role === 'it-support') {
+        if (LayoutManager.support) {
+            return LayoutManager.support.getContentArea();
+        }
+        return document.getElementById('support-content');
+    } else {
+        if (LayoutManager.client) {
+            return LayoutManager.client.getContentArea();
+        }
+        return document.getElementById('client-content');
+    }
 }
 
-export function clearPortalContent(role: string): HTMLElement | null {
+function clearPortalContent(role: string): HTMLElement | null {
     const container = getPortalContentContainer(role);
     if (container) {
         container.innerHTML = '';

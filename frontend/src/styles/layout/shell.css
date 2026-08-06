@@ -6,6 +6,21 @@
 /* ============================
    APP SHELL — SIDEBAR LAYOUT
    ============================ */
+html, body {
+    margin: 0;
+    padding: 0;
+    scrollbar-gutter: stable;
+    color: var(--color-text-primary);
+    font-family: var(--font);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+html {
+    background-color: var(--color-bg-base);
+}
+body {
+    background-color: transparent;
+}
+
 .app-shell {
     display: flex;
     height: 100vh;
@@ -17,8 +32,8 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 25;
+    background: var(--modal-overlay);
+    z-index: 98;
 }
 .sidebar-overlay.show {
     display: block;
@@ -36,6 +51,26 @@
 }
 .content-area {
     flex: 1;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
     padding: var(--space-lg);
+}
+.content-area.no-padding {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .content-area {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-area {
+        padding: 10px;
+    }
 }

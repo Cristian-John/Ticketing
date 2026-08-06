@@ -5,34 +5,45 @@
 
 /* ──── Glass Card ──── */
 .glass-card {
-    background: var(--bg-card);
+    background: var(--color-bg-surface);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
 }
 /* ──── Stat Cards ──── */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
 }
 .stat-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    transition: var(--transition);
+    justify-content: space-between;
+    min-height: 120px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+    transition: 
+        transform var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
 }
 .stat-card:hover {
-    transform: translateY(-2px);
-    background: var(--bg-card-hover);
-    box-shadow: var(--shadow);
+    transform: translateY(calc(-1 * var(--motion-distance-sm, 2px)));
+    background: var(--color-bg-surface-hover);
+    border-color: var(--color-border-hover);
+    box-shadow: var(--shadow-md);
 }
 .stat-card .stat-icon {
     font-size: 22px;
@@ -43,16 +54,16 @@
     line-height: 1;
 }
 .stat-card .stat-label {
-    color: var(--text-muted);
+    color: var(--color-text-secondary);
     font-size: 11px;
     margin-top: 2px;
 }
 
 /* ──── Panel ──── */
 .panel {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     padding: var(--space-md);
 }
 .panel-header {
@@ -66,7 +77,7 @@
 .panel-link {
     background: none;
     border: none;
-    color: var(--status-progress);
+    color: var(--color-primary);
     font-size: 12px;
     cursor: pointer;
     padding: 0;
@@ -74,17 +85,19 @@
 }
 /* ──── Mini Ticket Card ──── */
 .mini-card {
-    background: var(--bg-body);
-    border-radius: 7px;
+    background: var(--color-bg-base);
+    border-radius: var(--radius-md);
     padding: 10px;
     margin-bottom: var(--space-xs);
     cursor: pointer;
-    border: 1px solid var(--border);
-    transition: var(--transition);
+    border: 1px solid var(--color-border);
+    transition: 
+        background-color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard);
 }
 .mini-card:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-hover);
+    background: var(--color-bg-surface-hover);
+    border-color: var(--color-border-hover);
 }
 .mini-card:last-child {
     margin-bottom: 0;
@@ -97,19 +110,19 @@
 }
 .mini-card-id {
     font-size: 10px;
-    color: var(--text-muted);
+    color: var(--color-text-secondary);
     font-family: monospace;
 }
 .mini-card-title {
     font-weight: 600;
     font-size: 12px;
-    color: var(--text-primary);
+    color: var(--color-text-primary);
     line-height: 1.4;
     margin-bottom: 4px;
 }
 .mini-card-desc {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--color-text-secondary);
     margin-bottom: 4px;
 }
 .mini-card-badges {
@@ -119,3 +132,15 @@
     flex-wrap: wrap;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .ticket-card {
+        padding: 14px;
+    }
+    .panel {
+        padding: 14px;
+    }
+    .panel-header {
+        font-size: 13px;
+    }
+}

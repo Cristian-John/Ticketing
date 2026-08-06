@@ -1,8 +1,11 @@
-import { ModalsComponent } from '../components/Modals';
+import { SearchIcon } from '../components/common/Icons';
+import { DeleteArticleModal } from '../components/modals/DeleteArticleModal';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { articlesAPI } from '../services/api';
 import { store } from '../state/store';
 import { Article } from '../types';
+import { handleUIError, getErrorMessage } from '../utils/errorHandler';
 import { debounce,escapeHTML, formatDate } from '../utils/formatters';
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
@@ -29,7 +32,7 @@ export class ArticlesPage {
             </div>
             <div style="display:grid;gap:15px;grid-template-columns:1fr;align-items:start;">
                 ${Array.from({ length: 3 }).map(() => `
-                    <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); padding: 24px;">
+                    <div style="background: var(--color-bg-surface); border-radius: 8px; border: 1px solid var(--color-border); padding: 24px;">
                         <div class="skeleton skeleton-text" style="width: 80px; height: 24px; margin-bottom: 12px; border-radius: 12px;"></div>
                         <div class="skeleton skeleton-text" style="width: 60%; height: 28px; margin-bottom: 16px;"></div>
                         <div class="skeleton skeleton-text" style="width: 100%; margin-bottom: 8px;"></div>
@@ -49,7 +52,20 @@ export class ArticlesPage {
                 this.renderArticles(articles);
             });
         } catch (err) {
-            console.error('Failed to load KB articles:', err);
+            await LoadingManager.hideSkeleton(container);
+            handleUIError(err, 'Failed to load knowledge base articles');
+            container.innerHTML = `
+                <div class="empty-state" style="margin-top: var(--space-xl);">
+                    <div class="empty-state-icon" style="color: var(--color-danger);">
+                        <i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i>
+                    </div>
+                    <div class="empty-state-title" style="color: var(--color-danger); font-size: 1.25rem;">Failed to Load Articles</div>
+                    <p>${escapeHTML(getErrorMessage(err, 'An unexpected error occurred.'))}</p>
+                    <button class="btn btn-primary" style="margin-top: var(--space-md);" onclick="window.location.reload()">Retry</button>
+                </div>
+            `;
+            // @ts-ignore
+            if (window.lucide) window.lucide.createIcons({ root: container });
         }
     }
 
@@ -72,8 +88,11 @@ export class ArticlesPage {
     private static renderClientArticles(container: HTMLElement, articles: Article[]): void {
         container.innerHTML = `
             <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;">
-                <input type="text" id="kb-search-client" class="search-box" style="flex:1;max-width:400px;"
-                    placeholder="Search articles, FAQs..." value="${escapeHTML(this.clientSearchQuery)}">
+                <div class="search-box" style="flex:1;max-width:400px;">
+                    ${SearchIcon({ size: 14 })}
+                    <input type="text" id="kb-search-client" style="width: 100%;"
+                        placeholder="Search articles, FAQs..." value="${escapeHTML(this.clientSearchQuery)}">
+                </div>
                 <button class="btn btn-primary" id="kb-search-btn" type="button">Search</button>
             </div>
             <div id="kb-client-list" style="display:grid;gap:15px;grid-template-columns:1fr;align-items:start;"></div>
@@ -85,7 +104,9 @@ export class ArticlesPage {
         if (articles.length === 0) {
             list.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">📚</div>
+                    <div class="empty-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
                     <p>No knowledge base articles available.</p>
                 </div>
             `;
@@ -115,7 +136,7 @@ export class ArticlesPage {
         container.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
                 <div>
-                    <p style="color:var(--text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
+                    <p style="color:var(--color-text-muted);font-size:14px;margin:0">Manage support articles and FAQs</p>
                 </div>
                 <button class="btn btn-primary" id="btn-new-article" type="button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -133,7 +154,9 @@ export class ArticlesPage {
         if (articles.length === 0) {
             list.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">📚</div>
+                    <div class="empty-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </div>
                     <p>No knowledge base articles available.</p>
                 </div>
             `;
@@ -141,29 +164,48 @@ export class ArticlesPage {
             list.innerHTML = articles
                 .map(
                     a => `
-                <div class="kb-article-card">
+                <div class="kb-article-card" data-article-id="${escapeHTML(a.id)}">
                     <div class="kb-article-header">
                         <div class="kb-article-meta">
                             <span class="badge-cat">${escapeHTML(a.category)}</span>
                             <span class="kb-article-date">Updated ${formatDate(a.updatedAt)}</span>
                         </div>
+                        <button type="button" class="btn btn-danger btn-sm btn-delete-article" data-id="${escapeHTML(a.id)}" data-title="${escapeHTML(a.title)}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Delete
+                        </button>
                     </div>
                     <h3 class="kb-article-title">${escapeHTML(a.title)}</h3>
                     <div class="kb-article-content">${escapeHTML(a.content.substring(0, 300))}${a.content.length > 300 ? '...' : ''}</div>
-                    <div style="margin-top:12px;color:var(--text-muted);font-size:12px">Author: ${escapeHTML(a.author)}</div>
+                    <div style="margin-top:12px;color:var(--color-text-muted);font-size:12px">Author: ${escapeHTML(a.author)}</div>
                 </div>
             `,
                 )
                 .join('');
         }
 
-        // Prepare container for future administrative actions via event delegation
-        list.addEventListener('click', () => {
-            // e.g. const editBtn = (e.target as HTMLElement).closest('.btn-edit-article');
+        // Event delegation for delete buttons
+        list.addEventListener('click', (e) => {
+            const deleteBtn = (e.target as HTMLElement).closest('.btn-delete-article') as HTMLElement;
+            if (!deleteBtn) return;
+
+            const articleId = deleteBtn.getAttribute('data-id');
+            const articleTitle = deleteBtn.getAttribute('data-title') || 'this article';
+            if (!articleId) return;
+
+            DeleteArticleModal.open(articleTitle, async () => {
+                try {
+                    await articlesAPI.delete(articleId);
+                    showToast('Article deleted successfully', 'success');
+                    await this.load();
+                } catch (err) {
+                    handleUIError(err, 'Failed to delete article');
+                }
+            });
         });
 
         document.getElementById('btn-new-article')?.addEventListener('click', () => {
-            ModalsComponent.openModal('article-modal');
+            ModalsManager.openModal('article-modal');
         });
     }
 
@@ -180,7 +222,9 @@ export class ArticlesPage {
             if (filtered.length === 0) {
                 list.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">📚</div>
+                        <div class="empty-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        </div>
                         <p>No matching articles found.</p>
                     </div>
                 `;
@@ -236,10 +280,10 @@ export class ArticlesPage {
 
                 showToast('Article created successfully!', 'success');
                 form.reset();
-                ModalsComponent.closeModal('article-modal');
+                ModalsManager.closeModal('article-modal');
                 await this.load();
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create article', 'error');
+                handleUIError(err, 'Failed to create article');
             }
         });
     }

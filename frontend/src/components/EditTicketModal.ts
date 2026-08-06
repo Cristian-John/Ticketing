@@ -1,8 +1,8 @@
-import { ticketsAPI, usersAPI } from '../services/api';
+import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
 import { Ticket } from '../types';
-import { createElement } from '../utils/dom';
-import { ModalsComponent } from './Modals';
+import { handleUIError } from '../utils/errorHandler';
+import { ModalsManager } from './modals/ModalsManager';
 import { showToast } from './Toast';
 
 export class EditTicketModal {
@@ -22,33 +22,18 @@ export class EditTicketModal {
         await this.create();
         this.render();
         this.attachEvents();
-        ModalsComponent.openModal('edit-ticket-modal');
+        ModalsManager.openModal('edit-ticket-modal');
     }
 
     private async create(): Promise<void> {
         const statusSelect = document.getElementById('edit-ticket-status') as HTMLSelectElement;
         const severitySelect = document.getElementById('edit-ticket-severity') as HTMLSelectElement;
         const prioritySelect = document.getElementById('edit-ticket-priority') as HTMLSelectElement;
-        const assigneeSelect = document.getElementById('edit-ticket-assignee') as HTMLSelectElement;
         const dueInput = document.getElementById('edit-ticket-due') as HTMLInputElement;
 
         if (statusSelect) statusSelect.value = this.ticket.status;
         if (severitySelect) severitySelect.value = this.ticket.severity;
         if (prioritySelect) prioritySelect.value = this.ticket.priority;
-
-        if (assigneeSelect) {
-            assigneeSelect.innerHTML = '';
-            assigneeSelect.appendChild(createElement('option', { attributes: { value: 'Unassigned' }, textContent: 'Unassigned' }));
-            try {
-                const agents = await usersAPI.getByRole('it-support');
-                agents.forEach(agent => {
-                    assigneeSelect.appendChild(createElement('option', { attributes: { value: agent.fullName }, textContent: agent.fullName }));
-                });
-                assigneeSelect.value = this.ticket.assignee || 'Unassigned';
-            } catch (err) {
-                console.error('Failed to load agents for assignment:', err);
-            }
-        }
 
         if (dueInput) {
             if (this.ticket.dueAt) {
@@ -78,7 +63,7 @@ export class EditTicketModal {
 
         if (cancelBtn) {
             this.boundCancelHandler = () => {
-                ModalsComponent.closeModal('edit-ticket-modal');
+                ModalsManager.closeModal('edit-ticket-modal');
             };
             cancelBtn.addEventListener('click', this.boundCancelHandler);
         }
@@ -90,7 +75,6 @@ export class EditTicketModal {
                 const statusSelect = document.getElementById('edit-ticket-status') as HTMLSelectElement;
                 const severitySelect = document.getElementById('edit-ticket-severity') as HTMLSelectElement;
                 const prioritySelect = document.getElementById('edit-ticket-priority') as HTMLSelectElement;
-                const assigneeSelect = document.getElementById('edit-ticket-assignee') as HTMLSelectElement;
                 const dueInput = document.getElementById('edit-ticket-due') as HTMLInputElement;
 
                 const user = store.getState().currentUser;
@@ -106,16 +90,15 @@ export class EditTicketModal {
                         status: statusSelect.value,
                         severity: severitySelect.value,
                         priority: prioritySelect.value,
-                        assignee: assigneeSelect.value,
                         dueAt: dueAt || '',
                         changedBy,
                     });
 
                     showToast('Ticket updated successfully', 'success');
-                    ModalsComponent.closeModal('edit-ticket-modal');
+                    ModalsManager.closeModal('edit-ticket-modal');
                     this.onSaveCallback();
                 } catch (err: unknown) {
-                    showToast((err instanceof Error ? err.message : String(err)) || 'Failed to update ticket', 'error');
+                    handleUIError(err, 'Failed to update ticket');
                 }
             };
             form.addEventListener('submit', this.boundSubmitHandler);

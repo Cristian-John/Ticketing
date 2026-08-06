@@ -1,7 +1,8 @@
-import { ModalsComponent } from '../components/Modals';
+import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
+import { handleUIError } from '../utils/errorHandler';
 import { LoadingManager } from '../utils/loadingManager';
 import { TicketsPage } from './Tickets';
 
@@ -16,7 +17,7 @@ export class CreateTicketPage {
         ) as HTMLInputElement;
 
         openBtn?.addEventListener('click', () => {
-            ModalsComponent.openModal('ticket-modal');
+            ModalsManager.openModal('ticket-modal');
             const titleInput = document.getElementById('ticket-title') as HTMLInputElement;
             titleInput?.focus();
         });
@@ -97,7 +98,7 @@ export class CreateTicketPage {
 
                 await TicketsPage.load('my-tickets');
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create ticket', 'error');
+                handleUIError(err, 'Failed to create ticket');
             } finally {
                 if (submitBtn) {
                     LoadingManager.setButtonLoading(submitBtn, false);
@@ -107,7 +108,7 @@ export class CreateTicketPage {
     }
 
     private static closeModal(form: HTMLFormElement | null): void {
-        ModalsComponent.closeModal('ticket-modal');
+        ModalsManager.closeModal('ticket-modal');
         form?.reset();
         const customDeptGroup = document.getElementById('custom-dept-group');
         const customDeptInput = document.getElementById(
