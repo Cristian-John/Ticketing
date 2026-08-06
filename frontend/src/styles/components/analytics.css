@@ -154,76 +154,149 @@
 }
 
 /* ──── Line Chart ──── */
-.line-chart-container {
+.line-chart-wrapper {
+    width: 100%;
+}
+
+.line-chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    gap: var(--space-xs);
+    padding: var(--space-xl);
+}
+
+.line-chart-empty p {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.line-chart-canvas {
     position: relative;
     width: 100%;
 }
 
-.line-chart-container svg text {
+.line-chart-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.line-chart-svg text {
     font-family: inherit;
     user-select: none;
 }
 
-.line-chart-dot {
-    cursor: pointer;
-    transition: r 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-width 0.2s ease;
+/* Lines & Areas */
+.lc-line {
+    transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.line-chart-dot:hover {
-    r: 6.5;
-    stroke-width: 3;
+.lc-area {
+    opacity: 0;
+    transition: opacity 0.6s ease-out 0.25s;
 }
 
-/* Chart Tooltip */
-.chart-tooltip {
+/* Crosshair */
+.lc-crosshair {
+    stroke: var(--color-text-secondary);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    pointer-events: none;
+}
+
+/* Hover dots */
+.lc-hover-dot {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Tooltip */
+.lc-tooltip {
     position: absolute;
     pointer-events: none;
+    z-index: 50;
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: 8px 12px;
-    font-size: 0.75rem;
+    padding: 10px 14px;
+    font-size: 0.8rem;
     box-shadow: var(--shadow-lg);
-    z-index: 50;
-    opacity: 0;
-    transform: translate(-50%, -100%) translateY(-10px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-100%) scale(0.96);
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.chart-tooltip.visible {
-    opacity: 1;
-    transform: translate(-50%, -100%) translateY(-14px);
-}
-
-.chart-tooltip-date {
+.lc-tooltip-date {
     font-weight: 700;
+    font-size: 0.75rem;
     color: var(--color-text-primary);
-    margin-bottom: 4px;
-    padding-bottom: 3px;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
     border-bottom: 1px solid var(--color-border);
 }
 
-.chart-tooltip-row {
+.lc-tooltip-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 2px;
+    gap: 10px;
+    margin-top: 3px;
 }
 
-.chart-tooltip-key {
+.lc-tooltip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.lc-tooltip-label {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    flex: 1;
+}
+
+.lc-tooltip-value {
+    font-weight: 700;
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Legend */
+.lc-legend {
+    display: flex;
+    gap: var(--space-lg);
+    justify-content: center;
+    padding-top: var(--space-sm);
+}
+
+.lc-legend-item {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: var(--color-text-secondary);
 }
 
-.chart-tooltip-val {
-    font-weight: 700;
-    color: var(--color-text-primary);
+.lc-legend-swatch {
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+    display: inline-block;
 }
 
 /* ──── Analytics Page Layout ──── */
