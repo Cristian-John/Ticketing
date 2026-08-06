@@ -17,11 +17,13 @@ export class TransitionManager {
         const oldGhost = document.createElement('div');
         oldGhost.innerHTML = container.innerHTML;
         oldGhost.style.position = 'absolute';
-        oldGhost.style.top = '0';
-        oldGhost.style.left = '0';
-        oldGhost.style.width = '100%';
+        oldGhost.style.top = 'var(--space-lg)';
+        oldGhost.style.left = 'var(--space-lg)';
+        oldGhost.style.right = 'var(--space-lg)';
+        oldGhost.style.bottom = 'var(--space-lg)';
         oldGhost.style.transition = 'opacity var(--duration-normal) var(--ease-out)';
         oldGhost.style.pointerEvents = 'none';
+        oldGhost.style.boxSizing = 'border-box';
 
         const originalPosition = container.style.position;
         if (getComputedStyle(container).position === 'static') {
@@ -33,6 +35,9 @@ export class TransitionManager {
 
         // 3. Wrap new content
         const newWrapper = document.createElement('div');
+        newWrapper.style.position = 'relative';
+        newWrapper.style.width = '100%';
+        newWrapper.style.height = '100%';
         newWrapper.style.opacity = '0';
         newWrapper.style.transition = 'opacity var(--duration-normal) var(--ease-out)';
         
@@ -40,8 +45,8 @@ export class TransitionManager {
             newWrapper.appendChild(container.firstChild);
         }
 
-        container.appendChild(oldGhost);
         container.appendChild(newWrapper);
+        container.appendChild(oldGhost);
 
         // 4. Animate
         void container.offsetWidth; // Force reflow

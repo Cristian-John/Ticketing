@@ -5,6 +5,7 @@ import { LayoutManager } from '../layouts/LayoutManager';
 import { usersAPI } from '../services/api';
 import { store } from '../state/store';
 import { User } from '../types';
+import { getErrorMessage, handleUIError } from '../utils/errorHandler';
 import { escapeHTML } from '../utils/formatters';
 import { LoadingManager } from '../utils/loadingManager';
 import { getPortalContentContainer } from '../utils/portalContent';
@@ -25,9 +26,9 @@ export class UsersPage {
                     <div class="skeleton skeleton-btn" style="width: 200px;"></div>
                 </div>
             </div>
-            <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+            <div style="background: var(--color-bg-surface); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
                 ${Array.from({ length: 5 }).map(() => `
-                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--border); align-items: center;">
+                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--color-border); align-items: center;">
                         <div class="skeleton skeleton-text" style="width: 40px; margin-bottom: 0; margin-right: 16px;"></div>
                         <div style="flex: 1;">
                             <div class="skeleton skeleton-text" style="width: 40%; margin-bottom: 8px;"></div>
@@ -132,7 +133,7 @@ export class UsersPage {
                         u => `
                     <tr>
                         <td>
-                            <span class="user-name" style="font-weight: 600; color: var(--text-heading);">${escapeHTML(u.fullName)}</span>
+                            <span class="user-name" style="font-weight: 600; color: var(--color-text-heading);">${escapeHTML(u.fullName)}</span>
                         </td>
                         <td><span class="text-secondary">@${escapeHTML(u.username)}</span></td>
                         <td>${escapeHTML(u.email)}</td>
@@ -202,7 +203,7 @@ export class UsersPage {
                                 showToast(`User ${action}d successfully`, 'success');
                                 this.refreshUsersList();
                             } catch (err: unknown) {
-                                showToast((err instanceof Error ? err.message : String(err)) || 'Deactivation failed', 'error');
+                                handleUIError(err, 'Deactivation failed');
                             }
                         }
                     }
@@ -213,7 +214,7 @@ export class UsersPage {
         } catch (err: unknown) {
             const tbody = document.getElementById('users-table-body');
             if (tbody) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:#ff4757">Failed to load users: ${escapeHTML((err instanceof Error ? err.message : String(err)))}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="padding:20px; text-align:center; color:var(--color-danger)">Failed to load users: ${escapeHTML(getErrorMessage(err, 'Unknown error'))}</td></tr>`;
             }
         }
     }
@@ -285,7 +286,7 @@ export class UsersPage {
                 ModalsManager.closeModal('user-modal');
                 this.refreshUsersList();
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Action failed', 'error');
+                handleUIError(err, 'Action failed');
             }
         });
 
@@ -323,7 +324,7 @@ export class UsersPage {
                 showToast('Password reset successfully', 'success');
                 ModalsManager.closeModal('reset-password-modal');
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Reset failed', 'error');
+                handleUIError(err, 'Reset failed');
             } finally {
                 LoadingManager.setButtonLoading(submitBtn, false);
             }

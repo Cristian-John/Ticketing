@@ -12,6 +12,17 @@ import articleRoutes from './routes/articles';
 import statRoutes from './routes/stats';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
+import sseRoutes from './routes/sse';
+import notificationRoutes from './routes/notifications';
+import ratingRoutes from './routes/ratings';
+import reportRoutes from './routes/reports';
+
+import { SSEController } from './controllers/sse.controller';
+import { NotificationService } from './services/notification.service';
+import { TicketWorkflowService } from './services/ticketWorkflow.service';
+import { CacheService } from './infrastructure/cache/CacheService';
+import { CacheInvalidationService } from './services/cacheInvalidation.service';
+import { StatsService } from './services/stats.service';
 
 const app = express();
 
@@ -78,18 +89,57 @@ app.get('/health', async (req: Request, res: Response) => {
     }
 });
 
+// ─── Cache Health & Metrics Endpoint ──────────────────────────────────────────
+app.get('/api/v1/system/cache', async (req: Request, res: Response) => {
+    try {
+        const isHealthy = await CacheService.health();
+        const metrics = await CacheService.getMetrics();
+        
+        res.json({
+            status: isHealthy ? 'ok' : 'error',
+            timestamp: new Date().toISOString(),
+            ...metrics
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            status: 'error',
+            error: error.message
+        });
+    }
+});
+
 // ─── Register API v1 Routes (with rate limiting) ──────────────────────────────
 app.use('/api/v1/tickets', apiLimiter, ticketRoutes);
 app.use('/api/v1/articles', apiLimiter, articleRoutes);
 app.use('/api/v1/stats', apiLimiter, statRoutes);
+app.use('/api/v1/reports', apiLimiter, reportRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', apiLimiter, userRoutes);
+app.use('/api/sse', sseRoutes); // typically outside general rate limits due to persistent connection
+app.use('/api/v1/notifications', apiLimiter, notificationRoutes);
+app.use('/api/v1/ratings', apiLimiter, ratingRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
 
 // ─── Start Server (Conditionally for local environments) ──────────────────────
+
 if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    // Initialize services
+    SSEController.initialize();
+    NotificationService.initialize();
+    TicketWorkflowService.startExpirationCleanupTask();
+    
+    // Cache Setup
+    CacheService.initialize();
+    CacheInvalidationService.initialize();
+    
+    if (ENV.CACHE_WARMUP) {
+        console.log('[App] Warming up cache asynchronously...');
+        StatsService.getExecutiveKPIs({}).catch(e => console.error(e));
+        StatsService.getSidebarStats({}).catch(e => console.error(e));
+    }
+
     app.listen(ENV.PORT, () => {
         console.log(`\n  🎫  IT Support Ticketing Backend (v1)`);
         console.log(`  ──────────────────────────────────────────`);
@@ -97,6 +147,13 @@ if (ENV.NODE_ENV !== 'production' || !process.env.VERCEL) {
         console.log(`  Environment: ${ENV.NODE_ENV}`);
         console.log(`  Database: Supabase PostgreSQL\n`);
     });
+} else {
+    // For serverless deployments, initialize once
+    SSEController.initialize();
+    NotificationService.initialize();
+    CacheService.initialize();
+    CacheInvalidationService.initialize();
+    // Do not run background tasks in serverless
 }
 
 export default app;

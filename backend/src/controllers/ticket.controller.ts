@@ -25,6 +25,18 @@ export class TicketController {
         }
     }
 
+    public static async getRecent(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+            const user = (req as any).user;
+            
+            const tickets = await TicketService.getRecent(limit, user?.id, user?.role);
+            res.json(tickets);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     public static async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const ticket = await TicketService.getById(String(req.params.id));

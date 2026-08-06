@@ -1,7 +1,7 @@
 import './style.css';
 
 import { cleanupServiceWorkers } from './bootstrap/serviceWorkerCleanup';
-import { HexagonBackground } from './components/background/HexagonBackground';
+import { BackgroundRenderer } from './components/background/BackgroundRenderer';
 import { SplashManager } from './components/common/SplashManager';
 import { ThemeManager } from './components/common/theme/ThemeManager';
 import { ModalsManager } from './components/modals/ModalsManager';
@@ -9,6 +9,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { ClientLayout } from './layouts/ClientLayout';
 import { LayoutManager } from './layouts/LayoutManager';
 import { LoginLayout } from './layouts/LoginLayout';
+import { SupportLayout } from './layouts/SupportLayout';
 import { ArticlesPage } from './pages/Articles';
 import { CreateTicketPage } from './pages/CreateTicket';
 import { LoginPage } from './pages/Login';
@@ -21,7 +22,7 @@ class App {
             // Initialize foundational modules
             cleanupServiceWorkers();
             ThemeManager.initialize();
-            HexagonBackground.init();
+            BackgroundRenderer.init();
             
             // Ensure splash is visible
             SplashManager.show();
@@ -42,10 +43,13 @@ class App {
             const legacyAdmin = document.getElementById('admin-screen');
             if (legacyAdmin) {
                 LayoutManager.admin = new AdminLayout();
-                
-
-
                 legacyAdmin.replaceWith(LayoutManager.admin.getElement());
+            }
+
+            const legacySupport = document.getElementById('support-screen');
+            if (legacySupport) {
+                LayoutManager.support = new SupportLayout();
+                legacySupport.replaceWith(LayoutManager.support.getElement());
             }
 
             ModalsManager.initializeModals();

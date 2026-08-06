@@ -1,4 +1,10 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
+
+export interface TxContext {
+    client: PoolClient;
+    addPostCommitHook: (hook: () => void | Promise<void>) => void;
+    query: (sql: string, params?: any) => Promise<any>;
+}
 import { ENV } from './env';
 import bcrypt from 'bcryptjs';
 import { parseQuery } from '../utils/dbParser';
@@ -14,9 +20,48 @@ export const db = {
         if (!params) {
             return pool.query(sql);
         }
-        
         const { text, values } = parseQuery(sql, params);
         return pool.query(text, values);
+    },
+    
+    // Execute a callback inside a transaction, providing a TxContext
+    async withTransaction<T>(callback: (tx: TxContext) => Promise<T>): Promise<T> {
+        const client = await pool.connect();
+        const postCommitHooks: Array<() => void | Promise<void>> = [];
+        
+        const tx: TxContext = {
+            client,
+            addPostCommitHook: (hook) => postCommitHooks.push(hook),
+            query: async (sql: string, params?: any) => {
+                if (!params) {
+                    return client.query(sql);
+                }
+                const { text, values } = parseQuery(sql, params);
+                return client.query(text, values);
+            }
+        };
+
+        try {
+            await client.query('BEGIN');
+            const result = await callback(tx);
+            await client.query('COMMIT');
+            
+            // Execute post-commit hooks after successful commit
+            for (const hook of postCommitHooks) {
+                try {
+                    await hook();
+                } catch (err) {
+                    console.error('Post-commit hook failed:', err);
+                }
+            }
+            
+            return result;
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
     }
 };
 

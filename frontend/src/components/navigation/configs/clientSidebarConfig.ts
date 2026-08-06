@@ -21,9 +21,9 @@ export const clientSidebarConfig: SidebarConfig = {
     ],
     statsBoxHtml: `
         <div class="sb-stats-label">MY TICKETS</div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Open</span><span class="sb-stats-val" style="color:var(--status-open)" id="cs-open">0</span></div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Active</span><span class="sb-stats-val" style="color:var(--accent)" id="cs-active">0</span></div>
-        <div class="sb-stats-row"><span class="sb-stats-key">Resolved</span><span class="sb-stats-val" style="color:var(--status-resolved)" id="cs-resolved">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Open</span><span class="sb-stats-val" style="color:var(--color-warning)" id="cs-open">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Active</span><span class="sb-stats-val" style="color:var(--color-primary)" id="cs-active">0</span></div>
+        <div class="sb-stats-row"><span class="sb-stats-key">Resolved</span><span class="sb-stats-val" style="color:var(--color-success)" id="cs-resolved">0</span></div>
     `,
     actionBoxHtml: `
         <button class="btn btn-primary sb-new-btn" id="client-new-ticket-btn">

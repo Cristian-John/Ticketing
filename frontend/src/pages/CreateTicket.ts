@@ -2,6 +2,7 @@ import { ModalsManager } from '../components/modals/ModalsManager';
 import { showToast } from '../components/Toast';
 import { ticketsAPI } from '../services/api';
 import { store } from '../state/store';
+import { handleUIError } from '../utils/errorHandler';
 import { LoadingManager } from '../utils/loadingManager';
 import { TicketsPage } from './Tickets';
 
@@ -97,7 +98,7 @@ export class CreateTicketPage {
 
                 await TicketsPage.load('my-tickets');
             } catch (err: unknown) {
-                showToast((err instanceof Error ? err.message : String(err)) || 'Failed to create ticket', 'error');
+                handleUIError(err, 'Failed to create ticket');
             } finally {
                 if (submitBtn) {
                     LoadingManager.setButtonLoading(submitBtn, false);

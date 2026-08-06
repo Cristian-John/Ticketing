@@ -11,6 +11,8 @@ function buildSvg(paths: string, props: IconProps): string {
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${className}${style}>${paths}</svg>`;
 }
 
+export const PaletteIcon = (props: IconProps = {}) => `<svg width="${props.size || 24}" height="${props.size || 24}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className || ''}"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>`;
+
 export function ShieldIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" />', props);
 }
@@ -31,6 +33,9 @@ export function UsersIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', props);
 }
 
+export function BarChartIcon(props: IconProps = {}): string {
+    return buildSvg('<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>', props);
+}
 
 export function KeyIcon(props: IconProps = {}): string {
     return buildSvg('<path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>', props);
@@ -83,4 +88,8 @@ export function MenuIcon(props: IconProps = {}): string {
 
 export function SearchIcon(props: IconProps = {}): string {
     return buildSvg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', props);
+}
+
+export function ChevronLeftIcon(props: IconProps = {}): string {
+    return buildSvg('<path d="m15 18-6-6 6-6"/>', props);
 }

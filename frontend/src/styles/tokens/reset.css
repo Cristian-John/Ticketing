@@ -16,14 +16,14 @@
 html {
     font-size: 15px;
     scroll-behavior: smooth;
-    background: var(--bg-body);
+    background: var(--color-bg-base);
     transition: var(--theme-transition);
 }
 
 body {
     font-family: var(--font);
     background: transparent;
-    color: var(--text-primary);
+    color: var(--color-text-primary);
     min-height: 100vh;
     overflow-x: hidden;
     line-height: 1.6;
@@ -40,7 +40,8 @@ body,
 .stat-card,
 .ticket-row-item,
 .kb-article-card,
-.profile-section,
+.profile-card,
+.profile-security-card,
 .users-table th,
 .users-table td,
 .table-wrap,

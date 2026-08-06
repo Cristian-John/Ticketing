@@ -1,11 +1,13 @@
-import { DepartmentService } from '../services/DepartmentService';
 import { SearchIcon } from '../components/common/Icons';
 import { TicketDetailModal } from '../components/TicketDetailModal';
 import { LayoutManager } from '../layouts/LayoutManager';
 import { HtmlViewName } from '../router/router';
 import { ticketsAPI } from '../services/api';
+import { DepartmentService } from '../services/DepartmentService';
+import { sseClient } from '../services/sseClient';
 import { store } from '../state/store';
 import { Ticket } from '../types';
+import { getErrorMessage, handleUIError } from '../utils/errorHandler';
 import {
     debounce,
     escapeHTML,
@@ -22,10 +24,62 @@ import { TransitionManager } from '../utils/transitionManager';
 
 export class TicketsPage {
     private static currentTickets: Ticket[] = [];
+    private static pendingFilters: Record<string, string> = {};
+    private static initializedSSE: boolean = false;
+    private static activeHtmlView: HtmlViewName = 'all-tickets';
+    private static silentReload = debounce(async () => {
+        try {
+            TicketsPage.currentTickets = await ticketsAPI.getAll();
+            const container = getPortalContentContainer(store.getState().currentUser!.role);
+            if (container) {
+                const user = store.getState().currentUser;
+                if (!user) return;
+                
+                const tickets = TicketsPage.currentTickets;
+                if (user.role === 'admin' || user.role === 'it-support') {
+                    TicketsPage.updateAdminSidebarStats(tickets);
+                    if (TicketsPage.activeHtmlView === 'resolved') {
+                        TicketsPage.renderResolvedView(container, tickets);
+                    } else {
+                        TicketsPage.renderAdminAllTickets(container, tickets);
+                    }
+                } else {
+                    const mine = tickets.filter(t => t.userId === user.id || t.requester.toLowerCase() === user.username.toLowerCase());
+                    TicketsPage.updateClientSidebarStats(mine);
+                    TicketsPage.renderClientTickets(container, mine);
+                }
+            }
+        } catch (e) {
+            console.error('Silent reload failed in TicketsPage', e);
+        }
+    }, 1000);
+
+    private static setupRealtimeUpdates() {
+        if (this.initializedSSE) return;
+        this.initializedSSE = true;
+
+        const eventsToWatch = [
+            'ticket.created',
+            'ticket.claimed',
+            'ticket.transferred',
+            'ticket.reopened',
+            'ticket.status_updated',
+            'note.added',
+            'collaboration.approved',
+            'collaboration.rejected'
+        ];
+
+        eventsToWatch.forEach(event => {
+            sseClient.on(event, () => this.silentReload());
+        });
+    }
 
     public static async load(htmlView: HtmlViewName): Promise<void> {
+        this.activeHtmlView = htmlView;
         const container = getPortalContentContainer(store.getState().currentUser!.role);
         if (!container) return;
+
+        this.setupRealtimeUpdates();
 
         LoadingManager.registerSkeleton('tickets-table', () => `
             <div class="controls-row" style="margin-bottom: 20px; display: flex; justify-content: space-between;">
@@ -35,9 +89,9 @@ export class TicketsPage {
                     <div class="skeleton skeleton-btn" style="width: 200px;"></div>
                 </div>
             </div>
-            <div style="background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+            <div style="background: var(--color-bg-surface); border-radius: 8px; border: 1px solid var(--color-border); overflow: hidden;">
                 ${Array.from({ length: 5 }).map(() => `
-                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--border); align-items: center;">
+                    <div style="display: flex; padding: 16px; border-bottom: 1px solid var(--color-border); align-items: center;">
                         <div class="skeleton skeleton-text" style="width: 40px; margin-bottom: 0; margin-right: 16px;"></div>
                         <div style="flex: 1;">
                             <div class="skeleton skeleton-text" style="width: 40%; margin-bottom: 8px;"></div>
@@ -83,15 +137,20 @@ export class TicketsPage {
                 }
             });
         } catch (err) {
-            console.error('Failed to load tickets:', err);
+            await LoadingManager.hideSkeleton(container);
+            handleUIError(err, 'Failed to load tickets');
             container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div class="empty-state" style="margin-top: var(--space-xl);">
+                    <div class="empty-state-icon" style="color: var(--color-danger);">
+                        <i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i>
                     </div>
-                    <p>Failed to load tickets. Please try again.</p>
+                    <div class="empty-state-title" style="color: var(--color-danger); font-size: 1.25rem;">Failed to Load Tickets</div>
+                    <p>${escapeHTML(getErrorMessage(err, 'An unexpected error occurred.'))}</p>
+                    <button class="btn btn-primary" style="margin-top: var(--space-md);" onclick="window.location.reload()">Retry</button>
                 </div>
             `;
+            // @ts-ignore
+            if (window.lucide) window.lucide.createIcons({ root: container });
         }
     }
 
@@ -145,15 +204,15 @@ export class TicketsPage {
                         <div class="client-card" data-id="${escapeHTML(ticket.id)}" style="border-left: 3px solid ${getSeverityColor(ticket.severity)}">
                             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
                                 <div style="flex:1;min-width:0">
-                                    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
-                                        <span style="font-family:monospace;font-size:10px;color:var(--text-muted)">${escapeHTML(ticket.id)}</span>
+                                    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap;justify-content:flex-start;">
+                                        <span style="font-family:monospace;font-size:10px;color:var(--color-text-muted)">${escapeHTML(ticket.id)}</span>
                                         <span class="badge ${getStatusBadgeClass(ticket.status)}">${escapeHTML(ticket.status)}</span>
                                         <span class="badge ${getSeverityBadgeClass(ticket.severity)}">${escapeHTML(ticket.severity)}</span>
                                         <span class="badge-dept">${escapeHTML(ticket.department)}</span>
                                     </div>
-                                    <div style="font-weight:600;font-size:15px;color:var(--text-heading);margin-bottom:4px">${escapeHTML(ticket.title)}</div>
-                                    <div style="font-size:12px;color:var(--text-muted)">${escapeHTML(ticket.category)} · ${escapeHTML(formatAssignees(ticket))} · ${formatDate(ticket.updatedAt)}</div>
-                                    ${lastNote ? `<div class="latest-note">💬 ${escapeHTML(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
+                                    <div style="font-weight:600;font-size:15px;color:var(--color-text-heading);margin-bottom:4px">${escapeHTML(ticket.title)}</div>
+                                    <div style="font-size:12px;color:var(--color-text-muted)">${escapeHTML(ticket.category)} · ${escapeHTML(formatAssignees(ticket))} · ${formatDate(ticket.updatedAt)}</div>
+                                    ${lastNote ? `<div class="latest-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px; display:inline-block;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${escapeHTML(lastNote.text.slice(0, 90))}${lastNote.text.length > 90 ? '…' : ''}</div>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -184,6 +243,8 @@ export class TicketsPage {
             (document.getElementById('admin-filter-severity') as HTMLSelectElement)?.value || 'all';
         const dept =
             (document.getElementById('admin-filter-dept') as HTMLSelectElement)?.value || 'all';
+        const cat =
+            (document.getElementById('admin-filter-cat') as HTMLSelectElement)?.value || 'all';
         const search =
             (document.getElementById('admin-search') as HTMLInputElement)?.value
                 .trim()
@@ -193,6 +254,7 @@ export class TicketsPage {
             .filter(t => status === 'all' || t.status === status)
             .filter(t => severity === 'all' || t.severity === severity)
             .filter(t => dept === 'all' || t.department === dept)
+            .filter(t => cat === 'all' || t.category === cat)
             .filter(t => {
                 if (!search) return true;
                 const haystack = [t.id, t.title, t.requester, t.department, t.description || '']
@@ -246,14 +308,14 @@ export class TicketsPage {
                 .map(
                     t => `
                 <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
-                    <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
-                    <td style="font-weight:600;color:var(--text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
+                    <td style="font-family:monospace;font-size:11px;color:var(--color-text-muted)">${escapeHTML(t.id)}</td>
+                    <td style="font-weight:600;color:var(--color-text-heading);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.title)}</td>
                     <td><span class="badge-dept">${escapeHTML(t.department)}</span></td>
                     <td><span class="badge ${getSeverityBadgeClass(t.severity)}">${escapeHTML(t.severity)}</span></td>
                     <td><span class="badge ${getStatusBadgeClass(t.status)}">${escapeHTML(t.status)}</span></td>
                     <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(t.requester)}</td>
-                    <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : '—'}</td>
-                    <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
+                    <td style="color:var(--color-success)">${t.rating != null ? t.rating + '★' : '—'}</td>
+                    <td style="color:var(--color-text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
                 </tr>
             `,
                 )
@@ -303,7 +365,22 @@ export class TicketsPage {
                 <option value="all">All Departments</option>
                 ${deptOptions}
             </select>
+            <select id="admin-filter-cat" class="filter-sel">
+                <option value="all">All Categories</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Software">Software</option>
+                <option value="Network">Network</option>
+                <option value="Access">Access</option>
+            </select>
         `;
+
+        if (this.pendingFilters.status) (container.querySelector('#admin-filter-status') as HTMLSelectElement).value = this.pendingFilters.status;
+        if (this.pendingFilters.severity) (container.querySelector('#admin-filter-severity') as HTMLSelectElement).value = this.pendingFilters.severity;
+        if (this.pendingFilters.department) (container.querySelector('#admin-filter-dept') as HTMLSelectElement).value = this.pendingFilters.department;
+        if (this.pendingFilters.category) (container.querySelector('#admin-filter-cat') as HTMLSelectElement).value = this.pendingFilters.category;
+        
+        // Clear pending filters after applying
+        this.pendingFilters = {};
 
         const rerender = debounce(() => {
             const listContainer = getPortalContentContainer(store.getState().currentUser!.role);
@@ -316,8 +393,16 @@ export class TicketsPage {
         container.querySelector('#admin-filter-status')?.addEventListener('change', rerender);
         container.querySelector('#admin-filter-severity')?.addEventListener('change', rerender);
         container.querySelector('#admin-filter-dept')?.addEventListener('change', rerender);
+        container.querySelector('#admin-filter-cat')?.addEventListener('change', rerender);
 
         return container;
+    }
+
+    public static applyFilterAndNavigate(filterKey: string, value: string): void {
+        this.pendingFilters[filterKey] = value;
+        import('../router/router').then(({ Router }) => {
+            Router.switchView('all-tickets');
+        });
     }
 
     private static renderResolvedView(container: HTMLElement, allTickets: Ticket[]): void {
@@ -329,16 +414,16 @@ export class TicketsPage {
 
         container.innerHTML = `
             <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
-                <div class="stat-card" style="border-top:3px solid var(--status-resolved)">
-                    <div class="stat-number" style="color:var(--status-resolved)">${resolved.length}</div>
+                <div class="stat-card" style="border-top:3px solid var(--color-success)">
+                    <div class="stat-number" style="color:var(--color-success)">${resolved.length}</div>
                     <div class="stat-label">Total Resolved</div>
                 </div>
-                <div class="stat-card" style="border-top:3px solid var(--severity-moderate)">
-                    <div class="stat-number" style="color:var(--severity-moderate)">${rated.length}</div>
+                <div class="stat-card" style="border-top:3px solid var(--color-success)">
+                    <div class="stat-number" style="color:var(--color-success)">${rated.length}</div>
                     <div class="stat-label">Rated Tickets</div>
                 </div>
-                <div class="stat-card" style="border-top:3px solid var(--severity-moderate)">
-                    <div class="stat-number" style="color:var(--severity-moderate)">${avg ? avg + '★' : '—'}</div>
+                <div class="stat-card" style="border-top:3px solid var(--color-success)">
+                    <div class="stat-number" style="color:var(--color-success)">${avg ? avg + '★' : '—'}</div>
                     <div class="stat-label">Avg Rating</div>
                 </div>
             </div>
@@ -381,11 +466,11 @@ export class TicketsPage {
             .map(
                 t => `
             <tr class="clickable-row" data-id="${escapeHTML(t.id)}">
-                <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">${escapeHTML(t.id)}</td>
-                <td style="font-weight:600;color:var(--text-heading)">${escapeHTML(t.title)}</td>
+                <td style="font-family:monospace;font-size:11px;color:var(--color-text-muted)">${escapeHTML(t.id)}</td>
+                <td style="font-weight:600;color:var(--color-text-heading)">${escapeHTML(t.title)}</td>
                 <td>${escapeHTML(t.requester)}</td>
-                <td style="color:var(--severity-moderate)">${t.rating != null ? t.rating + '★' : 'Unrated'}</td>
-                <td style="color:var(--text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
+                <td style="color:var(--color-success)">${t.rating != null ? t.rating + '★' : 'Unrated'}</td>
+                <td style="color:var(--color-text-muted);font-size:11px">${formatDate(t.updatedAt)}</td>
             </tr>
         `,
             )
